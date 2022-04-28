@@ -1,0 +1,87 @@
+Ac = 0.1
+diffusion_coef = 123
+#diffusion_coef = 0.0
+initial_Ac = 0.1
+verbosity = 3
+tag_buffer_size = 3
+refine_thresh = 0.01
+regrid_interval = 2 2 2 2 2 2
+max_dt_growth = 1.1
+dt_tolerance_factor = 1.1
+grid_buffer_size = 1
+periodic_bc = 0 0 0
+fixed_dt   = -1.0
+
+max_level = 3
+ref_ratio = 2 2 2 2 2
+
+block_factor =  4
+max_grid_size = 64
+fill_ratio = 0.75
+
+checkpoint_interval = -1
+plot_interval = 10
+plot_prefix  = 123D
+chk_prefix = chk
+
+#this is the length of the longest side
+#domain_length = 11754
+#n_cell =  32 32 32
+
+domain_length = 23508
+n_cell =  32 64 128
+
+max_step = 300
+max_time = 300.0
+
+gas.name        = air
+gas.density     = 2.688e25
+gas.mue0        = 1.0
+gas.alpha0      = 0.1843
+gas.B0          = 197.589
+
+#iniPlaCloud.number = 1
+#iniPlaCloud.center = 5.8770e+03 5.8770e+03 5.8770e+03
+#iniPlaCloud.radius = 1.1754e3
+#iniPlaCloud.mag    = 7.6975e-2
+
+#iniPlaCloud.number = 1
+#iniPlaCloud.center = 5877 5877 5877
+#iniPlaCloud.radius = 882
+#iniPlaCloud.mag    = 7.6975e-1
+
+iniPlaCloud.number = 2
+#iniPlaCloud.center = 2938 4408 8815
+#              2938 7346 14692
+iniPlaCloud.center = 2938 4408 9991
+              2938 7346 17043
+#0.25 mm
+iniPlaCloud.radius = 588 588
+#0.2 mm
+#iniPlaCloud.radius = 470 470
+iniPlaCloud.mag    = 7.6975 7.6975
+
+iniPlaCloud.bgdDensity = 7.6975e-06
+
+use_limiting = true
+
+diffusionSolver.num_smooth  = 8
+diffusionSolver.tolerance   = 1.0e-10
+diffusionSolver.num_mg      = 1
+diffusionSolver.norm_thresh = 1.0e-10
+diffusionSolver.hang_eps    = 1.0e-10
+diffusionSolver.max_iter    = 100
+diffusionSolver.verbosity   = 1
+#0 = dirichlet, 1 = neumann, 2 = extrapolate
+bc_lo   = 2 2 2
+bc_hi   = 2 2 2
+bc_value = 0.
+
+EPot.bc_lo   	= 1 1 0
+EPot.bc_hi   	= 1 1 0
+EPot.bc_loValue = 0. 0. 1222420
+#EPot.bc_loValue = 0. 0. 977936
+#EPot.bc_loValue = 0. 0. 488968
+EPot.bc_hiValue = 0. 0. 0.
+EPot.En		= 0. 0. 0.
+

@@ -1,0 +1,145 @@
+Ac = 0.1
+Ai = 0.2
+Ad = 0.5
+diffusion_coef = 123
+initial_Ac = 0.1
+verbosity = 3
+tag_buffer_size = 3
+refine_thresh = 0.01
+regrid_interval = 2 2 2 2 2 2
+max_dt_growth = 1.1
+dt_tolerance_factor = 1.1
+grid_buffer_size = 1
+periodic_bc = 0 0 0
+fixed_dt   = -1.0
+
+max_level = 2
+ref_ratio = 2 2 2 2 2
+
+block_factor =  4
+max_grid_size = 64
+fill_ratio = 0.75
+
+checkpoint_interval = -1
+plot_interval = 20
+plot_prefix  = dhali
+chk_prefix = chk
+
+#this is the length of the longest side
+domain_length = 11754
+#n_cell =  64 64 128
+n_cell =  32 32 64
+
+#domain_length = 5877
+#n_cell =  16 16 32
+
+max_step = 1000
+max_time = 500.0
+
+gas.name       = air
+gas.density    = 2.688e25
+gas.mue0       = 1.0
+
+###### dhali coefficients
+ionization.name       = ionization
+ionization.numCoeffs  = 2
+ionization.numPieces  = 1
+ionization.xlb        = 0
+ionization.A          = 0.1843
+                        197.589
+
+mobility.name         = mobility
+mobility.numCoeffs    = 2
+mobility.numPieces    = 1
+mobility.xlb          = 0
+mobility.A            = 1.0
+                        0.0
+
+
+###### morrow coefficients
+#ionization.name       = ionization
+#ionization.numCoeffs  = 2
+#ionization.numPieces  = 2
+#ionization.xlb        = 0 40.32
+#ionization.A          = 0.0757 0.2287
+#                        150.3398 194.8262
+
+#mobility.name         = mobility
+#mobility.numCoeffs    = 2
+#mobility.numPieces    = 4
+#mobility.xlb          = 0         0.6989    2.6880   53.7600
+#mobility.A            = 6.6976    0.7114    1.0042   0.7214
+#                        0.0886    4.2715    3.4067   18.6059
+
+iniPlaCloud.number = 1
+iniPlaCloud.center = 2938 2938 0
+#iniPlaCloud.center = 1469 1469 0
+#0.25 mm
+iniPlaCloud.radius = 494 494 635
+iniPlaCloud.mag    = 7.6975
+
+iniPlaCloud.bgdDensity = 7.6975e-06
+#iniPlaCloud.bgdDensity = 0.0
+
+use_limiting = true
+
+diffusionSolver.num_smooth  = 8
+diffusionSolver.tolerance   = 1.0e-10
+diffusionSolver.num_mg      = 1
+diffusionSolver.norm_thresh = 1.0e-10
+diffusionSolver.hang_eps    = 1.0e-10
+diffusionSolver.max_iter    = 100
+diffusionSolver.verbosity   = 1
+
+#0 = dirichlet, 1 = neumann, 2 = extrapolate
+#bc_lo   = 2 2 2
+#bc_hi   = 2 2 2
+#bc_value = 0.
+bc_lo   = 2 2 1
+bc_hi   = 2 2 2
+bc_value = 0
+
+PoissonSolver.num_smooth  = 8
+PoissonSolver.tolerance   = 1.0e-10
+PoissonSolver.num_mg      = 1
+PoissonSolver.norm_thresh = 1.0e-10
+PoissonSolver.hang_eps    = 1.0e-10
+PoissonSolver.max_iter    = 100
+PoissonSolver.verbosity   = 1
+
+#EPot.bc_lo     = 1 1 0
+#EPot.bc_hi     = 1 1 0
+#EPot.bc_loValue = 0. 0. 611210
+#EPot.bc_hiValue = 0. 0. 0.
+#EPot.En      = 0. 0. 0.
+
+EPot.bc_lo   	  = 0 0 0
+EPot.bc_hi   	  = 0 0 0
+EPot.bc_loValue = -52. -52. -611210
+EPot.bc_hiValue = -52. -52. 0.
+EPot.En			    = 0. 0. 0.
+
+PISolver.runSolve = false
+# Multigrid PIPISolver parameters
+PISolver.verbosity = 1
+PISolver.num_smooth = 4
+PISolver.num_mg     = 1
+PISolver.num_bottom = 1
+PISolver.num_pre = 2
+PISolver.num_post = 2
+
+PISolver.max_iterations = 100
+PISolver.tolerance  = 1.0e-9
+PISolver.hang       = 1.0e-10
+#PISolver.tolerance  = 1.0e-12
+#PISolver.hang       = 1.0e-13
+
+#bcs for faces 1 - const neumann, 0 - const diri, 3 - Robin
+PI1.bc_lo              = 3 3 3
+PI1.bc_hi              = 3 3 3
+PI2.bc_lo              = 0 0 0
+PI2.bc_hi              = 0 0 0
+PI2.bc_value           = 0.0
+PI3.bc_lo              = 0 0 0
+PI3.bc_hi              = 0 0 0
+PI3.bc_value           = 0.0

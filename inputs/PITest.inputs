@@ -1,0 +1,93 @@
+Ac = 0.1
+diffusion_coef = 123
+initial_Ac = 0.1
+verbosity = 3
+tag_buffer_size = 3
+refine_thresh = 0.01
+regrid_interval = 2 2 2 2 2 2
+max_dt_growth = 1.1
+dt_tolerance_factor = 1.1
+grid_buffer_size = 1
+periodic_bc = 0 0 0
+fixed_dt   = -1.0
+
+max_level = 3
+ref_ratio = 2 2 2 2 2
+
+block_factor =  4
+max_grid_size = 64
+fill_ratio = 0.75
+
+checkpoint_interval = -1
+plot_interval = 1
+plot_prefix  = PITest
+chk_prefix = chk
+
+#this is the length of the longest side
+#domain_length = 11754
+#n_cell =  32 32 32
+
+domain_length = 4702
+n_cell =  64 64 64
+
+max_step = 300
+max_time = 300.0
+
+gas.name        = air
+gas.density     = 2.688e25
+gas.mue0        = 1.0
+gas.alpha0      = 0.1843
+gas.B0          = 197.589
+
+iniPlaCloud.number = 1
+iniPlaCloud.center = 2351 2351 2351
+#0.25 mm
+iniPlaCloud.radius = 235
+iniPlaCloud.mag    = 0.3003
+
+iniPlaCloud.bgdDensity = 7.6975e-06
+
+use_limiting = true
+
+diffusionSolver.num_smooth  = 8
+diffusionSolver.tolerance   = 1.0e-10
+diffusionSolver.num_mg      = 1
+diffusionSolver.norm_thresh = 1.0e-10
+diffusionSolver.hang_eps    = 1.0e-10
+diffusionSolver.max_iter    = 100
+diffusionSolver.verbosity   = 1
+#0 = dirichlet, 1 = neumann, 2 = extrapolate
+bc_lo   = 2 2 2
+bc_hi   = 2 2 2
+bc_value = 0.
+
+EPot.bc_lo     = 1 1 0
+EPot.bc_hi     = 1 1 0
+
+EPot.bc_loValue = 0. 0. 0
+EPot.bc_hiValue = 0. 0. 0.
+EPot.En      = 0. 0. 0.
+
+# Multigrid PIPISolver parameters
+PISolver.verbosity = 4
+PISolver.num_smooth = 4
+PISolver.num_mg     = 1
+PISolver.num_bottom = 1
+PISolver.num_pre = 2
+PISolver.num_post = 2
+
+PISolver.max_iterations = 100
+PISolver.tolerance  = 1.0e-9
+PISolver.hang       = 1.0e-10
+#PISolver.tolerance  = 1.0e-12
+#PISolver.hang       = 1.0e-13
+
+#bcs for faces 1 - const neumann, 0 - const diri, 3 - Robin
+PI1.bc_lo              = 3 3 3
+PI1.bc_hi              = 3 3 3
+PI2.bc_lo              = 0 0 0
+PI2.bc_hi              = 0 0 0
+PI2.bc_value           = 0.0
+PI3.bc_lo              = 0 0 0
+PI3.bc_hi              = 0 0 0
+PI3.bc_value           = 0.0
