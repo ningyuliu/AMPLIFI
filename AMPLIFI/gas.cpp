@@ -165,7 +165,6 @@ double piecewiseReciprocalLinear(double E, processCoefficients& coeff) {
   return y;
 }
 
-
 //#endif
 
 #include "NamespaceFooter.H"
