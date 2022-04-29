@@ -16,10 +16,10 @@ grid_buffer_size = 1
 block_factor =  4
 max_grid_size = 64
 fill_ratio = 0.85
-
 periodic_bc = 0 0 0
 
 implicitReflux = false
+use_limiting = true
 sourceNumericalScheme = 2
 
 verbosity = 1
@@ -27,20 +27,20 @@ testing = false
 
 checkpoint_interval = -1
 plot_interval = 10
-plot_prefix  = results/bourdon07
+plot_prefix  = results/out
 chk_prefix = chk
 
 normalization.EBar  = 1e5
 normalization.muBar = 0.0382
 
 #this is the length of the longest side
-domain_length = 35262
+domain_length = 1.5e-2
 n_cell = 48 48 192
 
 max_step = 4000
-max_time = 500.0
+max_time = 50.0e-9
 
-diffusion_coef = 123
+diffusion_coef = 0.1995
 
 gas.name          = air
 gas.uniformity    = true
@@ -71,17 +71,14 @@ mobility.xlb          = 0         2.6e-21     1.0e-20   2.0e-19
 mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
                         3.38e2    1.63e4      1.3e4     7.1e4
 
+###############################################################
 iniPlaCloud.bgdDensity = 0.0
-
-#0.2 mm - 470.1607
-
 iniPlaCloud.number = 1
-iniPlaCloud.center = 4408 4408 17631
-iniPlaCloud.radius = 470.1607 470.1607 470.1607
-iniPlaCloud.mag    = 7.6975
+iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
+iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
+iniPlaCloud.mag    = 1e20
 
-use_limiting = true
-
+###############################################################
 diffusionSolver.num_smooth  = 8
 diffusionSolver.tolerance   = 1.0e-10
 diffusionSolver.num_mg      = 1
@@ -91,10 +88,14 @@ diffusionSolver.max_iter    = 100
 diffusionSolver.verbosity   = 1
 
 #0 = dirichlet, 1 = neumann, 2 = extrapolate
+# zero values for all boundaries; nothing needs to be done for normalization
+# future work
 diffusion.bc_lo   = 2 2 1
 diffusion.bc_hi   = 2 2 2
 diffusion.bc_value = 0.
 
+
+###############################################################
 PoissonSolver.implicit    = true
 PoissonSolver.num_smooth  = 8
 PoissonSolver.tolerance   = 1.0e-10
@@ -105,16 +106,13 @@ PoissonSolver.max_iter    = 100
 PoissonSolver.verbosity   = 1
 
 #0 = dirichlet, 1 = neumann, 2 = extrapolate, 3 = dirichlet, with linear potential with in z;
-EPot.bc_lo     = 3 3 0
-EPot.bc_loValue = -48. -48. -1.6926e+06
-EPot.bc_hi     = 3 3 0
-EPot.bc_hiValue = -48. -48. 0.
+EPot.bc_lo     = 3 3 3
+EPot.bc_loValue = -4.8e6 -4.8e6 -72000
+EPot.bc_hi     = 3 3 3
+EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 
-#EPot.bc_lo      = 1   1   1
-#EPot.bc_loValue = 0.  0.  48
-#EPot.bc_hi      = 1   1   0
-#EPot.bc_hiValue = 0.  0.  0.
 
+###############################################################
 PISolver.runSolve = true
 # Multigrid PIPISolver parameters
 PISolver.verbosity = 1
@@ -131,6 +129,8 @@ PISolver.hang       = 1.0e-10
 #PISolver.hang       = 1.0e-13
 
 #0 = dirichlet, 1 = neumann, 3 = Robin
+# zero values for all boundaries; nothing needs to be done for normalization
+# future work
 PI1.bc_lo              = 3 3 3
 PI1.bc_hi              = 3 3 3
 PI2.bc_lo              = 0 0 0

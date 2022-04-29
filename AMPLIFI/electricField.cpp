@@ -14,12 +14,12 @@
 #include "BCFunc.H"
 
 #include "electricField.hpp"
-
+#include "globalVariables.h"
 #include "NamespaceHeader.H"
 
 int field::s_verbosity;
 
-void PoissonBCParseValue(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values) {
+void PoissonBCParseValueDiri(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values) {
 
   ParmParse pp("EPot");
   std::vector<Real> bcVal;
@@ -29,10 +29,23 @@ void PoissonBCParseValue(Real* pos, int* dir, Side::LoHiSide* side, Real* a_valu
   else
     pp.getarr("bc_hiValue", bcVal, 0, SpaceDim);
 
-  a_values[0] = bcVal[*dir];
+  a_values[0] = bcVal[*dir] / normalization::phiBar;
 }
 
-// const. at zlow, zhigh, but linearly varies with z along the other boundaries, where bcValLo/Hi stores the -rate/field
+void PoissonBCParseValueNeum(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values) {
+
+  ParmParse pp("EPot");
+  std::vector<Real> bcVal;
+
+  if(*side == Side::Lo)
+    pp.getarr("bc_loValue", bcVal, 0, SpaceDim);
+  else
+    pp.getarr("bc_hiValue", bcVal, 0, SpaceDim);
+
+  a_values[0] = bcVal[*dir] / normalization::EBar;
+}
+
+// const. at zlow, zhigh, but linearly varies with z along the other boundaries, where bcValLo/Hi stores the electric field (or -rate)
 void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values) {
   
   ParmParse pp("EPot");
@@ -43,14 +56,14 @@ void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Real* a_va
   
   if (*dir == SpaceDim-1)
     if(*side == Side::Lo)
-      a_values[0] = bcValLo[SpaceDim-1];
+      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar;
     else
-      a_values[0] = bcValHi[SpaceDim-1];
+      a_values[0] = bcValHi[SpaceDim-1] / normalization::phiBar;
   else
     if(*side == Side::Lo)
-      a_values[0] = bcValLo[SpaceDim-1] - pos[SpaceDim-1]*bcValLo[*dir];
+      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValLo[*dir] / normalization::EBar;
     else
-      a_values[0] = bcValLo[SpaceDim-1] - pos[SpaceDim-1]*bcValHi[*dir];
+      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValHi[*dir] / normalization::EBar;
 
 }
 
@@ -77,11 +90,11 @@ void EPotParseBC(FArrayBox& a_state, const Box& a_valid, const ProblemDomain& a_
           
           switch (bcLo[i]) {
             case 0:
-              DiriBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValue, i, Side::Lo);
+              DiriBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValueDiri, i, Side::Lo);
               break;
               
             case 1:
-              NeumBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValue, i, Side::Lo);
+              NeumBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValueNeum, i, Side::Lo);
               break;
               
             case 2:
@@ -101,11 +114,11 @@ void EPotParseBC(FArrayBox& a_state, const Box& a_valid, const ProblemDomain& a_
           
           switch (bcHi[i]) {
             case 0:
-              DiriBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValue, i, Side::Hi);
+              DiriBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValueDiri, i, Side::Hi);
               break;
               
             case 1:
-              NeumBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValue, i, Side::Hi);
+              NeumBC(a_state, valid, a_dx, a_homogeneous, PoissonBCParseValueNeum, i, Side::Hi);
               break;
               
             case 2:

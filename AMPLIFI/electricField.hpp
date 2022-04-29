@@ -18,10 +18,13 @@
 #include "NamespaceHeader.H"
 
 // define a BC with constant value
-extern void PoissonBCParseValue(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values);
+extern void PoissonBCParseValueDiri(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values);
 
-// const BC at zlow, zhigh, but linearly varies with z along the other
-// boundaries, where bcValLo/Hi stores the -rate/field
+extern void PoissonBCParseValueNeum(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values);
+
+// const potential at low and high of the last dimension, but linearly varies
+// along the last dimension on other boundaries, where bc_lo/hi stores
+// the electric field (- changing rate of the potential).
 extern void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values);
 
 extern void EPotParseBC(FArrayBox& a_state, const Box& a_valid, const ProblemDomain& a_domain, Real a_dx, bool a_homogeneous);

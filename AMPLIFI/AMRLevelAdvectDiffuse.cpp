@@ -970,7 +970,7 @@ getRate(FArrayBox& a_rate, const FArrayBox& a_Emag, const FArrayBox& a_mu, strin
   for (BoxIterator bit(a_rate.box()); bit.ok(); ++bit) {
     const IntVect& iv = bit();
     Real E, a;
-    Real n = m_gas.m_N/nBar;
+    Real n = m_gas.m_N;
     E = a_Emag(iv, 0);
     a = getProcessCoeff(E/n, m_gas, processName)*n;
     a_rate(iv, 0) *= a;
@@ -2007,7 +2007,7 @@ photoionizationSolve() {
           Real n;
           E = EmagFab(iv, 0);
           if (m_gas.m_uniformity)
-            n = m_gas.m_N/nBar;
+            n = m_gas.m_N;
           else
             n = (hierarchy[lev]->m_neut[dit()])(iv,0);
           
@@ -2507,7 +2507,7 @@ initialData()
     const Box& b = m_UNew[dit()].box();
     
     if (!m_gas.m_uniformity)
-      m_neut[dit()].setVal(m_gas.m_N/nBar, b, 0);
+      m_neut[dit()].setVal(m_gas.m_N, b, 0);
   }
   
   m_phi.copyTo(m_phiOld);
@@ -3314,7 +3314,7 @@ computeDt()
 //    for (int i = 1; i < allEmax.size (); ++i)
 //      Emax = max(Emax,allEmax[i]);
 //
-//    Real n = m_gas.m_N/nBar;
+//    Real n = m_gas.m_N;
 //
 //    ai = getProcessCoeff(Emax/n, m_gas, "ionization")*n;
 //    ve = getProcessCoeff(Emax/n, m_gas, "mobility")/n*Emax;
@@ -3350,7 +3350,7 @@ AMRLevelAdvectDiffuse::computeDtI()
       for (int i = 1; i < allEmax.size(); ++i)
         Emax = max(Emax,allEmax[i]);
       
-      Real n = m_gas.m_N/nBar;
+      Real n = m_gas.m_N;
       
       ai = getProcessCoeff(Emax/n, m_gas, "ionization")*n;
       ve = getProcessCoeff(Emax/n, m_gas, "mobility")/n*Emax;
@@ -3620,7 +3620,7 @@ fillMobility(bool timeInterpForGhost) {
       const IntVect& iv = bit();
       Real n;
       if (m_gas.m_uniformity)
-        n = m_gas.m_N/nBar;
+        n = m_gas.m_N;
       else
         n = m_neut[dit()](iv,0);
       

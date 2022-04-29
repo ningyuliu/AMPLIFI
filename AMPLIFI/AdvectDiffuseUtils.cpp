@@ -21,10 +21,11 @@
 #include "computeNorm.H"
 #include "CellToEdge.H"
 #include "electricField.hpp"
-
-#include "NamespaceHeader.H"
 #include "globalVariables.h"
 
+#include "NamespaceHeader.H"
+
+// give default values
 namespace normalization {
 
   double EBar = 1e5;
@@ -334,6 +335,7 @@ makeFinestDomain(ProblemDomain& a_domain,
   ParmParse pp;
   Real domainLength;
   pp.get("domain_length",domainLength);
+  domainLength = domainLength/normalization::lBar;
   getProblemDomain(a_domain);
   int ncells = a_domain.size(0);
   a_dx = domainLength/ncells;
@@ -450,6 +452,7 @@ getAmbientGas(gas& a_gas)
   pp.get("name", name);
   pp.get("uniformity", uniformity);
   pp.get("density", N);
+  N = N / normalization::nBar;
   pp.get("numOfIonSpe", numOfIonSpe);
   
   gas air;
@@ -457,7 +460,7 @@ getAmbientGas(gas& a_gas)
   
   std::string pname;
   int numPieces, numCoeffs;
-  vector<vector<double>> A;
+  vector <vector<double>> A;
   vector <double> xlb;
   
   ParmParse ppp("ionization");
@@ -582,6 +585,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
       
       const std::string varName("center");
       std::string valStr;
+      // random generator is called on one processor only
       if (procID() == uniqueProc(SerialTask::compute))
         for (int i = 0; i < blobNum; i++)
           for (int dir = 0; dir < SpaceDim; dir++) {
@@ -624,13 +628,17 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   } else
     pp.getarr("mag", mag, 0, blobNum);
   
+  //non-dimensionalize, etc.
+  bgdDensity = bgdDensity / normalization::nBar;
   Vector<RealVect> centRV(blobNum), aRV(blobNum);
-  for (int j = 0; j < blobNum; j++)
+  for (int j = 0; j < blobNum; j++) {
     for (int idir = 0; idir < SpaceDim; idir++) {
-      (centRV[j])[idir] = center[idir+j*SpaceDim];
-      (aRV[j])[idir] = radius[idir+j*SpaceDim];
+      (centRV[j])[idir] = center[idir+j*SpaceDim] / normalization::lBar;
+      (aRV[j])[idir] = radius[idir+j*SpaceDim] / normalization::lBar;
     }
-  
+    mag[j] = mag[j] / normalization::nBar;
+  }
+    
   a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, bgdDensity));
 }
 
@@ -648,6 +656,7 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   
   Real domainLength;
   pp.get("domain_length",domainLength);
+  domainLength = domainLength/normalization::lBar;
   
   Real refineThresh = 0.3;
   pp.get ("refine_thresh",refineThresh);
@@ -660,6 +669,9 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   
   Real nu;
   pp.get("diffusion_coef", nu);
+  
+  // DBar = lBar^2/tBar;
+  nu = nu / (normalization::lBar*normalization::lBar/normalization::tBar);
   
   a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
   (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,

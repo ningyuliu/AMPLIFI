@@ -98,6 +98,7 @@ main(int a_argc, char* a_argv[])
     ParmParse pp(a_argc-2,a_argv+2,NULL,inFile);
     Real stopTime = 0.0;
     pp.get("max_time",stopTime);
+    stopTime = stopTime/normalization::tBar;
 
     int nstop = 0;
     pp.get("max_step",nstop);
