@@ -1,0 +1,158 @@
+Ac = 0.25
+Ai = 100
+Ad = 100
+initial_Ac = 0.05
+
+max_dt_growth = 1.1
+dt_tolerance_factor = 1.1
+fixed_dt   = -1.0
+
+max_level = 2
+ref_ratio = 2 2 2 2 2
+tag_buffer_size = 3
+refine_thresh = 0.05
+regrid_interval = 2 2 2 2 2 2
+grid_buffer_size = 1
+block_factor =  4
+max_grid_size = 64
+fill_ratio = 0.85
+
+periodic_bc = 0 0 0
+
+implicitReflux = false
+sourceNumericalScheme = 2
+
+verbosity = 1
+testing = false
+
+checkpoint_interval = -1
+plot_interval = 30
+plot_prefix  = results/bourdon
+chk_prefix = chk
+
+normalization.EBar  = 1e5
+normalization.muBar = 0.0382
+
+#this is the length of the longest side
+domain_length = 117540.17
+n_cell = 128 128 640
+
+max_step = 4000
+max_time = 500.0
+
+diffusion_coef = 123
+#diffusion_coef = 0
+
+gas.name          = air
+gas.uniformity    = true
+gas.density       = 2.688e25
+gas.numOfIonSpe   = 2
+
+###### dhali coefficients
+#ionization.name       = ionization
+#ionization.numCoeffs  = 2
+#ionization.numPieces  = 1
+#ionization.xlb        = 0
+#ionization.A          = 0.1843
+#                        197.589
+
+#mobility.name         = mobility
+#mobility.numCoeffs    = 2
+#mobility.numPieces    = 1
+#mobility.xlb          = 0
+#mobility.A            = 1.0
+#                        0.0
+
+###### morrow coefficients
+# Ek = 1.2e-19 V-m^2
+
+ionization.name       = ionization
+ionization.numCoeffs  = 2
+ionization.numPieces  = 2
+ionization.xlb        = 0 1.5e-19
+ionization.A          = 6.619e-21   2.0e-20
+                        5.593e-19   7.248e-19
+                        
+attachment.name       = attachment
+attachment.numCoeffs  = 2
+attachment.numPieces  = 3
+attachment.xlb        = 0   4.7512e-20    1.05e-19
+attachment.A          = 0   -2.8930e-23   2.567e-23
+                        0   6.089e-4      8.889e-5
+#attachment.A          = 0 0 0
+#                        0 0 0
+
+mobility.name         = mobility
+mobility.numCoeffs    = 2
+mobility.numPieces    = 4
+mobility.xlb          = 0         2.6e-21     1.0e-20   2.0e-19
+mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
+                        3.38e2    1.63e4      1.3e4     7.1e4
+
+iniPlaCloud.bgdDensity = 0.0
+
+#0.2 mm - 470.1607
+
+# not z-aligned
+iniPlaCloud.number = 2
+iniPlaCloud.center = 7052.41 7052.41 41139.06
+               16455.62 16455.62 76401.11
+iniPlaCloud.radius = 470.1607 470.1607 470.1607
+               470.1607 470.1607 470.1607
+iniPlaCloud.mag    = 7.6975 7.6975
+
+use_limiting = true
+
+diffusionSolver.num_smooth  = 8
+diffusionSolver.tolerance   = 1.0e-10
+diffusionSolver.num_mg      = 1
+diffusionSolver.norm_thresh = 1.0e-10
+diffusionSolver.hang_eps    = 1.0e-10
+diffusionSolver.max_iter    = 100
+diffusionSolver.verbosity   = 1
+
+#0 = dirichlet, 1 = neumann, 2 = extrapolate
+diffusion.bc_lo   = 2 2 1
+diffusion.bc_hi   = 2 2 2
+diffusion.bc_value = 0.
+
+PoissonSolver.implicit    = true
+PoissonSolver.num_smooth  = 8
+PoissonSolver.tolerance   = 1.0e-10
+PoissonSolver.num_mg      = 1
+PoissonSolver.norm_thresh = 1.0e-10
+PoissonSolver.hang_eps    = 1.0e-10
+PoissonSolver.max_iter    = 100
+PoissonSolver.verbosity   = 1
+
+#0 = dirichlet, 1 = neumann, 2 = extrapolate, 3 = dirichlet, with linear potential with in z;
+
+EPot.bc_lo      = 1   1   1
+EPot.bc_loValue = 0.  0.  44.8
+EPot.bc_hi      = 1   1   0
+EPot.bc_hiValue = 0.  0.  0.
+
+PISolver.runSolve = true
+# Multigrid PIPISolver parameters
+PISolver.verbosity = 1
+PISolver.num_smooth = 4
+PISolver.num_mg     = 1
+PISolver.num_bottom = 1
+PISolver.num_pre = 2
+PISolver.num_post = 2
+
+PISolver.max_iterations = 100
+PISolver.tolerance  = 1.0e-9
+PISolver.hang       = 1.0e-10
+#PISolver.tolerance  = 1.0e-12
+#PISolver.hang       = 1.0e-13
+
+#bcs for faces 1 - const neumann, 0 - const diri, 3 - Robin
+PI1.bc_lo              = 3 3 3
+PI1.bc_hi              = 3 3 3
+PI2.bc_lo              = 0 0 0
+PI2.bc_hi              = 0 0 0
+PI2.bc_value           = 0.0
+PI3.bc_lo              = 0 0 0
+PI3.bc_hi              = 0 0 0
+PI3.bc_value           = 0.0
