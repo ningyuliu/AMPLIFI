@@ -6,6 +6,8 @@ initial_Ac = 0.05
 max_dt_growth = 1.1
 dt_tolerance_factor = 1.1
 fixed_dt   = -1.0
+max_time = 50.0e-9
+max_step = 4000
 
 max_level = 2
 ref_ratio = 2 2 2 2 2
@@ -37,18 +39,16 @@ normalization.muBar = 0.0382
 domain_length = 1.5e-2
 n_cell = 48 48 192
 
-max_step = 4000
-max_time = 50.0e-9
-
-diffusion_coef = 0.1995
 
 gas.name          = air
 gas.uniformity    = true
 gas.density       = 2.688e25
 gas.numOfIonSpe   = 2
 
-###### morrow coefficients
-# Ek = 1.2e-19 V-m^2
+diffusion_coef = 0.1995
+
+###############################################################
+# morrow coefficients, Ek = 1.2e-19 V-m^2
 
 ionization.name       = ionization
 ionization.numCoeffs  = 2
@@ -72,13 +72,18 @@ mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
                         3.38e2    1.63e4      1.3e4     7.1e4
 
 ###############################################################
+# initial plasma cloud(s)
+
 iniPlaCloud.bgdDensity = 0.0
 iniPlaCloud.number = 1
 iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
 iniPlaCloud.mag    = 1e20
 
+
 ###############################################################
+# diffusion solver inputs
+
 diffusionSolver.num_smooth  = 8
 diffusionSolver.tolerance   = 1.0e-10
 diffusionSolver.num_mg      = 1
@@ -87,7 +92,7 @@ diffusionSolver.hang_eps    = 1.0e-10
 diffusionSolver.max_iter    = 100
 diffusionSolver.verbosity   = 1
 
-#0 = dirichlet, 1 = neumann, 2 = extrapolate
+# 0 = dirichlet, 1 = neumann, 2 = extrapolate
 # zero values for all boundaries; nothing needs to be done for normalization
 # future work
 diffusion.bc_lo   = 2 2 1
@@ -96,6 +101,8 @@ diffusion.bc_value = 0.
 
 
 ###############################################################
+# Poisson's equation solver inputs
+
 PoissonSolver.implicit    = true
 PoissonSolver.num_smooth  = 8
 PoissonSolver.tolerance   = 1.0e-10
@@ -105,7 +112,7 @@ PoissonSolver.hang_eps    = 1.0e-10
 PoissonSolver.max_iter    = 100
 PoissonSolver.verbosity   = 1
 
-#0 = dirichlet, 1 = neumann, 2 = extrapolate, 3 = dirichlet, with linear potential with in z;
+# 0 = dirichlet, 1 = neumann, 2 = extrapolate, 3 = dirichlet, with linear potential with in z;
 EPot.bc_lo     = 3 3 3
 EPot.bc_loValue = -4.8e6 -4.8e6 -72000
 EPot.bc_hi     = 3 3 3
@@ -113,6 +120,8 @@ EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 
 
 ###############################################################
+# photoionization solver inputs
+
 PISolver.runSolve = true
 # Multigrid PIPISolver parameters
 PISolver.verbosity = 3
