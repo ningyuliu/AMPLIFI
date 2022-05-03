@@ -438,6 +438,11 @@ void getGlobalVariables() {
   normalization::tBar = normalization::lBar/(normalization::muBar*normalization::EBar);
   normalization::nBar = pow(normalization::lBar, -3);
   normalization::phiBar = normalization::EBar*normalization::lBar;
+  
+  std::transform(SP3A.begin(), SP3A.end(), SP3A.begin(),
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
+  std::transform(SP3Lambda.begin(), SP3Lambda.end(), SP3Lambda.begin(),
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
 }
 
 void

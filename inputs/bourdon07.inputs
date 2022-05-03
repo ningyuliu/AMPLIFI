@@ -115,7 +115,7 @@ EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 ###############################################################
 PISolver.runSolve = true
 # Multigrid PIPISolver parameters
-PISolver.verbosity = 1
+PISolver.verbosity = 3
 PISolver.num_smooth = 4
 PISolver.num_mg     = 1
 PISolver.num_bottom = 1

@@ -29,6 +29,8 @@
 #include "photoionization.hpp"
 
 int photoionization::s_verbosity;
+vector<double> SP3A{6.7e-3*1e2, 0.0346*1e2, 0.3059*1e2};
+vector<double> SP3Lambda{0.0447*1e2, 0.1121*1e2, 0.5994*1e2};
 
 void
 PISetupSolver(AMRMultiGrid<LevelData<FArrayBox> > *a_amrSolver) {
@@ -60,7 +62,7 @@ PISetupSolver(AMRMultiGrid<LevelData<FArrayBox> > *a_amrSolver) {
 
 vector<int>    PIBCLo = vector<int>(SpaceDim, 0);
 vector<int>    PIBCHi = vector<int>(SpaceDim, 0);
-Real           PIDiriNeumBCValues;
+double         PIDiriNeumBCValues;
 
 vector<double> PIRobinBCValues(3, 0);
 

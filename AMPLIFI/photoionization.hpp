@@ -33,8 +33,8 @@ using namespace normalization;
 const double pO2Torr = 150;
 const double quenchingFactor = 30.0/(760.0+30.0);
 const double PIXi = 0.06;
-const vector<double> SP3A{6.7e-3*1e2*pO2Torr*lBar, 0.0346*1e2*pO2Torr*lBar, 0.3059*1e2*pO2Torr*lBar};
-const vector<double> SP3Lambda{0.0447*1e2*pO2Torr*lBar, 0.1121*1e2*pO2Torr*lBar, 0.5994*1e2*pO2Torr*lBar};
+extern vector<double> SP3A;
+extern vector<double> SP3Lambda;
 
 //  -----------------------------------------
 // boundary condition stuff
@@ -42,7 +42,7 @@ const vector<double> SP3Lambda{0.0447*1e2*pO2Torr*lBar, 0.1121*1e2*pO2Torr*lBar,
 // use the same integer array to store the types of the BCs for all 3 SP3 components
 extern vector<int>    PIBCLo;
 extern vector<int>    PIBCHi;
-extern Real           PIDiriNeumBCValues;
+extern double         PIDiriNeumBCValues;
 // Robin BC: (alpha + d/dx) phi = gamma
 // store alphaLo, alphaHi, and gamma in order for a SP3 component;
 // also they are assumed to be the same for all directions

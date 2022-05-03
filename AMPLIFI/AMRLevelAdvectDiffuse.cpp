@@ -34,6 +34,7 @@
 #include "EdgeToCell.H"
 #include "AdvectPhysicsF_F.H"
 #include "AdvectDiffuseUtils.H"
+#include "AMRPoissonOp.H"
 #include "VCAMRPoissonOp2.H"
 #include "GodunovPhysicsF_F.H"
 #include "NamespaceHeader.H"
