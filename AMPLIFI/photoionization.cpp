@@ -41,15 +41,15 @@ PISetupSolver(AMRMultiGrid<LevelData<FArrayBox> > *a_amrSolver) {
   
   // multigrid solver parameters
   int numSmooth, numMG, maxIter, verbosity;
-  Real eps, hang;
-  ppSolver.get("verbosity", verbosity);
-  ppSolver.get("num_smooth", numSmooth);
-  ppSolver.get("num_mg",     numMG);
-  ppSolver.get("max_iterations", maxIter);
-  ppSolver.get("tolerance", eps);
-  ppSolver.get("hang",      hang);
+  Real eps, hang, normThresh = 1.0e-30;
+  ppSolver.get("num_smooth",    numSmooth);
+  ppSolver.get("tolerance",     eps);
+  ppSolver.get("num_mg",        numMG);
+  ppSolver.get("norm_thresh",   normThresh);
+  ppSolver.get("hang_eps",      hang);
+  ppSolver.get("max_iter",      maxIter);
+  ppSolver.get("verbosity",     verbosity);
   
-  Real normThresh = 1.0e-30;
   a_amrSolver->setSolverParameters(numSmooth, numSmooth, numSmooth,
                                    numMG, maxIter, eps, hang, normThresh);
   a_amrSolver->m_verbosity = verbosity;

@@ -191,7 +191,7 @@ defineSolvers()
                                    maxIter, tolerance, hang, normThresh);
   s_EPotAMRMG->m_verbosity = mgverb;
   
-  s_PIBotSolver.m_verbosity = mgverb-3;
+  s_PIBotSolver.m_verbosity = mgverb;
   AMRPoissonOpFactory* amrpopPI =  new AMRPoissonOpFactory();
   amrpopPI->define(lev0Dom, grids, refRat, lev0Dx, m_phtznbcFunc, 1.0, 1.0);
   s_PIOpFact  = RefCountedPtr<AMRLevelOpFactory<LevelData<FArrayBox> > >(amrpopPI);
@@ -1993,7 +1993,7 @@ photoionizationSolve() {
     for (int lev = startLev; lev<= finest_level; lev++) {
       // rhs has no ghost cells, while phi does.
       rhs[lev]  = new LevelData<FArrayBox>(grids[lev], 1, IntVect::Zero);
-      phi[lev]  = new LevelData<FArrayBox>(grids[lev], 1, IntVect::Unit);
+      phi[lev]  = new LevelData<FArrayBox>(grids[lev], 1, m_numGhost*IntVect::Unit);
       
       hierarchy[lev]->m_mu.copyTo(*(rhs[lev]));
       for (DataIterator dit =  hierarchy[lev]->m_grids.dataIterator(); dit.ok(); ++dit) {
@@ -2018,6 +2018,12 @@ photoionizationSolve() {
       }
       
     }
+    
+    ParmParse ppSolver("PISolver");
+    bool PITesting;
+    ppSolver.query("testing", PITesting);
+    if (PITesting)
+      PISetTestRHS(rhs, refRat, lev0Domain, lev0Dx, startLev, finest_level, PITestProbType::gaussian);
     
 //    PISetTestRHS(rhs, refRat, lev0Domain, lev0Dx, startLev, finest_level, PITestProbType::gaussian);
     
