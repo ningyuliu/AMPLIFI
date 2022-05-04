@@ -93,6 +93,7 @@ mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
 # initial plasma cloud(s)
 
 iniPlaCloud.bgdDensity = 0.0
+
 iniPlaCloud.number = 1
 iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
@@ -131,9 +132,9 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
-EPot.bc_lo     = 3 3 3
+EPot.bc_lo      = 3 3 3
 EPot.bc_loValue = -4.8e6 -4.8e6 -72000
-EPot.bc_hi     = 3 3 3
+EPot.bc_hi      = 3 3 3
 EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 
 
@@ -143,7 +144,7 @@ EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 PISolver.runSolve       = true
 PISolver.testing        = false
 
-PISolver.num_smooth     = 8
+PISolver.num_smooth     = 4
 PISolver.tolerance      = 1.0e-10
 PISolver.num_mg         = 1
 PISolver.norm_thresh    = 1.0e-30
