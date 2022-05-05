@@ -94,15 +94,10 @@ mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
 
 iniPlaCloud.bgdDensity = 0.0
 
-iniPlaCloud.number = 2
-iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
-iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.mag    = 1e20
-
 # not z-aligned
 iniPlaCloud.number = 2
-iniPlaCloud.center = 0.0045    0.0045    0.0150
-                     0.0055    0.0055    0.0250
+iniPlaCloud.center = 0.0030    0.0030    0.0175
+                     0.0070    0.0070    0.0325
 iniPlaCloud.radius = 0.02e-2   0.02e-2   0.02e-2
                      0.02e-2   0.02e-2   0.02e-2
 iniPlaCloud.mag    = 1e20 1e20
