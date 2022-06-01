@@ -1,0 +1,19 @@
+abstract: AMPLIFI is a plasma fluid simulation code. It stands for Adaptive Modeling of PLasma Initiation, Filamentation and Interaction.
+authors:
+  - family-names: Liu
+    given-names: Ningyu
+    orcid: "https://orcid.org/0000-0002-8626-6218"
+cff-version: 1.2.0
+date-released: "2022-6-1"
+identifiers:
+  - description: This is the archived snapshot of version 1.0.0 of AMPLIFI
+    type: doi
+    value: https://zenodo.org/badge/latestdoi/486549661
+keywords:
+  - "AMPLIFI"
+  - research
+license: Apache-2.0
+message: If you use this software, please cite it using these metadata.
+repository-code: "https://github.com/citation-file-format/my-research-software"
+title: AMPLIFI
+version: 1.0.0
