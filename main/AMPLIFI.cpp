@@ -25,10 +25,13 @@
 #include "AdvectDiffuseUtils.H"
 #include "parstream.H"
 
+#include "dataFileIFReduced.hpp"
 #include "gas.hpp"
 #include "electricField.hpp"
 
 #include "UsingNamespace.H"
+
+DataFileIFReduced* neutDensityFile;
 
 /***************/
 void amrGodunov(const Real& a_stopTime,

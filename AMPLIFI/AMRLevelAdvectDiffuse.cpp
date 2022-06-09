@@ -43,6 +43,7 @@
 #include "photoionization.hpp"
 #include "physicalConstants.h"
 #include "Gradient.H"
+#include "dataFileIFReduced.hpp"
 
 RefCountedPtr<LevelTGA>                                   AMRLevelAdvectDiffuse::s_diffuseLevTGA = RefCountedPtr<LevelTGA>();
 RefCountedPtr<AMRMultiGrid<LevelData<FArrayBox> > >       AMRLevelAdvectDiffuse::s_diffuseAMRMG  = RefCountedPtr<AMRMultiGrid<LevelData<FArrayBox> > >();
@@ -2510,12 +2511,27 @@ initialData()
     }
   }
   
-  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
+/*  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
     const Box& b = m_UNew[dit()].box();
     
     if (!m_gas.m_uniformity)
       m_neut[dit()].setVal(m_gas.m_N, b, 0);
-  }
+  } */
+  
+  Real levDx = m_dx;
+  RealVect ccOffset = 0.5*levDx*RealVect::Unit;
+  
+  if (!m_gas.m_uniformity)
+    for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
+      for (BoxIterator bit(m_grids.get(dit)); bit.ok(); ++bit) {
+        const IntVect& iv = bit();
+        RealVect point(iv);
+        point *= levDx;
+        point += ccOffset;
+        point *= normalization::lBar;
+        m_neut[dit()](iv, 0) = neutDensityFile->value(point) / normalization::nBar;
+      }
+    }
   
   m_phi.copyTo(m_phiOld);
   m_phtzn.copyTo(m_phtznOld);

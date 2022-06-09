@@ -22,7 +22,11 @@
 #include "memtrack.H"
 #include "parstream.H"
 
+#include "dataFileIFReduced.hpp"
+
 #include "NamespaceHeader.H"
+
+extern DataFileIFReduced* neutDensityFile;
 
 ///
 /**

@@ -463,6 +463,40 @@ getAmbientGas(gas& a_gas)
   gas air;
   air.define(name, uniformity, N, numOfIonSpe);
   
+  if (!uniformity)
+    if (pp.contains("densityInputFile")) {
+      string inputFileNamePtr;
+      pp.get("densityInputFile", inputFileNamePtr);
+      if (pp.contains("numGridPoints")) {
+        Vector<int> numGridPoints(SpaceDim, 0);
+        vector<double> spacing(SpaceDim, 0);
+        vector<double> origin(SpaceDim, 0);
+        pp.getarr("numGridPoints", numGridPoints, 0, SpaceDim);
+        pp.getarr("spacing", spacing, 0, SpaceDim);
+        pp.getarr("origin", origin, 0, SpaceDim);
+        //non-dimensionalize
+        std::transform(spacing.begin(), spacing.end(), spacing.begin(),
+                       std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/lBar));
+        
+      } else // assuming the length scaling is already done
+        neutDensityFile = new DataFileIFReduced(inputFileNamePtr.c_str(),DataFileIFReduced::ASCII,0,true);
+    }
+  
+  RealVect rt(0, 0, 7.5e-3/lBar);
+  cout << rt << endl;
+  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
+  cout << endl;
+  
+  rt = RealVect(3.75e-3/lBar, 0, 7.5e-3/lBar);
+  cout << rt << endl;
+  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
+  cout << endl;
+  
+  rt = RealVect(0, 3.75e-3/lBar, 7.5e-3/lBar);
+  cout << rt << endl;
+  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
+  cout << endl;
+  
   std::string pname;
   int numPieces, numCoeffs;
   vector <vector<double>> A;
