@@ -15,9 +15,8 @@
 #include <vector>
 #include <map>
 
-#include "IntVect.H"
-#include "RealVect.H"
-
+#include "dataFileIFReduced.hpp"
+#include "parameterizedFunction.hpp"
 #include "NamespaceHeader.H"
 
 class gas;
@@ -57,7 +56,6 @@ public:
 
 typedef double (*processFunc) (double EN, processCoefficients&);
 
-
 class process {
   
 private:
@@ -77,18 +75,24 @@ class gas {
 private:
   
 public:
-  std::string m_name;
-  bool m_uniformity;        // uniform density?
-  Real m_N;                 // default density
-  int m_numOfIonSpe;        // number of ion species (electrons not included)
-  // the name and process pair
-  std::map<std::string, process> processes;
+  
   gas() {};
   gas(std::string a_name, bool uniformity, Real a_N, int a_numOfIonspe = 1);
   gas(const gas&);
   gas& operator=(const gas&);
-  void define (std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe = 1);
-  virtual ~gas() {};
+  void define(std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe = 1);
+  virtual ~gas();
+  
+  double getBackgroundDensity(vector<double> point);
+  
+  std::string             m_name;
+  double                  m_N;                 // default density
+  bool                    m_uniformity;        // uniform density?
+  int                     m_numOfIonSpe;       // electrons excluded
+  
+  std::map<std::string, process> processes;    // the name and process pair
+  parameterizedFunction*         bgdDensityProfile = NULL;
+  DataFileIFReduced*             densityFileIF = NULL;
 };
 
 #include "NamespaceFooter.H"

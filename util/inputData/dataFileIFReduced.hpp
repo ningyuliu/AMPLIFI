@@ -235,6 +235,8 @@ public:
       of the data.  If a_point is outside the data then return the maximum data
       value.
    */
+  virtual Real value(const vector<double> a_point) const;
+
   virtual Real value(const RealVect& a_point) const;
 
   virtual Real value(const IndexTM<Real,GLOBALDIM>& a_point) const;
@@ -261,6 +263,11 @@ public:
     return m_binary_data;
   }
 
+  Real GetNoDataValue(void)
+  {
+    return m_noDataValue;
+  }
+  
 protected:
   void OpenFile(ifstream&         a_file,
                 const char* const a_filename);

@@ -22,6 +22,7 @@
 #include "CellToEdge.H"
 #include "electricField.hpp"
 #include "globalVariables.h"
+#include "parameterizedFunction.hpp"
 
 #include "NamespaceHeader.H"
 
@@ -460,42 +461,73 @@ getAmbientGas(gas& a_gas)
   N = N / normalization::nBar;
   pp.get("numOfIonSpe", numOfIonSpe);
   
+  /*parameterizedFunction pf(exponential, {1.0, 0.0, 1});
+  cout << pf.value({1.0}) << " " << pf.value({0, 1.0}) << endl;*/
+  
   gas air;
   air.define(name, uniformity, N, numOfIonSpe);
   
-  if (!uniformity)
-    if (pp.contains("densityInputFile")) {
+  if (!uniformity) {
+    if (pp.contains("densityInputFile")) { // input data from a file
       string inputFileNamePtr;
       pp.get("densityInputFile", inputFileNamePtr);
-      if (pp.contains("numGridPoints")) {
-        Vector<int> numGridPoints(SpaceDim, 0);
-        vector<double> spacing(SpaceDim, 0);
-        vector<double> origin(SpaceDim, 0);
-        pp.getarr("numGridPoints", numGridPoints, 0, SpaceDim);
-        pp.getarr("spacing", spacing, 0, SpaceDim);
-        pp.getarr("origin", origin, 0, SpaceDim);
-        //non-dimensionalize
-        std::transform(spacing.begin(), spacing.end(), spacing.begin(),
-                       std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/lBar));
-        
-      } else // assuming the length scaling is already done
-        neutDensityFile = new DataFileIFReduced(inputFileNamePtr.c_str(),DataFileIFReduced::ASCII,0,true);
+      Vector<int> numGridPoints(SpaceDim, 0);
+      vector<double> spacing(SpaceDim, 0);
+      vector<double> basePt(SpaceDim, 0);
+      pp.getarr("numGridPoints", numGridPoints, 0, SpaceDim);
+      pp.getarr("spacing", spacing, 0, SpaceDim);
+      pp.getarr("basePoint", basePt, 0, SpaceDim);
+      //non-dimensionalize
+      std::transform(spacing.begin(), spacing.end(), spacing.begin(),
+                     std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/lBar));
+      air.densityFileIF = new DataFileIFReduced(inputFileNamePtr.c_str(), DataFileIFReduced::ASCII, IntVect(numGridPoints), RealVect(spacing), RealVect(basePt), 0, true);
+      air.densityFileIF->GetAsciiData()->mult(1/nBar);
+      air.densityFileIF->SetNoDataValue(air.densityFileIF->GetNoDataValue()/nBar);
+      
+    } else { // data from a function
+      std::string profileName;
+      int profileParamNum;
+      vector<double> profileParam;
+      pp.get("densityProfile", profileName);
+      pp.get("densityProfileParamNum", profileParamNum);
+      profileParam.resize(profileParamNum);
+      pp.getarr("densityprofileParam", profileParam, 0, profileParamNum);
+      if (profileName == "exp") {
+        profileParam[0] = profileParam[0]/nBar;
+        profileParam[1] = profileParam[1]/lBar;
+        profileParam[2] = profileParam[2]/lBar;
+      }
+      air.bgdDensityProfile = new parameterizedFunction(profileName, profileParam);
     }
-  
-  RealVect rt(0, 0, 7.5e-3/lBar);
-  cout << rt << endl;
-  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
-  cout << endl;
-  
-  rt = RealVect(3.75e-3/lBar, 0, 7.5e-3/lBar);
-  cout << rt << endl;
-  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
-  cout << endl;
-  
-  rt = RealVect(0, 3.75e-3/lBar, 7.5e-3/lBar);
-  cout << rt << endl;
-  cout << neutDensityFile->value(rt) / normalization::nBar << endl;
-  cout << endl;
+        
+    /*vector<double> point{0, 0, 0/lBar};
+    for (auto i = point.begin(); i != point.end(); ++i)
+        std::cout << *i*lBar << ' ';
+    cout << endl;
+    cout << air.getBackgroundDensity(point) * nBar << endl;
+    cout << endl;
+    
+    point = vector<double>{3.75e-3/lBar, 0, 7.5e-3/lBar};
+    for (auto i = point.begin(); i != point.end(); ++i)
+        std::cout << *i*lBar << ' ';
+    cout << endl;
+    cout << air.getBackgroundDensity(point) * nBar << endl;
+    cout << endl;
+    
+    point = vector<double>{3.75e-3/lBar, 0, 1.5e-2/lBar};
+    for (auto i = point.begin(); i != point.end(); ++i)
+        std::cout << *i*lBar << ' ';
+    cout << endl;
+    cout << air.getBackgroundDensity(point) * nBar << endl;
+    cout << endl;
+    
+    point = vector<double>{0, 0, 3e-2/lBar};
+    for (auto i = point.begin(); i != point.end(); ++i)
+        std::cout << *i*lBar << ' ';
+    cout << endl;
+    cout << air.getBackgroundDensity(point) * nBar << endl;
+    cout << endl;*/
+  }
   
   std::string pname;
   int numPieces, numCoeffs;

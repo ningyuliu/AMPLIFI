@@ -51,12 +51,23 @@ process& process::operator=(const process& p) {
 
 
 gas::gas(std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe)
-: m_name(a_name), m_uniformity(a_uniformity), m_N(a_N), m_numOfIonSpe(a_numOfIonspe)
+: m_name(a_name), m_N(a_N), m_uniformity(a_uniformity), m_numOfIonSpe(a_numOfIonspe)
 {}
 
 gas::gas(const gas& a_gas)
-: m_name(a_gas.m_name), m_uniformity(a_gas.m_uniformity), m_N(a_gas.m_N), m_numOfIonSpe(a_gas.m_numOfIonSpe){
+: m_name(a_gas.m_name), m_N(a_gas.m_N), m_uniformity(a_gas.m_uniformity), m_numOfIonSpe(a_gas.m_numOfIonSpe){
+  
   processes = a_gas.processes;
+  
+  if(a_gas.bgdDensityProfile)
+    bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+  else
+    bgdDensityProfile = NULL;
+  
+  if(a_gas.densityFileIF)
+    densityFileIF = new DataFileIFReduced(*a_gas.densityFileIF);
+  else
+    densityFileIF = NULL;
 }
 
 gas& gas::operator=(const gas& a_gas) {
@@ -65,6 +76,17 @@ gas& gas::operator=(const gas& a_gas) {
   m_uniformity = a_gas.m_uniformity;
   m_numOfIonSpe = a_gas.m_numOfIonSpe;
   processes = a_gas.processes;
+  
+  if(a_gas.bgdDensityProfile)
+    bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+  else
+    bgdDensityProfile = NULL;
+  
+  if(a_gas.densityFileIF)
+    densityFileIF = new DataFileIFReduced(*a_gas.densityFileIF);
+  else
+    densityFileIF = NULL;
+  
   return *this;
 }
 
@@ -73,6 +95,27 @@ void gas::define (std::string a_name, bool a_uniformity, Real a_N, int a_numOfIo
   m_uniformity = a_uniformity;
   m_N = a_N;
   m_numOfIonSpe = a_numOfIonSpe;
+}
+
+gas::~gas() {
+  
+  if (bgdDensityProfile != NULL)
+    delete bgdDensityProfile;
+  
+  if (densityFileIF != NULL)
+    delete densityFileIF;
+}
+  
+double gas::getBackgroundDensity(vector<double> point) {
+  
+  if (bgdDensityProfile != NULL)
+    return bgdDensityProfile->value(point);
+  else if (densityFileIF != NULL)
+    return densityFileIF->value(point);
+  else {
+    cerr << "gas background density missing!" << endl;
+    abort();
+  }
 }
 
 //#if __cplusplus > 199711L

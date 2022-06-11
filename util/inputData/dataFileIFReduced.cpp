@@ -280,6 +280,10 @@ void DataFileIFReduced::SetNoDataValue(const Real& a_value)
   m_noDataValue = a_value;
 }
 
+Real DataFileIFReduced::value(const vector<double> a_point) const {
+  return value(RealVect(a_point));
+}
+
 Real DataFileIFReduced::value(const RealVect& a_point) const
 {
   IndexTM<Real,GLOBALDIM> point;
