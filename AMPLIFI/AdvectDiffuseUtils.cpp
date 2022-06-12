@@ -485,48 +485,45 @@ getAmbientGas(gas& a_gas)
       air.densityFileIF->SetNoDataValue(air.densityFileIF->GetNoDataValue()/nBar);
       
     } else { // data from a function
-      std::string profileName;
-      int profileParamNum;
-      vector<double> profileParam;
-      pp.get("densityProfile", profileName);
-      pp.get("densityProfileParamNum", profileParamNum);
-      profileParam.resize(profileParamNum);
-      pp.getarr("densityprofileParam", profileParam, 0, profileParamNum);
-      if (profileName == "exp") {
-        profileParam[0] = profileParam[0]/nBar;
-        profileParam[1] = profileParam[1]/lBar;
-        profileParam[2] = profileParam[2]/lBar;
+      if (!pp.contains("densityProfilePieceNum")) {
+        std::string profileName;
+        int profileParamNum;
+        vector<double> profileParam;
+        pp.get("densityProfile", profileName);
+        pp.get("densityProfileParamNum", profileParamNum);
+        profileParam.resize(profileParamNum);
+        pp.getarr("densityprofileParam", profileParam, 0, profileParamNum);
+        if (profileName == "exp") {
+          profileParam[0] = profileParam[0]/nBar;
+          profileParam[1] = profileParam[1]/lBar;
+          profileParam[2] = profileParam[2]/lBar;
+        }
+        air.bgdDensityProfile = new singleFunction(profileName, profileParam);
+      } else {
+        int numPiece;
+        vector<double> lb;
+        vector<string> fNames;
+        vector<int>    paramNums;
+        vector<vector<double>> paramVect;
+        pp.get("densityProfilePieceNum", numPiece);
+        pp.getarr("densityProfileLeftBound", lb, 0, numPiece);
+        pp.getarr("densityProfileFuncNames", fNames, 0, numPiece);
+        pp.getarr("densityProfileParamNums", paramNums, 0, numPiece);
+        paramVect.resize(numPiece);
+        for (int i = 0, startIdx = 0; i < numPiece; i++) {
+          paramVect[i].resize(paramNums[i]);
+          pp.getarr("densityProfileParamVect", paramVect[i], startIdx, paramNums[i]);
+          startIdx += paramNums[i];
+          if (fNames[i] == "exp") {
+            lb[i] = lb[i]/lBar;
+            paramVect[i][0] = paramVect[i][0]/nBar;
+            paramVect[i][1] = paramVect[i][1]/lBar;
+            paramVect[i][2] = paramVect[i][2]/lBar;
+          }
+        }
+        air.bgdDensityProfile = new piecewiseFunction(numPiece, lb, fNames, paramVect);
       }
-      air.bgdDensityProfile = new parameterizedFunction(profileName, profileParam);
     }
-        
-    /*vector<double> point{0, 0, 0/lBar};
-    for (auto i = point.begin(); i != point.end(); ++i)
-        std::cout << *i*lBar << ' ';
-    cout << endl;
-    cout << air.getBackgroundDensity(point) * nBar << endl;
-    cout << endl;
-    
-    point = vector<double>{3.75e-3/lBar, 0, 7.5e-3/lBar};
-    for (auto i = point.begin(); i != point.end(); ++i)
-        std::cout << *i*lBar << ' ';
-    cout << endl;
-    cout << air.getBackgroundDensity(point) * nBar << endl;
-    cout << endl;
-    
-    point = vector<double>{3.75e-3/lBar, 0, 1.5e-2/lBar};
-    for (auto i = point.begin(); i != point.end(); ++i)
-        std::cout << *i*lBar << ' ';
-    cout << endl;
-    cout << air.getBackgroundDensity(point) * nBar << endl;
-    cout << endl;
-    
-    point = vector<double>{0, 0, 3e-2/lBar};
-    for (auto i = point.begin(); i != point.end(); ++i)
-        std::cout << *i*lBar << ' ';
-    cout << endl;
-    cout << air.getBackgroundDensity(point) * nBar << endl;
-    cout << endl;*/
   }
   
   std::string pname;
@@ -614,6 +611,48 @@ getAmbientGas(gas& a_gas)
   air.processes[pname] = mobility;
   
   a_gas = air;
+  
+  /*vector<double> point{0, 0, 0/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << a_gas.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;
+  
+  point = vector<double>{3.75e-3/lBar, 0, 3.75e-3/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << air.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;
+  
+  point = vector<double>{3.75e-3/lBar, 0, 7.5e-3/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << air.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;
+  
+  point = vector<double>{3.75e-3/lBar, 0, 1.125e-2/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << air.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;
+  
+  point = vector<double>{3.75e-3/lBar, 0, 1.5e-2/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << air.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;*/
+  
+  /*point = vector<double>{0, 0, 3e-2/lBar};
+  for (auto i = point.begin(); i != point.end(); ++i)
+      std::cout << *i*lBar << ' ';
+  cout << endl;
+  cout << air.getBackgroundDensity(point) * nBar << endl;
+  cout << endl;*/
   
 //  Real n;
 //  n = N/nBar;

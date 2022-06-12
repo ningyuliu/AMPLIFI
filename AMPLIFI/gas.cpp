@@ -60,7 +60,8 @@ gas::gas(const gas& a_gas)
   processes = a_gas.processes;
   
   if(a_gas.bgdDensityProfile)
-    bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+    //bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+    bgdDensityProfile = a_gas.bgdDensityProfile->clone();
   else
     bgdDensityProfile = NULL;
   
@@ -78,7 +79,8 @@ gas& gas::operator=(const gas& a_gas) {
   processes = a_gas.processes;
   
   if(a_gas.bgdDensityProfile)
-    bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+    //bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
+    bgdDensityProfile = a_gas.bgdDensityProfile->clone();
   else
     bgdDensityProfile = NULL;
   

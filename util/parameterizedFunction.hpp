@@ -20,19 +20,33 @@ double exponential (vector<double>& x, vector<double>& p);
 
 typedef double (*functionPointer) (vector<double>& x, vector<double>& parameter);
 
-
 class parameterizedFunction {
   
 private:
   
 public:
-  parameterizedFunction() {};
-  parameterizedFunction(const string& name, const vector<double>& p);
-  parameterizedFunction(const functionPointer& f, const vector<double>& p);
-  parameterizedFunction(const string& name, const functionPointer& fp, const vector<double>& p);
-  parameterizedFunction(const parameterizedFunction& pf);
-  parameterizedFunction& operator=(const parameterizedFunction&);
   virtual ~parameterizedFunction() {};
+  virtual parameterizedFunction* clone() const = 0;
+  virtual double value(vector<double> x) = 0;
+  
+};
+
+class singleFunction : public parameterizedFunction {
+  
+private:
+  
+public:
+  singleFunction() {};
+  singleFunction(const string& name, const vector<double>& p);
+  singleFunction(const functionPointer& f, const vector<double>& p);
+  singleFunction(const string& name, const functionPointer& fp, const vector<double>& p);
+  singleFunction(const singleFunction& pf);
+  singleFunction& operator=(const singleFunction&);
+  virtual ~singleFunction() {};
+  
+  virtual singleFunction* clone() const {
+    return new singleFunction(*this);
+   }
   
   double value(vector<double> x);
   
@@ -42,5 +56,49 @@ public:
   
   static map<string, functionPointer> functionCollection;
 };
+
+
+
+// A Functor
+class greaterOrEqual {
+  
+private:
+  double m_x;
+  
+public:
+  greaterOrEqual(double a_x) : m_x(a_x) {  }
+  
+  // This operator overloading enables calling operator function () on objects of comparison
+  int operator () (const double xlb) const {
+    return xlb >= m_x;
+  }
+};
+
+
+
+class piecewiseFunction : public parameterizedFunction {
+  
+private:
+  
+public:
+  
+  virtual ~piecewiseFunction() {};
+  
+  virtual piecewiseFunction* clone() const {
+    return new piecewiseFunction(*this);
+   }
+  
+  int                             numPieces;
+  vector<double>                  leftBound;
+  vector<singleFunction>          paramFuncVect;
+  
+  piecewiseFunction(const int num, const vector<double>& lb, const vector<string>& funcNames,
+                    const vector<vector<double>>& paramVect);
+  
+  double value(vector<double> x);
+};
+
+
+
 
 #endif /* parameterizedFunction_hpp */

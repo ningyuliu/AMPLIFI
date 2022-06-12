@@ -60,19 +60,26 @@ gas.numOfIonSpe       = 2
 gas.uniformity        = false
 gas.density           = 2.688e25
 
-#gas.densityInputFile  = neutralDensityData.txt
-#gas.numGridPoints     = 3 3 3
-#gas.spacing           = 1.875e-3 1.875e-3 7.5e-3
 # If the origin of the simulation box is assumed to be at (x0,y0,z0),
 # then basePoint = (x-x0,y-y0,z-z0), where (x,y,z) is the origin of the box
 # covered by the input file.
+#gas.densityInputFile  = neutralDensityData.txt
+#gas.numGridPoints     = 3 3 3
+#gas.spacing           = 1.875e-3 1.875e-3 7.5e-3
 #gas.basePoint         = 0.0 0.0 0.0
 
-gas.densityProfile    = exp
-gas.densityProfileParamNum = 3
 # density at reference alt., reference alt, scale height
 # reference alt is relative to the origin of the simulation box
-gas.densityprofileParam  = 2.688e25 0.0e-2 1000
+# gas.densityProfile    = exp
+# gas.densityProfileParamNum = 3
+# gas.densityprofileParam  = 2.688e25 0.0e-2 1000
+
+gas.densityProfilePieceNum = 2
+gas.densityProfileLeftBound = 0 7.5e-3
+gas.densityProfileFuncNames = exp exp
+gas.densityProfileParamNums = 3 3
+gas.densityProfileParamVect = 2.688e25 0.0e-2 7.5e-3
+                              7.307e25 7.5e-3 -7.5e-3
 
 diffusion_coef = 0.1995
 normalization.EBar  = 1e5
