@@ -24,6 +24,15 @@ testing = false
 
 
 ###############################################################
+# scaling factor for gas density, plasma density, diffusion coeff, Ebar, muBar
+scalingFactor = 1e-6 #6.7807e-05
+
+# normalization constants, which are modified by scalingFactor.
+tBar           = 1e-11
+#EBar          = 1e5
+muBar          = 0.0382
+
+###############################################################
 # output
 
 plot_interval = 10
@@ -37,7 +46,7 @@ max_step = 4000
 
 # the origin of the grid used is always (0, 0, 0)
 # this is the length of the longest side
-domain_length = 1.5e-2
+domain_length = 1.5e-2 #221
 n_cell = 48 48 192
 max_level = 2
 
@@ -57,9 +66,15 @@ fill_ratio = 0.85
 
 gas.name              = air
 gas.numOfIonSpe       = 2
-gas.uniformity        = false
-gas.density           = 2.688e25
+gas.uniformity        = true
 
+### ground pressure values
+gas.density           = 2.688e25 #value at ground pressure
+gas.elecDiffCoef      = 0.1995   #value at ground pressure
+
+### nonuniform density
+
+# input from a data file
 # If the origin of the simulation box is assumed to be at (x0,y0,z0),
 # then basePoint = (x-x0,y-y0,z-z0), where (x,y,z) is the origin of the box
 # covered by the input file.
@@ -68,22 +83,25 @@ gas.density           = 2.688e25
 #gas.spacing           = 1.875e-3 1.875e-3 7.5e-3
 #gas.basePoint         = 0.0 0.0 0.0
 
+# input from a known function
+# gas.densityProfile          = exp
+# gas.densityProfileParamNum  = 3
 # density at reference alt., reference alt, scale height
-# reference alt is relative to the origin of the simulation box
-# gas.densityProfile    = exp
-# gas.densityProfileParamNum = 3
-# gas.densityprofileParam  = 2.688e25 0.0e-2 1000
+# the alt is relative to the implicitly assumed origin of the simulation box
+# gas.densityprofileParam     = 2.688e25 0.0e-2 1000
 
-gas.densityProfilePieceNum = 2
-gas.densityProfileLeftBound = 0 7.5e-3
-gas.densityProfileFuncNames = exp exp
-gas.densityProfileParamNums = 3 3
-gas.densityProfileParamVect = 2.688e25 0.0e-2 7.5e-3
-                              7.307e25 7.5e-3 -7.5e-3
+gas.densityProfile          = stdAtm
+gas.densityProfileParamNum  = 1
+# ground density, ground height
+# the height is relative to the implicitly assumed origin of the simulation box
+gas.densityprofileParam     = -70e3
 
-diffusion_coef = 0.1995
-normalization.EBar  = 1e5
-normalization.muBar = 0.0382
+#gas.densityProfilePieceNum = 2
+#gas.densityProfileLeftBound = 0 7.5e-3
+#gas.densityProfileFuncNames = exp exp
+#gas.densityProfileParamNums = 3 3
+#gas.densityProfileParamVect = 2.688e25 0.0e-2 7.5e-3
+#                              7.307e25 7.5e-3 -7.5e-3
 
 
 ###############################################################
@@ -158,7 +176,6 @@ EPot.bc_lo      = 3 3 3
 EPot.bc_loValue = -4.8e6 -4.8e6 -72000
 EPot.bc_hi      = 3 3 3
 EPot.bc_hiValue = -4.8e6 -4.8e6 0.
-
 
 ###############################################################
 # photoionization solver inputs

@@ -50,12 +50,12 @@ process& process::operator=(const process& p) {
 }
 
 
-gas::gas(std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe)
-: m_name(a_name), m_N(a_N), m_uniformity(a_uniformity), m_numOfIonSpe(a_numOfIonspe)
+gas::gas(std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe, double diffCoef)
+: m_name(a_name), m_N(a_N), m_uniformity(a_uniformity), m_numOfIonSpe(a_numOfIonspe), m_elecDiffCoef(diffCoef)
 {}
 
 gas::gas(const gas& a_gas)
-: m_name(a_gas.m_name), m_N(a_gas.m_N), m_uniformity(a_gas.m_uniformity), m_numOfIonSpe(a_gas.m_numOfIonSpe){
+: m_name(a_gas.m_name), m_N(a_gas.m_N), m_uniformity(a_gas.m_uniformity), m_numOfIonSpe(a_gas.m_numOfIonSpe), m_elecDiffCoef(a_gas.m_elecDiffCoef) {
   
   processes = a_gas.processes;
   
@@ -76,6 +76,7 @@ gas& gas::operator=(const gas& a_gas) {
   m_N = a_gas.m_N;
   m_uniformity = a_gas.m_uniformity;
   m_numOfIonSpe = a_gas.m_numOfIonSpe;
+  m_elecDiffCoef = a_gas.m_elecDiffCoef;
   processes = a_gas.processes;
   
   if(a_gas.bgdDensityProfile)
@@ -90,13 +91,6 @@ gas& gas::operator=(const gas& a_gas) {
     densityFileIF = NULL;
   
   return *this;
-}
-
-void gas::define (std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonSpe) {
-  m_name = a_name;
-  m_uniformity = a_uniformity;
-  m_N = a_N;
-  m_numOfIonSpe = a_numOfIonSpe;
 }
 
 gas::~gas() {

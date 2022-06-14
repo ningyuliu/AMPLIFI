@@ -29,6 +29,7 @@
 #include "photoionization.hpp"
 
 int photoionization::s_verbosity;
+double pO2Torr = 150;
 vector<double> SP3A{6.7e-3*1e2, 0.0346*1e2, 0.3059*1e2};
 vector<double> SP3Lambda{0.0447*1e2, 0.1121*1e2, 0.5994*1e2};
 

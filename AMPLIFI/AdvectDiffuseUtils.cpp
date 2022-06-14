@@ -29,6 +29,8 @@
 // give default values
 namespace normalization {
 
+  double scalingFactor = 1.0;
+
   double EBar = 1e5;
   double muBar = 0.0382;
   double lBar = sqrt(constants::e/(constants::eps0*EBar));
@@ -336,7 +338,7 @@ makeFinestDomain(ProblemDomain& a_domain,
   ParmParse pp;
   Real domainLength;
   pp.get("domain_length",domainLength);
-  domainLength = domainLength/normalization::lBar;
+  domainLength = domainLength/normalization::scalingFactor/normalization::lBar;
   getProblemDomain(a_domain);
   int ncells = a_domain.size(0);
   a_dx = domainLength/ncells;
@@ -430,20 +432,6 @@ void getGlobalVariables() {
   numerical::Ac = Ac;
   numerical::Ai = Ai;
   numerical::Ad = Ad;
-  
-  pp = ParmParse("normalization");
-  pp.get("EBar",  normalization::EBar);
-  pp.get("muBar", normalization::muBar);
-  
-  normalization::lBar = sqrt(constants::e/(constants::eps0*normalization::EBar));
-  normalization::tBar = normalization::lBar/(normalization::muBar*normalization::EBar);
-  normalization::nBar = pow(normalization::lBar, -3);
-  normalization::phiBar = normalization::EBar*normalization::lBar;
-  
-  std::transform(SP3A.begin(), SP3A.end(), SP3A.begin(),
-                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
-  std::transform(SP3Lambda.begin(), SP3Lambda.end(), SP3Lambda.begin(),
-                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
 }
 
 void
@@ -451,22 +439,30 @@ getAmbientGas(gas& a_gas)
 {
   std::string name;
   bool uniformity;
-  Real N;
   int numOfIonSpe;
   
   ParmParse pp("gas");
   pp.get("name", name);
-  pp.get("uniformity", uniformity);
-  pp.get("density", N);
-  N = N / normalization::nBar;
   pp.get("numOfIonSpe", numOfIonSpe);
+  pp.get("uniformity", uniformity);
   
-  /*parameterizedFunction pf(exponential, {1.0, 0.0, 1});
-  cout << pf.value({1.0}) << " " << pf.value({0, 1.0}) << endl;*/
+  Real N, diffCoef;
+  pp.get("density", N);
+  pp.get("elecDiffCoef", diffCoef);
   
-  gas air;
-  air.define(name, uniformity, N, numOfIonSpe);
+  N *= normalization::scalingFactor;
+  N /= normalization::nBar;
+  diffCoef /= normalization::scalingFactor;
+  diffCoef /= normalization::lBar*normalization::lBar/normalization::tBar;
   
+  gas air(name, uniformity, N, numOfIonSpe, diffCoef);
+  
+  pO2Torr = pO2Torr*normalization::scalingFactor;
+  std::transform(SP3A.begin(), SP3A.end(), SP3A.begin(),
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
+  std::transform(SP3Lambda.begin(), SP3Lambda.end(), SP3Lambda.begin(),
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
+    
   if (!uniformity) {
     if (pp.contains("densityInputFile")) { // input data from a file
       string inputFileNamePtr;
@@ -497,7 +493,13 @@ getAmbientGas(gas& a_gas)
           profileParam[0] = profileParam[0]/nBar;
           profileParam[1] = profileParam[1]/lBar;
           profileParam[2] = profileParam[2]/lBar;
+        } else if (profileName == "stdAtm") {
+          // need to do this because the function contains numbers with dimension
+          profileParam[0] = profileParam[0];
+          profileParam.push_back(lBar);
+          profileParam.push_back(nBar);
         }
+        
         air.bgdDensityProfile = new singleFunction(profileName, profileParam);
       } else {
         int numPiece;
@@ -617,9 +619,9 @@ getAmbientGas(gas& a_gas)
       std::cout << *i*lBar << ' ';
   cout << endl;
   cout << a_gas.getBackgroundDensity(point) * nBar << endl;
-  cout << endl;
+  cout << endl;*/
   
-  point = vector<double>{3.75e-3/lBar, 0, 3.75e-3/lBar};
+  /*point = vector<double>{3.75e-3/lBar, 0, 3.75e-3/lBar};
   for (auto i = point.begin(); i != point.end(); ++i)
       std::cout << *i*lBar << ' ';
   cout << endl;
@@ -739,14 +741,14 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
     pp.getarr("mag", mag, 0, blobNum);
   
   //non-dimensionalize, etc.
-  bgdDensity = bgdDensity / normalization::nBar;
+  bgdDensity = bgdDensity * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
   Vector<RealVect> centRV(blobNum), aRV(blobNum);
   for (int j = 0; j < blobNum; j++) {
     for (int idir = 0; idir < SpaceDim; idir++) {
-      (centRV[j])[idir] = center[idir+j*SpaceDim] / normalization::lBar;
-      (aRV[j])[idir] = radius[idir+j*SpaceDim] / normalization::lBar;
+      (centRV[j])[idir] = center[idir+j*SpaceDim] / normalization::scalingFactor / normalization::lBar;
+      (aRV[j])[idir] = radius[idir+j*SpaceDim] / normalization::scalingFactor / normalization::lBar;
     }
-    mag[j] = mag[j] / normalization::nBar;
+    mag[j] = mag[j] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
   }
     
   a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, bgdDensity));
@@ -766,7 +768,7 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   
   Real domainLength;
   pp.get("domain_length",domainLength);
-  domainLength = domainLength/normalization::lBar;
+  domainLength = domainLength/normalization::scalingFactor/normalization::lBar;
   
   Real refineThresh = 0.3;
   pp.get ("refine_thresh",refineThresh);
@@ -778,10 +780,10 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   pp.get("use_limiting", useLimiting);
   
   Real nu;
-  pp.get("diffusion_coef", nu);
-  
-  // DBar = lBar^2/tBar;
-  nu = nu / (normalization::lBar*normalization::lBar/normalization::tBar);
+  // pp.get("diffusion_coef", nu);
+  // normalization DBar = lBar^2/tBar;
+  // nu = nu / (normalization::lBar*normalization::lBar/normalization::tBar);
+  nu = a_gas.m_elecDiffCoef;
   
   a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
   (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,

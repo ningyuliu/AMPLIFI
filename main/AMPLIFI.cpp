@@ -99,9 +99,34 @@ main(int a_argc, char* a_argv[])
       }
     // Parse the command line and the input file (if any)
     ParmParse pp(a_argc-2,a_argv+2,NULL,inFile);
+    
+    pp.get("scalingFactor", normalization::scalingFactor);
+    
+    /*pp.get("EBar",          normalization::EBar);
+    pp.get("muBar",         normalization::muBar);
+   
+    normalization::EBar  *= scalingFactor;
+    normalization::muBar /= scalingFactor;
+    normalization::lBar   = sqrt(constants::e/(constants::eps0*normalization::EBar));
+    normalization::tBar   = normalization::lBar/(normalization::muBar*normalization::EBar);
+    normalization::nBar   = pow(normalization::lBar, -3);
+    normalization::phiBar = normalization::EBar*normalization::lBar;*/
+    
+    pp.get("tBar",          normalization::tBar);
+    pp.get("muBar",         normalization::muBar);
+    
+    normalization::tBar  /= scalingFactor;
+    normalization::muBar /= scalingFactor;
+    
+    normalization::EBar   = pow(constants::e/constants::eps0, 1.0/3.0) *
+                            pow(normalization::tBar*normalization::muBar, -2.0/3.0);
+    normalization::lBar   = sqrt(constants::e/(constants::eps0*normalization::EBar));
+    normalization::nBar   = pow(normalization::lBar, -3);
+    normalization::phiBar = normalization::EBar*normalization::lBar;
+    
     Real stopTime = 0.0;
     pp.get("max_time",stopTime);
-    stopTime = stopTime/normalization::tBar;
+    stopTime = stopTime/normalization::scalingFactor/normalization::tBar;
 
     int nstop = 0;
     pp.get("max_step",nstop);

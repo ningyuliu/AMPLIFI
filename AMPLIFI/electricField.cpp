@@ -42,7 +42,7 @@ void PoissonBCParseValueNeum(Real* pos, int* dir, Side::LoHiSide* side, Real* a_
   else
     pp.getarr("bc_hiValue", bcVal, 0, SpaceDim);
 
-  a_values[0] = bcVal[*dir] / normalization::EBar;
+  a_values[0] = bcVal[*dir] * normalization::scalingFactor / normalization::EBar;
 }
 
 // const. at zlow, zhigh, but linearly varies with z along the other boundaries, where bcValLo/Hi stores the electric field (or -rate)
@@ -61,9 +61,9 @@ void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Real* a_va
       a_values[0] = bcValHi[SpaceDim-1] / normalization::phiBar;
   else
     if(*side == Side::Lo)
-      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValLo[*dir] / normalization::EBar;
+      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValLo[*dir] * normalization::scalingFactor / normalization::EBar;
     else
-      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValHi[*dir] / normalization::EBar;
+      a_values[0] = bcValLo[SpaceDim-1] / normalization::phiBar - pos[SpaceDim-1] * bcValHi[*dir] * normalization::scalingFactor / normalization::EBar;
 
 }
 

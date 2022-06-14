@@ -77,18 +77,18 @@ private:
 public:
   
   gas() {};
-  gas(std::string a_name, bool uniformity, Real a_N, int a_numOfIonspe = 1);
+  gas(std::string a_name, bool uniformity, Real a_N, int a_numOfIonspe=1, double diffCoef=0);
   gas(const gas&);
   gas& operator=(const gas&);
-  void define(std::string a_name, bool a_uniformity, Real a_N, int a_numOfIonspe = 1);
   virtual ~gas();
   
   double getBackgroundDensity(vector<double> point);
   
   std::string             m_name;
-  double                  m_N;                 // default density
+  double                  m_N;                 // average/reference density
   bool                    m_uniformity;        // uniform density?
   int                     m_numOfIonSpe;       // electrons excluded
+  double                  m_elecDiffCoef;
   
   std::map<std::string, process> processes;    // the name and process pair
   parameterizedFunction*         bgdDensityProfile = NULL;

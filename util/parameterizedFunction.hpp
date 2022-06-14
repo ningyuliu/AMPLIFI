@@ -15,8 +15,20 @@
 
 using namespace std;
 
-// y = p[0] * exp( (p[1]-x.last()) / p[2] )
+// y = p[0] * exp( (x.back() - p[1]) / p[2] ); e.g., N0*exp((z-z0)/H)
 double exponential (vector<double>& x, vector<double>& p);
+
+// y = p[0] * exp( p[1] / x.back() ); e.g., A*exp(-B/E)
+double reciprocalExponential (vector<double>& x, vector<double>& p);
+
+// y = p[0] + p[1] * x.back(); e.g., A + B*E
+double linear (vector<double>& x, vector<double>& p);
+
+// y = p[0] + p[1] / x.back(); e.g., A + B/E
+double reciprocalLinear (vector<double>& x, vector<double>& p);
+
+// standard atmosphere
+double standardAtmosphere (vector<double>& x, vector<double>& p);
 
 typedef double (*functionPointer) (vector<double>& x, vector<double>& parameter);
 

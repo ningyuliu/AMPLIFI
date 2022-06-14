@@ -30,9 +30,14 @@ using namespace normalization;
 //const double PIlambda1 = 0.0447*1e2*pO2Torr*lBar; // 1/m/Torr
 //const double PIlambda2 = 0.1121*1e2*pO2Torr*lBar; // 1/m/Torr
 //const double PIlambda3 = 0.5994*1e2*pO2Torr*lBar; // 1/m/Torr
-const double pO2Torr = 150;
+
 const double quenchingFactor = 30.0/(760.0+30.0);
 const double PIXi = 0.06;
+
+// these quantities are assumed to be constant in the simulation region, i.e.,
+// they are altitude independent. Justification is that streamer dynamics depend
+// on the logrithmic of the ambient density
+extern double pO2Torr;
 extern vector<double> SP3A;
 extern vector<double> SP3Lambda;
 

@@ -12,6 +12,11 @@
 
 namespace normalization {
 
+  // this is meant to minimize the number of changes required in the inputs file
+  // for simulation at different altitudes; input quantities are scaled
+  // according to similarity laws using this
+  extern double scalingFactor;
+  
   extern double EBar;
   extern double muBar;
   extern double lBar;
