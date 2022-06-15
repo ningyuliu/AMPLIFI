@@ -13,6 +13,7 @@
 #include "parameterizedFunction.hpp"
 
 map<string, functionPointer> singleFunction::functionCollection = {
+  {"const",         constantValue},
   {"exp",           exponential},
   {"rcpExp",        reciprocalExponential},
   {"linear",        linear},
@@ -20,13 +21,16 @@ map<string, functionPointer> singleFunction::functionCollection = {
   {"stdAtm",        standardAtmosphere}
 };
 
+double constantValue(vector<double>& x, vector<double>& p) {
+  return p[0];
+}
 
 // e.g., N0*exp((z-z0)/H)
 double exponential(vector<double>& x, vector<double>& p) {
   if (fabs(p[2]) > DBL_MIN)
     return p[0]*exp((x.back()-p[1])/p[2]);
   else {
-    cerr << "division by zero !" << endl;
+    cerr << "division by zero in exponential()!" << endl;
     return 0.0;
   }
 }
@@ -36,7 +40,7 @@ double reciprocalExponential (vector<double>& x, vector<double>& p) {
   if (fabs(x.back()) > DBL_MIN)
     return p[0]*exp(p[1]/x.back());
   else {
-    cerr << "division by zero !" << endl;
+    cerr << "division by zero in reciprocalExponential()!" << endl;
     return 0.0;
   }
 }
@@ -51,7 +55,7 @@ double reciprocalLinear (vector<double>& x, vector<double>& p) {
   if (fabs(x.back()) > DBL_MIN)
     return p[0] + p[1]/x.back();
   else {
-    cerr << "division by zero !" << endl;
+    cerr << "division by zero reciprocalLinear!" << endl;
     return 0.0;
   }
 }
@@ -83,13 +87,17 @@ singleFunction& singleFunction::operator=(const singleFunction& f) {
   return *this;
 }
 
+double singleFunction::value(double x) {
+  std::vector<double> xvec = {x};
+  return value(xvec);
+}
+
 double singleFunction::value(vector<double> x) {
   return func(x, funcParam);
 }
 
 
 piecewiseFunction& piecewiseFunction::operator=(const piecewiseFunction& f) {
-  
   numPieces  = f.numPieces;
   leftBound  = f.leftBound;
   funcs      = f.funcs;
@@ -98,14 +106,17 @@ piecewiseFunction& piecewiseFunction::operator=(const piecewiseFunction& f) {
 }
 
 piecewiseFunction::piecewiseFunction(const int num, const vector<double>& lb, const vector<string>& fNames, const vector<vector<double>>& p) : numPieces(num), leftBound(lb) {
-  
   funcs.resize(num);
   for(int i = 0; i != numPieces; i++)
     funcs[i] = singleFunction(fNames[i], p[i]);
 }
 
+double piecewiseFunction::value(double x) {
+  std::vector<double> xvec = {x};
+  return value(xvec);
+}
+
 double piecewiseFunction::value(vector<double> x) {
-  
   double eps = 1e-20;
   double xp = x.back();
   
@@ -123,9 +134,7 @@ double piecewiseFunction::value(vector<double> x) {
   }
 }
 
-double Satm(double h)
-{
-  
+double Satm(double h) {
   double result, dz, nhi, nlo;
   int hi, lo, med;
   

@@ -974,7 +974,7 @@ getRate(FArrayBox& a_rate, const FArrayBox& a_Emag, const FArrayBox& a_mu, strin
     Real E, a;
     Real n = m_gas.m_N;
     E = a_Emag(iv, 0);
-    a = getProcessCoeff(E/n, m_gas, processName)*n;
+    a = m_gas.EDpdentProcs[processName].value(E/n)*n;
     a_rate(iv, 0) *= a;
   }
   
@@ -1003,7 +1003,7 @@ getRate(FArrayBox& a_rate, const FArrayBox& a_Emag, const FArrayBox& a_n, const 
     Real E, a;
     Real n = a_n(iv, 0);
     E = a_Emag(iv, 0);
-    a = getProcessCoeff(E/n, m_gas, processName)*n;
+    a = m_gas.EDpdentProcs[processName].value(E/n)*n;
     a_rate(iv, 0) *= a;
   }
   
@@ -2013,7 +2013,7 @@ photoionizationSolve() {
           else
             n = (hierarchy[lev]->m_neut[dit()])(iv,0);
           
-          ai = getProcessCoeff(E/n, m_gas, "ionization")*n;
+          ai = m_gas.EDpdentProcs["ionization"].value(E/n)*n;
           rhsFab(iv, 0) *= ai;
         }
       }
@@ -3379,8 +3379,8 @@ AMRLevelAdvectDiffuse::computeDtI()
       
       Real n = m_gas.m_N;
       
-      ai = getProcessCoeff(Emax/n, m_gas, "ionization")*n;
-      ve = getProcessCoeff(Emax/n, m_gas, "mobility")/n*Emax;
+      ai = m_gas.EDpdentProcs["ionization"].value(Emax/n)*n;
+      ve = m_gas.EDpdentProcs["mobility"].value(Emax/n)/n*Emax;
       dtI = numerical::Ai * 1/max(ai*ve, eps);
     }
     broadcast(dtI,uniqueProc(SerialTask::compute));
@@ -3651,7 +3651,7 @@ fillMobility(bool timeInterpForGhost) {
       else
         n = m_neut[dit()](iv,0);
       
-      uFab(iv, 0) = getProcessCoeff(EmagFab(iv, 0)/n, m_gas, "mobility")/n;
+      uFab(iv, 0) = m_gas.EDpdentProcs["mobility"].value(EmagFab(iv,0)/n)/n;
     }
   }
   

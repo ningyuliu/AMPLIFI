@@ -17,58 +17,6 @@
 
 #include "dataFileIFReduced.hpp"
 #include "parameterizedFunction.hpp"
-#include "NamespaceHeader.H"
-
-class gas;
-class processCoefficients;
-
-
-double getProcessCoeff(double E, gas& g, std::string procName);
-
-
-// The following is a list of pre-defined functions
-
-// A*exp(-B/E)
-double piecewiseExponential(double E, processCoefficients& coeff);
-// A + B*E
-double piecewiseLinear(double E, processCoefficients& coeff);
-// A + B/E
-double piecewiseReciprocalLinear(double E, processCoefficients& coeff);
-
-class processCoefficients {
-  
-private:
-  
-public:
-  int numOfPieces;
-  int numOfCoeffs; // number of coefficients for each piece
-  vector<double> Xlb; // the left bound of the interval of each piece
-  vector<vector<double>> A; // the coefficients
-    
-  processCoefficients() {};
-  processCoefficients(vector<double> xlb, vector<vector<double>> a);
-  processCoefficients& operator=(const processCoefficients&);
-  void define(vector<double> xlb, vector<vector<double>> a);
-  void define(const processCoefficients &);
-  virtual ~processCoefficients() {};
-};
-
-
-typedef double (*processFunc) (double EN, processCoefficients&);
-
-class process {
-  
-private:
-  
-public:
-  processCoefficients coeff;          // the coefficients for the function
-  processFunc func = NULL;            // the function
-  
-  process() {};
-  process(const processCoefficients&, const processFunc&);
-  process& operator=(const process&);
-};
-
 
 class gas {
   
@@ -90,13 +38,10 @@ public:
   int                     m_numOfIonSpe;       // electrons excluded
   double                  m_elecDiffCoef;
   
-  std::map<std::string, process> processes;    // the name and process pair
   parameterizedFunction*         bgdDensityProfile = NULL;
   DataFileIFReduced*             densityFileIF = NULL;
   std::map<std::string, piecewiseFunction> EDpdentProcs;
 };
-
-#include "NamespaceFooter.H"
 
 #endif /* gas_hpp */
 

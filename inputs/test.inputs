@@ -25,7 +25,7 @@ testing = false
 
 ###############################################################
 # scaling factor for gas density, plasma density, diffusion coeff, Ebar, muBar
-scalingFactor = 1 #6.7807e-05
+scalingFactor = 1e-6 #6.7807e-05
 
 # normalization constants, which are modified by scalingFactor.
 tBar           = 1e-11
@@ -107,55 +107,34 @@ gas.densityprofileParam     = -70e3
 ###############################################################
 # morrow coefficients, Ek = 1.2e-19 V-m^2
 
-test.name       = ionization
-test.numPieces  = 2
-test.xlb        = 0 1.5e-19
-test.funcNames   = rcpExp rcpExp
-test.paramNums  = 2 2
-test.A          = 6.619e-21  -5.593e-19
-                  2.0e-20    -7.248e-19
+ionization.name       =   ionization
+ionization.numPieces  =   3
+ionization.xlb        =   0      1e-25  1.5e-19
+ionization.funcNames  =   const rcpExp rcpExp
+ionization.paramNums  =   1 2 2
+ionization.A          =   0
+                          6.619e-21  -5.593e-19
+                          2.0e-20    -7.248e-19
 
-testAttachment.name         = attachment
-testAttachment.numPieces    = 3
-testAttachment.xlb          = 0   4.7512e-20    1.05e-19
-testAttachment.funcNames    = linear linear linear
-testAttachment.paramNums    = 2 2 2
-testAttachment.A            =  0           0
-                              -2.8930e-23  6.089e-4
-                               2.567e-23   8.889e-5
+attachment.name       =   attachment
+attachment.numPieces  =   3
+attachment.xlb        =   0   4.7512e-20    1.05e-19
+attachment.funcNames  =   linear linear linear
+attachment.paramNums  =   2 2 2
+attachment.A          =   0           0
+                          -2.8930e-23  6.089e-4
+                          2.567e-23   8.889e-5
 
-testMobility.name         = mobility
-testMobility.numPieces    = 4
-testMobility.xlb          = 0         2.6e-21   1.0e-20   2.0e-19
-testMobility.funcNames    = rcpLinear rcpLinear rcpLinear rcpLinear
-testMobility.paramNums    = 2         2         2         2
-testMobility.A            = 6.87e24   3.38e2
-                            7.2973e23 1.63e4
-                            1.03e24   1.3e4
-                            7.4e23    7.1e4
-                        
-                               
-ionization.name       = ionization
-ionization.numCoeffs  = 2
-ionization.numPieces  = 2
-ionization.xlb        = 0 1.5e-19
-ionization.A          = 6.619e-21   2.0e-20
-                        5.593e-19   7.248e-19
-                        
-attachment.name       = attachment
-attachment.numCoeffs  = 2
-attachment.numPieces  = 3
-attachment.xlb        = 0   4.7512e-20    1.05e-19
-attachment.A          = 0   -2.8930e-23   2.567e-23
-                        0   6.089e-4      8.889e-5
-
-mobility.name         = mobility
-mobility.numCoeffs    = 2
-mobility.numPieces    = 4
-mobility.xlb          = 0         2.6e-21     1.0e-20   2.0e-19
-mobility.A            = 6.87e24   7.2973e23   1.03e24   7.4e23
-                        3.38e2    1.63e4      1.3e4     7.1e4
-
+mobility.name         =   mobility
+mobility.numPieces    =   5
+mobility.xlb          =   0       1e-25     2.6e-21   1.0e-20   2.0e-19
+mobility.funcNames    =   const   rcpLinear rcpLinear rcpLinear rcpLinear
+mobility.paramNums    =   1       2         2         2         2
+mobility.A            =   3.99e25
+                          6.87e24   3.38e2
+                          7.2973e23 1.63e4
+                          1.03e24   1.3e4
+                          7.4e23    7.1e4
 
 ###############################################################
 # initial plasma cloud(s)

@@ -15,6 +15,8 @@
 
 using namespace std;
 
+double constantValue(vector<double>& x, vector<double>& p);
+
 // y = p[0] * exp( (x.back() - p[1]) / p[2] ); e.g., N0*exp((z-z0)/H)
 double exponential (vector<double>& x, vector<double>& p);
 
@@ -61,6 +63,7 @@ public:
    }
   
   double value(vector<double> x);
+  double value(double x);
   
   string              funcName;
   functionPointer     func = NULL;        // the function
@@ -107,7 +110,7 @@ public:
   vector<double>                  leftBound;
   vector<singleFunction>          funcs;
 
-  
+  double value(double x);
   double value(vector<double> x);
 };
 
