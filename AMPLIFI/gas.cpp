@@ -58,6 +58,7 @@ gas::gas(const gas& a_gas)
 : m_name(a_gas.m_name), m_N(a_gas.m_N), m_uniformity(a_gas.m_uniformity), m_numOfIonSpe(a_gas.m_numOfIonSpe), m_elecDiffCoef(a_gas.m_elecDiffCoef) {
   
   processes = a_gas.processes;
+  EDpdentProcs = a_gas.EDpdentProcs;
   
   if(a_gas.bgdDensityProfile)
     //bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);
@@ -78,6 +79,7 @@ gas& gas::operator=(const gas& a_gas) {
   m_numOfIonSpe = a_gas.m_numOfIonSpe;
   m_elecDiffCoef = a_gas.m_elecDiffCoef;
   processes = a_gas.processes;
+  EDpdentProcs = a_gas.EDpdentProcs;
   
   if(a_gas.bgdDensityProfile)
     //bgdDensityProfile = new parameterizedFunction(*a_gas.bgdDensityProfile);

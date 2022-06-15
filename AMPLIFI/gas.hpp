@@ -93,6 +93,7 @@ public:
   std::map<std::string, process> processes;    // the name and process pair
   parameterizedFunction*         bgdDensityProfile = NULL;
   DataFileIFReduced*             densityFileIF = NULL;
+  std::map<std::string, piecewiseFunction> EDpdentProcs;
 };
 
 #include "NamespaceFooter.H"

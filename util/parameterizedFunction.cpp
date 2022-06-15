@@ -73,13 +73,13 @@ singleFunction::singleFunction(const functionPointer& f, const vector<double>& p
 singleFunction::singleFunction(const string& name, const functionPointer& f, const vector<double>& p)
 : funcName(name), func(f), funcParam(p) {}
 
-singleFunction::singleFunction(const singleFunction& pf)
-: funcName(pf.funcName), func(pf.func), funcParam(pf.funcParam) {}
+singleFunction::singleFunction(const singleFunction& f)
+: funcName(f.funcName), func(f.func), funcParam(f.funcParam) {}
 
-singleFunction& singleFunction::operator=(const singleFunction& pf) {
-  funcName  = pf.funcName;
-  funcParam = pf.funcParam;
-  func      = pf.func;  
+singleFunction& singleFunction::operator=(const singleFunction& f) {
+  funcName  = f.funcName;
+  funcParam = f.funcParam;
+  func      = f.func;
   return *this;
 }
 
@@ -88,12 +88,20 @@ double singleFunction::value(vector<double> x) {
 }
 
 
+piecewiseFunction& piecewiseFunction::operator=(const piecewiseFunction& f) {
+  
+  numPieces  = f.numPieces;
+  leftBound  = f.leftBound;
+  funcs      = f.funcs;
+  
+  return *this;
+}
 
 piecewiseFunction::piecewiseFunction(const int num, const vector<double>& lb, const vector<string>& fNames, const vector<vector<double>>& p) : numPieces(num), leftBound(lb) {
   
-  paramFuncVect.resize(num);
+  funcs.resize(num);
   for(int i = 0; i != numPieces; i++)
-    paramFuncVect[i] = singleFunction(fNames[i], p[i]);
+    funcs[i] = singleFunction(fNames[i], p[i]);
 }
 
 double piecewiseFunction::value(vector<double> x) {
@@ -107,7 +115,7 @@ double piecewiseFunction::value(vector<double> x) {
   long index = it-leftBound.begin();
   
   if (index > -1)
-    return paramFuncVect[index].value(x);
+    return funcs[index].value(x);
   else {
     cerr << "the input is out of the valid range of the piecewise function !" << endl;
     return 0.0;

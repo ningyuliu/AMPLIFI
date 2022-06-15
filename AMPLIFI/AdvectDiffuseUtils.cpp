@@ -528,6 +528,74 @@ getAmbientGas(gas& a_gas)
     }
   }
   
+  
+  std::string testName;
+  int numPiece;
+  vector<double> lb;
+  vector<string> fNames;
+  vector<int>    paramNums;
+  vector<vector<double>> paramVect;
+  
+  pp = ParmParse("test");
+  pp.get("name", testName);
+  pp.get("numPieces", numPiece);
+  pp.getarr("xlb", lb, 0, numPiece);
+  pp.getarr("funcNames", fNames, 0, numPiece);
+  pp.getarr("paramNums", paramNums, 0, numPiece);
+  paramVect.resize(numPiece);
+  for (int i = 0, startIdx = 0; i < numPiece; i++) {
+    paramVect[i].resize(paramNums[i]);
+    pp.getarr("A", paramVect[i], startIdx, paramNums[i]);
+    startIdx += paramNums[i];
+    if (fNames[i] == "rcpExp") {
+      lb[i]           /= EBar/nBar;
+      paramVect[i][0] /= lBar*lBar;
+      paramVect[i][1] /= EBar/nBar;
+    }
+  }
+  
+  air.EDpdentProcs[testName] = piecewiseFunction(numPiece, lb, fNames, paramVect);
+  
+  pp = ParmParse("testAttachment");
+  pp.get("name", testName);
+  pp.get("numPieces", numPiece);
+  pp.getarr("xlb", lb, 0, numPiece);
+  pp.getarr("funcNames", fNames, 0, numPiece);
+  pp.getarr("paramNums", paramNums, 0, numPiece);
+  paramVect.resize(numPiece);
+  for (int i = 0, startIdx = 0; i < numPiece; i++) {
+    paramVect[i].resize(paramNums[i]);
+    pp.getarr("A", paramVect[i], startIdx, paramNums[i]);
+    startIdx += paramNums[i];
+    if (fNames[i] == "linear") {
+      lb[i]           /= EBar/nBar;
+      paramVect[i][0] /= lBar*lBar;
+      paramVect[i][1] /= 1.0/(EBar*lBar);
+    }
+  }
+  
+  air.EDpdentProcs[testName] = piecewiseFunction(numPiece, lb, fNames, paramVect);
+  
+  pp = ParmParse("testMobility");
+  pp.get("name", testName);
+  pp.get("numPieces", numPiece);
+  pp.getarr("xlb", lb, 0, numPiece);
+  pp.getarr("funcNames", fNames, 0, numPiece);
+  pp.getarr("paramNums", paramNums, 0, numPiece);
+  paramVect.resize(numPiece);
+  for (int i = 0, startIdx = 0; i < numPiece; i++) {
+    paramVect[i].resize(paramNums[i]);
+    pp.getarr("A", paramVect[i], startIdx, paramNums[i]);
+    startIdx += paramNums[i];
+    if (fNames[i] == "rcpLinear") {
+      lb[i]           /= EBar/nBar;
+      paramVect[i][0] /= muBar*nBar;
+      paramVect[i][1] /= muBar*EBar;
+    }
+  }
+  
+  air.EDpdentProcs[testName] = piecewiseFunction(numPiece, lb, fNames, paramVect);
+  
   std::string pname;
   int numPieces, numCoeffs;
   vector <vector<double>> A;
@@ -569,9 +637,9 @@ getAmbientGas(gas& a_gas)
   
   //non-dimensionalize coefficients
   std::transform(A[0].begin(), A[0].end(), A[0].begin(),
-                 std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/(1.0/(lBar*nBar))));
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/(lBar*lBar)));
   std::transform(A[1].begin(), A[1].end(), A[1].begin(),
-                 std::bind(std::multiplies<double>(), std::placeholders::_1, EBar/(1.0/lBar)));
+                 std::bind(std::multiplies<double>(), std::placeholders::_1, EBar*lBar));
   std::transform(xlb.begin(), xlb.end(), xlb.begin(),
                  std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/(EBar/nBar)));
   
@@ -656,15 +724,24 @@ getAmbientGas(gas& a_gas)
   cout << air.getBackgroundDensity(point) * nBar << endl;
   cout << endl;*/
   
-//  Real n;
-//  n = N/nBar;
+  Real n;
+  n = N;
+
+  cout << "E=5: " << 1.0/lBar*n*getProcessCoeff(5/n, a_gas, "ionization") << "; " << "E=20: " << 1.0/lBar*n*getProcessCoeff(20/n, a_gas, "ionization") << endl;
+  
+  cout << "E=5: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(std::vector<double>{5/n}) << "; " << "E=20: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(std::vector<double>{20/n}) << endl;
+  
 //
-//  cout << "E=16: " << 1.0/lBar*n*getProcessCoeff(16/n, a_gas, "ionization") << "; " << "E=64: " << 1.0/lBar*n*getProcessCoeff(64/n, a_gas, "ionization") << endl;
-//
-//  cout << "E=8: " << 1.0/lBar*n*getProcessCoeff(8/n, a_gas, "attachment") << "; " << "E=16: " << 1.0/lBar*n*getProcessCoeff(16/n, a_gas, "attachment") << "; " << "E=64: " << 1.0/lBar*n*getProcessCoeff(64/n, a_gas, "attachment") << endl;
-//
-//  cout << "E=0.01: " << muBar/n*getProcessCoeff(0.01/n, a_gas, "mobility") << "; " << "E=0.06: " << muBar/n*getProcessCoeff(0.06/n, a_gas, "mobility") << "; " << "E=1: " << muBar/n*getProcessCoeff(1.0/n, a_gas, "mobility") << "; " << "E=10: " << muBar/n*getProcessCoeff(10.0/n, a_gas, "mobility") << endl;
-//  cout << "n = " << n << endl;
+  cout << "E=1.6: " << 1.0/lBar*n*getProcessCoeff(1.6/n, a_gas, "attachment") << "; " << "E=3.2: " << 1.0/lBar*n*getProcessCoeff(3.2/n, a_gas, "attachment") << "; " << "E=12.8: " << 1.0/lBar*n*getProcessCoeff(12.8/n, a_gas, "attachment") << endl;
+  
+  cout << "E=1.6: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(std::vector<double>{1.6/n}) << "; " << "E=3.2: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(std::vector<double>{3.2/n}) << "; " << "E=12.8: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(std::vector<double>{12.8/n}) << endl;
+  
+
+  cout << "E=0.002: " << muBar/n*getProcessCoeff(0.002/n, a_gas, "mobility") << "; " << "E=0.012: " << muBar/n*getProcessCoeff(0.012/n, a_gas, "mobility") << "; " << "E=0.2: " << muBar/n*getProcessCoeff(0.2/n, a_gas, "mobility") << "; " << "E=10: " << muBar/n*getProcessCoeff(2.0/n, a_gas, "mobility") << endl;
+  
+  cout << "E=0.002: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(std::vector<double>{0.002/n}) << "; " << "E=0.012: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(std::vector<double>{0.012/n}) << "; " << "E=0.2: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(std::vector<double>{0.2/n}) << "; " << "E=10: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(std::vector<double>{2.0/n}) << endl;
+  
+  cout << "n = " << n << endl;
   
 }
 

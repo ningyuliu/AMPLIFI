@@ -93,7 +93,10 @@ class piecewiseFunction : public parameterizedFunction {
 private:
   
 public:
-  
+  piecewiseFunction() {};
+  piecewiseFunction(const int num, const vector<double>& lb, const vector<string>& funcNames,
+                    const vector<vector<double>>& paramVect);
+  piecewiseFunction& operator=(const piecewiseFunction&);
   virtual ~piecewiseFunction() {};
   
   virtual piecewiseFunction* clone() const {
@@ -102,10 +105,8 @@ public:
   
   int                             numPieces;
   vector<double>                  leftBound;
-  vector<singleFunction>          paramFuncVect;
-  
-  piecewiseFunction(const int num, const vector<double>& lb, const vector<string>& funcNames,
-                    const vector<vector<double>>& paramVect);
+  vector<singleFunction>          funcs;
+
   
   double value(vector<double> x);
 };

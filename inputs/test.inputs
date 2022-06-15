@@ -25,7 +25,7 @@ testing = false
 
 ###############################################################
 # scaling factor for gas density, plasma density, diffusion coeff, Ebar, muBar
-scalingFactor = 1e-6 #6.7807e-05
+scalingFactor = 1 #6.7807e-05
 
 # normalization constants, which are modified by scalingFactor.
 tBar           = 1e-11
@@ -69,8 +69,8 @@ gas.numOfIonSpe       = 2
 gas.uniformity        = true
 
 ### ground pressure values
-gas.density           = 2.688e25 #value at ground pressure
-gas.elecDiffCoef      = 0.1995   #value at ground pressure
+gas.density           = 2.688e25
+gas.elecDiffCoef      = 0.1995
 
 ### nonuniform density
 
@@ -107,6 +107,34 @@ gas.densityprofileParam     = -70e3
 ###############################################################
 # morrow coefficients, Ek = 1.2e-19 V-m^2
 
+test.name       = ionization
+test.numPieces  = 2
+test.xlb        = 0 1.5e-19
+test.funcNames   = rcpExp rcpExp
+test.paramNums  = 2 2
+test.A          = 6.619e-21  -5.593e-19
+                  2.0e-20    -7.248e-19
+
+testAttachment.name         = attachment
+testAttachment.numPieces    = 3
+testAttachment.xlb          = 0   4.7512e-20    1.05e-19
+testAttachment.funcNames    = linear linear linear
+testAttachment.paramNums    = 2 2 2
+testAttachment.A            =  0           0
+                              -2.8930e-23  6.089e-4
+                               2.567e-23   8.889e-5
+
+testMobility.name         = mobility
+testMobility.numPieces    = 4
+testMobility.xlb          = 0         2.6e-21   1.0e-20   2.0e-19
+testMobility.funcNames    = rcpLinear rcpLinear rcpLinear rcpLinear
+testMobility.paramNums    = 2         2         2         2
+testMobility.A            = 6.87e24   3.38e2
+                            7.2973e23 1.63e4
+                            1.03e24   1.3e4
+                            7.4e23    7.1e4
+                        
+                               
 ionization.name       = ionization
 ionization.numCoeffs  = 2
 ionization.numPieces  = 2
