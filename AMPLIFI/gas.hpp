@@ -8,8 +8,7 @@
 #ifndef gas_hpp
 #define gas_hpp
 
-// This is a simple class for representing gases. A key member is the class to
-// describe a process like ionization, which is a piece function of E/N.
+// This is a simple class for representing gases.
 
 #include <string>
 #include <vector>

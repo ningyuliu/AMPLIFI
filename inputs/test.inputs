@@ -24,8 +24,8 @@ testing = false
 
 
 ###############################################################
-# scaling factor for gas density, plasma density, diffusion coeff, Ebar, muBar
-scalingFactor = 1e-6 #6.7807e-05
+# scaling factor for gas density, plasma density, diffusion coeff, tbar, muBar
+scalingFactor = 1e-4 #6.7807e-05
 
 # normalization constants, which are modified by scalingFactor.
 tBar           = 1e-11
@@ -37,7 +37,7 @@ muBar          = 0.0382
 
 plot_interval = 10
 plot_prefix  = results/out
-max_time = 50.0e-9
+max_time = 50e-9
 max_step = 4000
 
 
@@ -66,7 +66,7 @@ fill_ratio = 0.85
 
 gas.name              = air
 gas.numOfIonSpe       = 2
-gas.uniformity        = true
+gas.uniformity        = false
 
 ### ground pressure values
 gas.density           = 2.688e25
@@ -84,17 +84,17 @@ gas.elecDiffCoef      = 0.1995
 #gas.basePoint         = 0.0 0.0 0.0
 
 # input from a known function
-# gas.densityProfile          = exp
-# gas.densityProfileParamNum  = 3
+gas.densityProfile          = exp
+gas.densityProfileParamNum  = 3
 # density at reference alt., reference alt, scale height
 # the alt is relative to the implicitly assumed origin of the simulation box
-# gas.densityprofileParam     = 2.688e25 0.0e-2 1000
+gas.densityprofileParam     = 4.4318e+21 0.0 -150
 
-gas.densityProfile          = stdAtm
-gas.densityProfileParamNum  = 1
+#gas.densityProfile          = stdAtm
+#gas.densityProfileParamNum  = 1
 # ground density, ground height
 # the height is relative to the implicitly assumed origin of the simulation box
-gas.densityprofileParam     = -70e3
+#gas.densityprofileParam     = -70e3
 
 #gas.densityProfilePieceNum = 2
 #gas.densityProfileLeftBound = 0 7.5e-3
