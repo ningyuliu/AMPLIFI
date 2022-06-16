@@ -92,9 +92,16 @@ gas.densityprofileParam     = 4.4318e+21 0.0 -150
 
 #gas.densityProfile          = stdAtm
 #gas.densityProfileParamNum  = 1
-# ground density, ground height
 # the height is relative to the implicitly assumed origin of the simulation box
 #gas.densityprofileParam     = -70e3
+
+bgdPlasma.numPieces   = 1
+bgdPlasma.xlb         = 0
+bgdPlasma.funcNames  = Wait
+bgdPlasma.paramNums  = 5
+# referene density, alpha = 0.15e-3 1/m, reference height wrt ground,
+# beta, and reference height wrt the origin
+bgdPlasma.A          = 1.43e13 0.15e-3 84.2e3 0.5e-3 24.2e3
 
 #gas.densityProfilePieceNum = 2
 #gas.densityProfileLeftBound = 0 7.5e-3

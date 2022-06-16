@@ -18,7 +18,8 @@ map<string, functionPointer> singleFunction::functionCollection = {
   {"rcpExp",        reciprocalExponential},
   {"linear",        linear},
   {"rcpLinear",     reciprocalLinear},
-  {"stdAtm",        standardAtmosphere}
+  {"stdAtm",        standardAtmosphere},
+  {"Wait",          ionosphereWait}
 };
 
 double constantValue(vector<double>& x, vector<double>& p) {
@@ -64,6 +65,10 @@ double Satm(double h);
 double standardAtmosphere(vector<double>& x, vector<double>& p) {
   double h = (x.back()*p[1] - p[0])/1000;
   return Satm(h)*2.688e25/p[2];
+}
+
+double ionosphereWait(vector<double>& x, vector<double>& p) {
+  return p[0]*exp(-p[1]*p[2])*exp((p[3]-p[1])*(x.back()-p[4]));
 }
 
 singleFunction::singleFunction(const string& name, const vector<double>& p)

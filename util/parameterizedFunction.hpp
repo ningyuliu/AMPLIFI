@@ -32,6 +32,9 @@ double reciprocalLinear (vector<double>& x, vector<double>& p);
 // standard atmosphere
 double standardAtmosphere (vector<double>& x, vector<double>& p);
 
+// Wait ionosphere profile
+double ionosphereWait(vector<double>& x, vector<double>& p);
+
 typedef double (*functionPointer) (vector<double>& x, vector<double>& parameter);
 
 class parameterizedFunction {
