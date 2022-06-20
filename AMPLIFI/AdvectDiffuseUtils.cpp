@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <functional>
+#include <cfloat>
 
 #include "AdvectDiffuseUtils.H"
 #include "ParmParse.H"
@@ -554,7 +555,7 @@ getAmbientGas(gas& a_gas)
     } else if (fNames[i] == "const") {
       paramVect[i][0] /= lBar*lBar;
     } else {
-      cout << "no coefficient scaling is done for process: " << processName << endl;
+      cout << "no coefficient nondimensionalization is done for process: " << processName << endl;
     }
   }
   
@@ -576,7 +577,7 @@ getAmbientGas(gas& a_gas)
       paramVect[i][0] /= lBar*lBar;
       paramVect[i][1] /= 1.0/(EBar*lBar);
     } else {
-      cout << "no coefficient scaling is done for process: " << processName << endl;
+      cout << "no coefficient nondimensionalization is done for process: " << processName << endl;
     }
   }
   
@@ -600,7 +601,7 @@ getAmbientGas(gas& a_gas)
     } else if (fNames[i] == "const") {
       paramVect[i][0] /= muBar*nBar;
     } else {
-      cout << "no coefficient scaling is done for process: " << processName << endl;
+      cout << "no coefficient nondimensionalization is done for process: " << processName << endl;
     }
   }
   
@@ -617,43 +618,6 @@ getAmbientGas(gas& a_gas)
   cout << "E=0.0: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.0) << "; " << "E=0.002: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.002/n) << "; " << "E=0.012: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.012/n) << "; " << "E=0.2: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.2/n) << "; " << "E=10: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(2.0/n) << endl;
 
   cout << "n = " << n << endl;*/
-  {
-    int numPiece;
-    vector<double> lb;
-    vector<string> fNames;
-    vector<int>    paramNums;
-    vector<vector<double>> paramVect;
-    
-    pp = ParmParse("bgdPlasma");
-    pp.get("numPieces", numPiece);
-    pp.getarr("xlb", lb, 0, numPiece);
-    pp.getarr("funcNames", fNames, 0, numPiece);
-    pp.getarr("paramNums", paramNums, 0, numPiece);
-    paramVect.resize(numPiece);
-    for (int i = 0, startIdx = 0; i < numPiece; i++) {
-      paramVect[i].resize(paramNums[i]);
-      pp.getarr("A", paramVect[i], startIdx, paramNums[i]);
-      startIdx += paramNums[i];
-      lb[i] /= lBar;
-      if (fNames[i] == "Wait") {
-        paramVect[i][0] /= nBar;
-        paramVect[i][1] /= 1/lBar;
-        paramVect[i][2] /= lBar;
-        paramVect[i][3] /= 1/lBar;
-        paramVect[i][4] /= lBar;
-      } {
-        cout << "no coefficient scaling is done for process: " << processName << endl;
-      }
-    }
-    
-    piecewiseFunction bgdProf = piecewiseFunction(numPiece, lb, fNames, paramVect);
-    
-    double h0 = 60e3;
-    for (int i = 0; i != 40; i++) {
-      cout << "h = " << i*1e3+h0 << "; ne = " << bgdProf.value(i*1e3/lBar) * nBar << endl;
-    }
-  }
-  
   
 }
 
@@ -662,9 +626,6 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
 {
   ParmParse pp("iniPlaCloud");
   int blobNum;
-  Real bgdDensity;
-  
-  pp.get("bgdDensity", bgdDensity);
   pp.get("number", blobNum);
   
   Vector<Real> radius(SpaceDim*blobNum, 0.0);
@@ -729,8 +690,51 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   } else
     pp.getarr("mag", mag, 0, blobNum);
   
-  //non-dimensionalize, etc.
-  bgdDensity = bgdDensity * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
+  pp = ParmParse("bgdPlasma");
+  int numPiece;
+  vector<double> lb;
+  vector<string> fNames;
+  vector<int>    paramNums;
+  vector<vector<double>> paramVect;
+  
+  if (pp.contains("numPieces")) {
+    
+    pp.get("numPieces", numPiece);
+    pp.getarr("xlb", lb, 0, numPiece);
+    pp.getarr("funcNames", fNames, 0, numPiece);
+    pp.getarr("paramNums", paramNums, 0, numPiece);
+    paramVect.resize(numPiece);
+    for (int i = 0, startIdx = 0; i < numPiece; i++) {
+      paramVect[i].resize(paramNums[i]);
+      pp.getarr("A", paramVect[i], startIdx, paramNums[i]);
+      startIdx += paramNums[i];
+      lb[i] /= lBar;
+      if (fNames[i] == "Wait") {
+        paramVect[i][0] /= nBar;
+        paramVect[i][1] /= 1/lBar;
+        paramVect[i][2] /= lBar;
+        paramVect[i][3] /= 1/lBar;
+        paramVect[i][4] /= lBar;
+      } else if (fNames[i] == "tanhIP") {
+        paramVect[i][0] /= nBar;
+        paramVect[i][1] /= lBar;
+        paramVect[i][2] /= lBar;
+      } else if (fNames[i] == "const") {
+        paramVect[i][0] /= nBar;
+      } else {
+        cout << "no parameter nondimensionalization is done for background plasma density profile!" << endl;
+      }
+    }
+  } else {
+    numPiece = 1;
+    lb.push_back(-DBL_MAX);
+    fNames.push_back("const");
+    paramNums.push_back(1);
+    paramVect.push_back(std::vector<double>{0.0});
+  }
+  
+  piecewiseFunction bgdDensity = piecewiseFunction(numPiece, lb, fNames, paramVect);
+  
   Vector<RealVect> centRV(blobNum), aRV(blobNum);
   for (int j = 0; j < blobNum; j++) {
     for (int idir = 0; idir < SpaceDim; idir++) {

@@ -17,7 +17,7 @@ implicitReflux = false
 use_limiting = true
 
 # testing, diagnostics, etc.
-verbosity = 1
+verbosity = 3
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -25,9 +25,11 @@ testing = false
 
 ###############################################################
 # scaling factor for gas density, plasma density, diffusion coeff, tbar, muBar
-scalingFactor = 1e-4 #6.7807e-05
+
+scalingFactor = 1e-4 #7.6468e-06
 
 # normalization constants, which are modified by scalingFactor.
+
 tBar           = 1e-11
 #EBar          = 1e5
 muBar          = 0.0382
@@ -46,8 +48,10 @@ max_step = 4000
 
 # the origin of the grid used is always (0, 0, 0)
 # this is the length of the longest side
-domain_length = 1.5e-2 #221
-n_cell = 48 48 192
+
+domain_length = 2e-2 #2.3e-2
+n_cell =  48 48 256
+#n_cell =  80 80 320
 max_level = 2
 
 periodic_bc = 0 0 0
@@ -84,24 +88,41 @@ gas.elecDiffCoef      = 0.1995
 #gas.basePoint         = 0.0 0.0 0.0
 
 # input from a known function
+#gas.densityProfile          = exp
+#gas.densityProfileParamNum  = 3
+#gas.densityprofileParam     = 1.9176e+20 2000 -7200
+# density at reference alt, reference alt wrt the origin, scale height
+
 gas.densityProfile          = exp
 gas.densityProfileParamNum  = 3
-# density at reference alt., reference alt, scale height
-# the alt is relative to the implicitly assumed origin of the simulation box
-gas.densityprofileParam     = 4.4318e+21 0.0 -150
+gas.densityprofileParam     = 2.688e21 100 -7200
+# density at reference alt, reference alt wrt the origin, scale height
 
 #gas.densityProfile          = stdAtm
 #gas.densityProfileParamNum  = 1
-# the height is relative to the implicitly assumed origin of the simulation box
 #gas.densityprofileParam     = -70e3
+# reference alt wrt the origin
+
+#bgdPlasma.numPieces   = 1
+#bgdPlasma.xlb         = 0
+#bgdPlasma.funcNames   = Wait
+#bgdPlasma.paramNums   = 5
+#bgdPlasma.A           = 1.43e13 0.15e-3 84.2e3 0.5e-3 1.2e3
+# referene density, alpha = 0.15e-3 1/m, reference height wrt ground,
+# beta, and reference height wrt the origin
 
 bgdPlasma.numPieces   = 1
 bgdPlasma.xlb         = 0
-bgdPlasma.funcNames  = Wait
-bgdPlasma.paramNums  = 5
-# referene density, alpha = 0.15e-3 1/m, reference height wrt ground,
-# beta, and reference height wrt the origin
-bgdPlasma.A          = 1.43e13 0.15e-3 84.2e3 0.5e-3 24.2e3
+bgdPlasma.funcNames   = tanhIP
+bgdPlasma.paramNums   = 3
+bgdPlasma.A           = 1e8 150 20
+# referene density, reference height wrt the origin, and sigma (Liu et al., 2015)
+
+#bgdPlasma.numPieces   = 1
+#bgdPlasma.xlb         = 0
+#bgdPlasma.funcNames   = const
+#bgdPlasma.paramNums   = 1
+#bgdPlasma.A           = 1e12 #1e3 # density
 
 #gas.densityProfilePieceNum = 2
 #gas.densityProfileLeftBound = 0 7.5e-3
@@ -153,6 +174,11 @@ iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
 iniPlaCloud.mag    = 1e20
 
+#iniPlaCloud.number = 1
+#iniPlaCloud.center = 0.2875e-2 0.2875e-2 0.7667e-2
+#iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
+#iniPlaCloud.mag    = 1e20
+
 
 ###############################################################
 # diffusion solver inputs
@@ -186,10 +212,10 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
-EPot.bc_lo      = 3 3 3
-EPot.bc_loValue = -4.8e6 -4.8e6 -72000
-EPot.bc_hi      = 3 3 3
-EPot.bc_hiValue = -4.8e6 -4.8e6 0.
+EPot.bc_lo      = 1 1 1
+EPot.bc_loValue = 0 0 4.8e6
+EPot.bc_hi      = 1 1 0
+EPot.bc_hiValue = 0 0 0
 
 ###############################################################
 # photoionization solver inputs

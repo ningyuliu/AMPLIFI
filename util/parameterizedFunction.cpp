@@ -19,7 +19,8 @@ map<string, functionPointer> singleFunction::functionCollection = {
   {"linear",        linear},
   {"rcpLinear",     reciprocalLinear},
   {"stdAtm",        standardAtmosphere},
-  {"Wait",          ionosphereWait}
+  {"Wait",          ionosphereWait},
+  {"tanhIP",        ionosphereTanh}
 };
 
 double constantValue(vector<double>& x, vector<double>& p) {
@@ -31,8 +32,8 @@ double exponential(vector<double>& x, vector<double>& p) {
   if (fabs(p[2]) > DBL_MIN)
     return p[0]*exp((x.back()-p[1])/p[2]);
   else {
-    cerr << "division by zero in exponential()!" << endl;
-    return 0.0;
+    cerr << "division by zero in exponential()! p[2] = " << p[2] << endl;
+    abort();
   }
 }
 
@@ -41,8 +42,8 @@ double reciprocalExponential (vector<double>& x, vector<double>& p) {
   if (fabs(x.back()) > DBL_MIN)
     return p[0]*exp(p[1]/x.back());
   else {
-    cerr << "division by zero in reciprocalExponential()!" << endl;
-    return 0.0;
+    cerr << "division by zero in reciprocalExponential()! x.back() = " << x.back() << endl;
+    abort();
   }
 }
 
@@ -56,8 +57,8 @@ double reciprocalLinear (vector<double>& x, vector<double>& p) {
   if (fabs(x.back()) > DBL_MIN)
     return p[0] + p[1]/x.back();
   else {
-    cerr << "division by zero reciprocalLinear!" << endl;
-    return 0.0;
+    cerr << "division by zero reciprocalLinear! x.back() = " << x.back() << endl;
+    abort();
   }
 }
 
@@ -69,6 +70,16 @@ double standardAtmosphere(vector<double>& x, vector<double>& p) {
 
 double ionosphereWait(vector<double>& x, vector<double>& p) {
   return p[0]*exp(-p[1]*p[2])*exp((p[3]-p[1])*(x.back()-p[4]));
+}
+
+// e.g., N0/2*(1+tanh((z-z0)/sigma)
+double ionosphereTanh(vector<double>& x, vector<double>& p) {
+  if (fabs(p[2]) > DBL_MIN)
+    return 0.5*p[0]*(1+tanh((x.back()-p[1])/p[2]));
+  else {
+    cerr << "division by zero in ionosphereTanh! p[2] = " << p[2] << endl;
+    abort();
+  }
 }
 
 singleFunction::singleFunction(const string& name, const vector<double>& p)

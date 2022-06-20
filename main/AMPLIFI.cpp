@@ -124,6 +124,11 @@ main(int a_argc, char* a_argv[])
     normalization::nBar   = pow(normalization::lBar, -3);
     normalization::phiBar = normalization::EBar*normalization::lBar;
     
+    if (procID() == uniqueProc(SerialTask::compute)) {
+      pout() << "scalingFactor = " << scalingFactor << endl;
+      pout() << " tBar = " << tBar << " lBar = " << lBar << " EBar = " << EBar << " nBar = " << nBar << " muBar = " << muBar << " phiBar = " << phiBar << endl;
+    }
+    
     Real stopTime = 0.0;
     pp.get("max_time",stopTime);
     stopTime = stopTime/normalization::scalingFactor/normalization::tBar;

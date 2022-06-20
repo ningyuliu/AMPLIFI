@@ -23,6 +23,7 @@
 
 #include "PhysIBC.H"
 #include "SolidBCF_F.H"
+#include "parameterizedFunction.hpp"
 
 #include "NamespaceHeader.H"
 
@@ -36,7 +37,7 @@ public:
                 const Vector<RealVect>& a_center,
                 const Vector<RealVect>& a_a,
                 const Vector<Real>&     a_mag,
-                const Real&     a_bgdDensity)
+                const piecewiseFunction&     a_bgdDensity)
   {
     m_number = a_number;
     m_center.resize(m_number);
@@ -92,7 +93,7 @@ protected:
   Vector<RealVect> m_center;
   Vector<RealVect> m_a;
   Vector<Real>     m_mag;
-  Real             m_bgdDensity;
+  piecewiseFunction m_bgdDensity;
 
 private:
   //weak construction is bad
