@@ -33,7 +33,7 @@ double exponential(vector<double>& x, vector<double>& p) {
     return p[0]*exp((x.back()-p[1])/p[2]);
   else {
     cerr << "division by zero in exponential()! p[2] = " << p[2] << endl;
-    abort();
+    exit(1);
   }
 }
 
@@ -43,7 +43,7 @@ double reciprocalExponential (vector<double>& x, vector<double>& p) {
     return p[0]*exp(p[1]/x.back());
   else {
     cerr << "division by zero in reciprocalExponential()! x.back() = " << x.back() << endl;
-    abort();
+    exit(1);
   }
 }
 
@@ -58,7 +58,7 @@ double reciprocalLinear (vector<double>& x, vector<double>& p) {
     return p[0] + p[1]/x.back();
   else {
     cerr << "division by zero reciprocalLinear! x.back() = " << x.back() << endl;
-    abort();
+    exit(1);
   }
 }
 
@@ -78,7 +78,7 @@ double ionosphereTanh(vector<double>& x, vector<double>& p) {
     return 0.5*p[0]*(1+tanh((x.back()-p[1])/p[2]));
   else {
     cerr << "division by zero in ionosphereTanh! p[2] = " << p[2] << endl;
-    abort();
+    exit(1);
   }
 }
 
@@ -146,7 +146,7 @@ double piecewiseFunction::value(vector<double> x) {
   else {
     cerr << "the input is out of the valid range of the piecewise function !" << endl;
     return 0.0;
-    //abort();
+    //exit(1);
   }
 }
 

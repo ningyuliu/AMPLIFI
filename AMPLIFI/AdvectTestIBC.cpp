@@ -64,7 +64,7 @@ void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U)
       RealVect ccOffset = 0.5*m_dx*RealVect::Unit;
       point *= m_dx;
       point += ccOffset;
-      vector< double> pvec(SpaceDim);
+      vector<double> pvec(SpaceDim);
       for(int i = 0; i != pvec.size(); i++)
         pvec[i] = point[i];
       a_U[dit()](iv, 0) += m_bgdDensity.value(pvec);

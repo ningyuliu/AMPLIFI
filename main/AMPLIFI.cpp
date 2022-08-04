@@ -126,7 +126,7 @@ main(int a_argc, char* a_argv[])
     
     if (procID() == uniqueProc(SerialTask::compute)) {
       pout() << "scalingFactor = " << scalingFactor << endl;
-      pout() << " tBar = " << tBar << " lBar = " << lBar << " EBar = " << EBar << " nBar = " << nBar << " muBar = " << muBar << " phiBar = " << phiBar << endl;
+      pout() << "tBar = " << tBar << " lBar = " << lBar << " EBar = " << EBar << " nBar = " << nBar << " muBar = " << muBar << " phiBar = " << phiBar << endl;
     }
     
     Real stopTime = 0.0;

@@ -259,6 +259,8 @@ void AMRLevelAdvectDiffuse::define(AMRLevel*            a_coarserLevelPtr,
                                    int                  a_level,
                                    int                  a_refRatio)
 {
+  if (s_verbosity >= 3)
+    pout() << "AMRLevelAdvectDiffuse::define " << m_level << endl;
   // Call inherited define
   AMRLevel::define(a_coarserLevelPtr,
                    a_problemDomain,
@@ -2195,7 +2197,7 @@ AMRLevelAdvectDiffuse::
 regrid(const Vector<Box>& a_newGrids)
 {
   if (s_verbosity >= 3) {
-    pout() << "AMRLevelAdvectDiffuse::regrid " << m_level << " pts of this proc = " << m_grids.numPointsThisProc() << endl;
+    pout() << "AMRLevelAdvectDiffuse::regrid " << m_level << "; # of pts on this proc = " << m_grids.numPointsThisProc() << endl;
     printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::regrid-start");
   }
   

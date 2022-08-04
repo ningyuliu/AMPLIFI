@@ -684,9 +684,12 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
       broadcast(valStr,uniqueProc(SerialTask::compute));
       broadcast(mag,uniqueProc(SerialTask::compute));
       pp.setStr(varName, valStr);
-    } else
-      pp.getarr("mag", mag, 0, blobNum);
-      
+    } else {
+      double mag0;
+      pp.get("mag", mag0);
+      for (int i = 0; i < blobNum; i++)
+        mag[i] = mag0;
+    }
   } else
     pp.getarr("mag", mag, 0, blobNum);
   
@@ -743,7 +746,22 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
     }
     mag[j] = mag[j] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
   }
-    
+  
+  pp = ParmParse("bgdPlasma");
+  if (pp.contains("inhomForIniPlaCloud")) {
+    bool flag;
+    pp.get("inhomForIniPlaCloud", flag);
+    if (flag) {
+      for (int j = 0; j < blobNum; j++) {
+        vector<double> pvec(SpaceDim);
+        for(int i = 0; i != pvec.size(); i++)
+          pvec[i] = centRV[j][i];
+        mag[j] /= normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
+        mag[j] *= bgdDensity.value(pvec);
+      }
+    }
+  }
+  
   a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, bgdDensity));
 }
 

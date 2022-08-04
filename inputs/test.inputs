@@ -26,7 +26,7 @@ testing = false
 ###############################################################
 # scaling factor for gas density, plasma density, diffusion coeff, tbar, muBar
 
-scalingFactor = 1e-4 #7.6468e-06
+scalingFactor = 2e-5 #7.6468e-06
 
 # normalization constants, which are modified by scalingFactor.
 
@@ -50,7 +50,7 @@ max_step = 4000
 # this is the length of the longest side
 
 domain_length = 2e-2 #2.3e-2
-n_cell =  48 48 256
+n_cell =  128 128 256
 #n_cell =  80 80 320
 max_level = 2
 
@@ -95,7 +95,7 @@ gas.elecDiffCoef      = 0.1995
 
 gas.densityProfile          = exp
 gas.densityProfileParamNum  = 3
-gas.densityprofileParam     = 2.688e21 100 -7200
+gas.densityprofileParam     = 5.376e20 500 -7200
 # density at reference alt, reference alt wrt the origin, scale height
 
 #gas.densityProfile          = stdAtm
@@ -115,7 +115,8 @@ bgdPlasma.numPieces   = 1
 bgdPlasma.xlb         = 0
 bgdPlasma.funcNames   = tanhIP
 bgdPlasma.paramNums   = 3
-bgdPlasma.A           = 1e8 150 20
+bgdPlasma.A           = 1e8 750 100
+# bgdPlasma.inhomForIniPlaCloud = true
 # referene density, reference height wrt the origin, and sigma (Liu et al., 2015)
 
 #bgdPlasma.numPieces   = 1
@@ -169,16 +170,24 @@ mobility.A            =   3.99e25
 
 iniPlaCloud.bgdDensity = 0.0
 
-iniPlaCloud.number = 1
-iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
-iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.mag    = 1e20
+#iniPlaCloud.number = 1
+#iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
+#iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
+#iniPlaCloud.mag    = 1e20
 
 #iniPlaCloud.number = 1
 #iniPlaCloud.center = 0.2875e-2 0.2875e-2 0.7667e-2
 #iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
 #iniPlaCloud.mag    = 1e20
 
+iniPlaCloud.number        = 10
+iniPlaCloud.radius        = 0.02e-2 0.02e-2 0.02e-2
+iniPlaCloud.randCenter    = true
+iniPlaCloud.distCenter    = 0.5e-2 0.5e-2 1.0e-2
+iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 1.0e-2
+iniPlaCloud.randMag       = true
+iniPlaCloud.magLim        = 1e19 1e20
+#iniPlaCloud.mag           = 10
 
 ###############################################################
 # diffusion solver inputs
@@ -213,7 +222,7 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_lo      = 1 1 1
-EPot.bc_loValue = 0 0 4.8e6
+EPot.bc_loValue = 0 0 3.0e6
 EPot.bc_hi      = 1 1 0
 EPot.bc_hiValue = 0 0 0
 
