@@ -2468,7 +2468,7 @@ initialData()
         pp.getarr("distCenter", distCenter, 0, SpaceDim);
         pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
         
-        const std::string varName("center");
+        const std::string varName("bgdChargeCloud.center");
         std::string valStr;
         if (procID() == uniqueProc(SerialTask::compute))
           for (int i = 0; i < num; i++)
@@ -2535,6 +2535,86 @@ initialData()
         for(int i = 0; i != pvec.size(); i++)
           pvec[i] = point[i];
         m_neut[dit()](iv, 0) = m_gas.getBackgroundDensity(pvec);
+      }
+    }
+  }
+  
+  pp = ParmParse("gas");
+  if (pp.contains("inhom")) {
+    bool flag;
+    pp.get("inhom", flag);
+    
+    if (flag) {
+      if (pp.contains("inhomRandom")) {
+        bool flagForRandom;
+        pp.get("inhomRandom", flagForRandom);
+        if (flagForRandom) {
+          double inhomDensity;
+          pp.get("inhomDensity", inhomDensity);
+          inhomDensity *= lBar*lBar*lBar;
+          
+          IntVect sizeVec = m_problem_domain.domainBox().size();
+          
+          for (int idir = 0; idir < SpaceDim; idir++)
+            inhomDensity *= m_dx * sizeVec[idir];
+          int num = inhomDensity;
+          
+          cout << "num = " << num << endl;
+          
+          if (!pp.contains("inhomCenter")) {
+            Vector<Real> center(SpaceDim*num, 0.0);
+            const std::string varName("gas.inhomCenter");
+            std::string valStr;
+            
+            if (procID() == uniqueProc(SerialTask::compute)) {
+              for (int i = 0; i < num; i++) {
+                for (int dir = 0; dir < SpaceDim; dir++) {
+                  center[dir+i*SpaceDim] = (1.0*rand()/RAND_MAX) * sizeVec[dir] * m_dx;
+                  valStr += to_string(center[dir+i*SpaceDim]);
+                  valStr += " ";
+                  cout << center[dir+i*SpaceDim] << " ";
+                }
+                cout << endl;
+              }
+              broadcast(valStr, uniqueProc(SerialTask::compute));
+              pp.setStr(varName, valStr);
+            }
+          }
+          
+          Real r0, mag0;
+          Vector<Real> center(SpaceDim*num, 0.0);
+          pp.get("inhomRadius", r0);
+          pp.get("inhomMag", mag0);
+          pp.getarr("inhomCenter", center, 0, SpaceDim*num);
+          
+          Vector<Real> radius(SpaceDim*num, r0), mag(SpaceDim*num, mag0);
+      //    pp.getarr("radius", radius, 0, SpaceDim*num);
+      //    pp.getarr("mag",   mag, 0, num);
+          r0 /= lBar;
+          
+          cout << "r0 = " << r0 << endl;
+          
+          for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
+            for (BoxIterator bit(m_grids.get(dit)); bit.ok(); ++bit) {
+              const IntVect& iv = bit();
+              vector< double> pvec(SpaceDim);
+
+              for (int i = 0; i < num; i++) {
+                for(int dir = 0; dir != pvec.size(); dir++)
+                  pvec[dir] = center[dir+i*SpaceDim];
+                
+                double val = mag[i] * m_gas.getBackgroundDensity(pvec);
+                for (int dir = 0; dir < SpaceDim; dir++) {
+                  double tmp = 0;
+                  tmp = (iv[dir]+0.5)*m_dx - center[dir+i*SpaceDim];
+                  tmp = tmp*tmp/radius[dir+i*SpaceDim]/radius[dir+i*SpaceDim];
+                  val *= exp(-tmp);
+                }
+                m_neut[dit()](iv, 0) += val;
+              }
+            }
+          }
+        }
       }
     }
   }

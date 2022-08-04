@@ -50,7 +50,7 @@ max_step = 4000
 # this is the length of the longest side
 
 domain_length = 2e-2 #2.3e-2
-n_cell =  128 128 256
+n_cell =  64 64 128
 #n_cell =  80 80 320
 max_level = 2
 
@@ -102,6 +102,12 @@ gas.densityprofileParam     = 5.376e20 500 -7200
 #gas.densityProfileParamNum  = 1
 #gas.densityprofileParam     = -70e3
 # reference alt wrt the origin
+
+gas.inhom           = true
+gas.inhomRandom     = true
+gas.inhomDensity    = 1e-8
+gas.inhomMag        = 1000
+gas.inhomRadius     = 100
 
 #bgdPlasma.numPieces   = 1
 #bgdPlasma.xlb         = 0

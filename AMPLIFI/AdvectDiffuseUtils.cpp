@@ -645,7 +645,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
       pp.getarr("distCenter", distCenter, 0, SpaceDim);
       pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
       
-      const std::string varName("center");
+      const std::string varName("iniPlaCloud.center");
       std::string valStr;
       // random generator is called on one processor only
       if (procID() == uniqueProc(SerialTask::compute))
@@ -673,7 +673,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
       Vector<Real> magLimit;
       pp.getarr("magLim", magLimit, 0, 2);
       
-      const std::string varName("mag");
+      const std::string varName("iniPlaCloud.mag");
       std::string valStr;
       if (procID() == uniqueProc(SerialTask::compute))
         for (int i = 0; i < blobNum; i++) {
