@@ -105,9 +105,9 @@ gas.densityprofileParam     = 5.376e20 500 -7200
 
 gas.inhom           = true
 gas.inhomRandom     = true
-gas.inhomDensity    = 1e-8
-gas.inhomMag        = 1000
-gas.inhomRadius     = 100
+gas.inhomDensity    = 1e-7
+gas.inhomMag        = 1
+gas.inhomRadius     = 50
 
 #bgdPlasma.numPieces   = 1
 #bgdPlasma.xlb         = 0
@@ -176,23 +176,23 @@ mobility.A            =   3.99e25
 
 iniPlaCloud.bgdDensity = 0.0
 
-#iniPlaCloud.number = 1
-#iniPlaCloud.center = 0.1875e-2 0.1875e-2 0.75e-2
-#iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-#iniPlaCloud.mag    = 1e20
+iniPlaCloud.number = 1
+iniPlaCloud.center = 0.5e-2 0.5e-2 1.5e-2
+iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
+iniPlaCloud.mag    = 1e20
 
 #iniPlaCloud.number = 1
 #iniPlaCloud.center = 0.2875e-2 0.2875e-2 0.7667e-2
 #iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
 #iniPlaCloud.mag    = 1e20
 
-iniPlaCloud.number        = 10
-iniPlaCloud.radius        = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.randCenter    = true
-iniPlaCloud.distCenter    = 0.5e-2 0.5e-2 1.0e-2
-iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 1.0e-2
-iniPlaCloud.randMag       = true
-iniPlaCloud.magLim        = 1e19 1e20
+#iniPlaCloud.number        = 10
+#iniPlaCloud.radius        = 0.02e-2 0.02e-2 0.02e-2
+#iniPlaCloud.randCenter    = true
+#iniPlaCloud.distCenter    = 0.5e-2 0.5e-2 1.0e-2
+#iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 1.0e-2
+#iniPlaCloud.randMag       = true
+#iniPlaCloud.magLim        = 1e19 1e20
 #iniPlaCloud.mag           = 10
 
 ###############################################################
@@ -228,7 +228,7 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_lo      = 1 1 1
-EPot.bc_loValue = 0 0 3.0e6
+EPot.bc_loValue = 0 0 2.0e6
 EPot.bc_hi      = 1 1 0
 EPot.bc_hiValue = 0 0 0
 
