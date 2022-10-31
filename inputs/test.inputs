@@ -47,11 +47,12 @@ max_step = 4000
 ###############################################################
 # simulation domain, discretization info, etc.
 
-# If the origin of the simulation box is at (x0,y0,z0),
+# the origin of the numerical grid is always (0, 0, 0); the corresponding
 # altitude z0 is determined by the reference density and altitude of gas density
 # e.g., if the reference density corresponds to an altitude of z but is
 # referenced to the origin at zp, then z-z0 = zp or z0 = z-zp
 
+# this is the length of the longest side
 domain_length = 2e-2 #2.3e-2
 n_cell =  32 32 64
 #n_cell =  128 128 256
@@ -82,7 +83,7 @@ gas.elecDiffCoef      = 0.1995
 ### nonuniform density
 
 # input from a data file
-# If the origin of the simulation box is assumed to be at (x0,y0,z0),
+# If the origin of the simulation box is at (x0,y0,z0),
 # then basePoint = (x-x0,y-y0,z-z0), where (x,y,z) is the origin of the box
 # covered by the input file.
 gas.densityInputFile  = 200-200-2000-4-5.txt #neutralDensityData.txt
