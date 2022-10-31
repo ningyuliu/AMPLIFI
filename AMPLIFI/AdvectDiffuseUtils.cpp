@@ -477,6 +477,9 @@ getAmbientGas(gas& a_gas)
       //non-dimensionalize
       std::transform(spacing.begin(), spacing.end(), spacing.begin(),
                      std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/lBar));
+      //non-dimensionalize
+      std::transform(basePt.begin(), basePt.end(), basePt.begin(),
+                     std::bind(std::multiplies<double>(), std::placeholders::_1, 1.0/lBar));
       air.densityFileIF = new DataFileIFReduced(inputFileNamePtr.c_str(), DataFileIFReduced::ASCII, IntVect(numGridPoints), RealVect(spacing), RealVect(basePt), 0, true);
       air.densityFileIF->GetAsciiData()->mult(1/nBar);
       air.densityFileIF->SetNoDataValue(air.densityFileIF->GetNoDataValue()/nBar);
