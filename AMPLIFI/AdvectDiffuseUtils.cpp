@@ -833,14 +833,22 @@ defineAMR(AMR&                                          a_amr,
   int plot_interval = 0;
   pp.get("plot_interval",plot_interval);
   
+  // Determine if a fixed or variable time step will be used
+  Real fixedDt = -1;
+  pp.query("fixed_dt",fixedDt);
+  
   Real max_dt_growth = 1.1;
   pp.get("max_dt_growth",max_dt_growth);
   
   Real dt_tolerance_factor = 1.1;
   pp.get("dt_tolerance_factor",dt_tolerance_factor);
-  AMR amr;
   a_amr.define(max_level, a_refRat,
                a_prob_domain,&(*a_fact));
+  
+  if (fixedDt > 0)
+  {
+    a_amr.fixedDt(fixedDt/normalization::tBar);
+  }
   
   // set grid generation parameters
   a_amr.maxGridSize(max_grid_size);
@@ -858,6 +866,13 @@ defineAMR(AMR&                                          a_amr,
   a_amr.regridIntervals(regrid_intervals);
   a_amr.maxDtGrow(max_dt_growth);
   a_amr.dtToleranceFactor(dt_tolerance_factor);
+  
+  if (pp.contains("plot_period")) {
+    double plot_period = 0.0;
+    pp.get("plot_period", plot_period);
+    a_amr.plotPeriod(plot_period/normalization::tBar);
+  }
+  
   if (pp.contains("use_subcycling"))
   {
     bool useSubcycling;
