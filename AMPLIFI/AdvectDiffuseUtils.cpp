@@ -873,7 +873,7 @@ defineAMR(AMR&                                          a_amr,
   if (pp.contains("plot_period")) {
     double plot_period = 0.0;
     pp.get("plot_period", plot_period);
-    a_amr.plotPeriod(plot_period/normalization::tBar);
+    a_amr.plotPeriod(plot_period/normalization::scalingFactor/normalization::tBar);
   }
   
   if (pp.contains("use_subcycling"))
