@@ -3796,4 +3796,42 @@ testing () {
   }
 }
 
+/*******/
+void
+AMRLevelAdvectDiffuse::
+getAMRStats(int &totNumCells) {
+  
+  Real time_eps = 1.0e-10;
+  if (m_level == 0) {
+    Vector<AMRLevelAdvectDiffuse*>         hierarchy;
+    Vector<int>                            refRat;
+    Vector<DisjointBoxLayout>              grids;
+    Real                                   lev0Dx;
+    ProblemDomain                          lev0Domain;
+    
+    getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
+    int finest_level = hierarchy.size()-1;
+    
+    unsigned long long localNumPts = 0;
+    
+    for (int lev = m_level; lev <= finest_level; lev++) {
+      localNumPts = grids[lev].numPointsThisProc();
+    }
+    
+    // Gather and broadcast
+    Vector<unsigned long long> allLocalNumPts;
+    gather(allLocalNumPts,localNumPts,uniqueProc(SerialTask::compute));
+
+    if (procID() == uniqueProc(SerialTask::compute)) {
+      Real eps = 1e-20;
+      for(int i = 0; i < allLocalNumPts.size(); ++i)
+           totNumCells += allLocalNumPts[i];
+    }
+    
+    broadcast(totNumCells,uniqueProc(SerialTask::compute));
+    std::cout() << "AMRLevelAdvectDiffuse::getAMRStats " << m_level << " totNumCells = " << totNumCells << endl;
+  }
+}
+
+
 #include "NamespaceFooter.H"
