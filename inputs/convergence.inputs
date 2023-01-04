@@ -51,7 +51,7 @@ fixed_dt   = 2e-12
 # this is the length of the longest side
 domain_length = .2e-2
 n_cell = 32 32 64
-max_level = 0
+max_level = 1
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2

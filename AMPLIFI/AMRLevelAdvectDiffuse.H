@@ -314,7 +314,7 @@ protected:
   AMRLevelAdvectDiffuse* getFinerLevel() const;
   
   void testing();
-  void getAMRStats (int& totNumCells);
+  void outputStepStats (unsigned long long& totNumCells);
   
   // Conserved state, U, at old and new time
   LevelData<FArrayBox> m_UOld, m_UNew, m_dU, m_ionNew, m_ionOld, m_neut;
@@ -381,6 +381,7 @@ protected:
   
   static bool s_testing;
   LevelData<FArrayBox> m_testOutput;
+  static unsigned long long totNumAdvCells;
 private:
   
   // Disallowed for all the usual reasons

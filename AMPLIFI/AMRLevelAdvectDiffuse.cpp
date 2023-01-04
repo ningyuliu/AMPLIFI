@@ -69,6 +69,7 @@ Vector<RefCountedPtr<LevelData<FArrayBox> > >  AMRLevelAdvectDiffuse::s_aCoefCom
 Vector<RefCountedPtr<LevelData<FluxBox> > >  AMRLevelAdvectDiffuse::s_bCoefComp(10);
 
 bool AMRLevelAdvectDiffuse::s_testing;
+unsigned long long AMRLevelAdvectDiffuse::totNumAdvCells = 0;
 /*******/
 AMRLevelAdvectDiffuse::
 ~AMRLevelAdvectDiffuse()
@@ -1098,6 +1099,8 @@ postTimeStep()
   if (m_phtzn.runSolve)
     photoionizationSolve();
   
+  unsigned long long totNumCells;
+  outputStepStats(totNumCells);
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::postTimeStep");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::postTimeStep");
   //  outputDataForCheck (m_level, m_grids, m_field.m_E);  
@@ -3799,9 +3802,26 @@ testing () {
 /*******/
 void
 AMRLevelAdvectDiffuse::
-getAMRStats(int &totNumCells) {
+outputStepStats(unsigned long long &totNumCells) {
   
-  Real time_eps = 1.0e-10;
+  unsigned long long localNumAdvCells;
+  localNumAdvCells = m_grids.numPointsThisProc();
+  cout << "cpu = " << procID() << " level = " << m_level << " localNumAdvCells = " << m_grids.numPointsThisProc() << endl;
+  
+  // Gather and broadcast
+  Vector<unsigned long long> allLocalNumAdvCells;
+  gather(allLocalNumAdvCells,localNumAdvCells,uniqueProc(SerialTask::compute));
+
+  if (procID() == uniqueProc(SerialTask::compute)) {
+    for(int i = 0; i < allLocalNumAdvCells.size(); ++i)
+    totNumAdvCells += allLocalNumAdvCells[i];
+  }
+  
+  broadcast(totNumAdvCells,uniqueProc(SerialTask::compute));
+  cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumAdvCells = " << totNumAdvCells << endl;
+  
+  totNumCells = 0;
+  
   if (m_level == 0) {
     Vector<AMRLevelAdvectDiffuse*>         hierarchy;
     Vector<int>                            refRat;
@@ -3815,7 +3835,8 @@ getAMRStats(int &totNumCells) {
     unsigned long long localNumPts = 0;
     
     for (int lev = m_level; lev <= finest_level; lev++) {
-      localNumPts = grids[lev].numPointsThisProc();
+      localNumPts += grids[lev].numPointsThisProc();
+      cout << "cpu = " << procID() << " level = " << lev << " localLevelNumPts = " << grids[lev].numPointsThisProc() << endl;
     }
     
     // Gather and broadcast
@@ -3823,13 +3844,12 @@ getAMRStats(int &totNumCells) {
     gather(allLocalNumPts,localNumPts,uniqueProc(SerialTask::compute));
 
     if (procID() == uniqueProc(SerialTask::compute)) {
-      Real eps = 1e-20;
       for(int i = 0; i < allLocalNumPts.size(); ++i)
            totNumCells += allLocalNumPts[i];
     }
     
     broadcast(totNumCells,uniqueProc(SerialTask::compute));
-    std::cout() << "AMRLevelAdvectDiffuse::getAMRStats " << m_level << " totNumCells = " << totNumCells << endl;
+    cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumCells = " << totNumCells << endl;
   }
 }
 
