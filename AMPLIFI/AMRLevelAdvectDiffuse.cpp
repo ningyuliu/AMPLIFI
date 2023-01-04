@@ -3804,9 +3804,17 @@ void
 AMRLevelAdvectDiffuse::
 outputStepStats(unsigned long long &totNumCells) {
   
+  Vector<AMRLevelAdvectDiffuse*>         hierarchy;
+  Vector<int>                            refRat;
+  Vector<DisjointBoxLayout>              grids;
+  Real                                   lev0Dx;
+  ProblemDomain                          lev0Domain;
+  getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
+  int finest_level = hierarchy.size()-1;
+
   unsigned long long localNumAdvCells;
   localNumAdvCells = m_grids.numPointsThisProc();
-  cout << "cpu = " << procID() << " level = " << m_level << " localNumAdvCells = " << m_grids.numPointsThisProc() << endl;
+  // cout << "cpu = " << procID() << " level = " << m_level << " localNumAdvCells = " << m_grids.numPointsThisProc() << endl;
   
   // Gather and broadcast
   Vector<unsigned long long> allLocalNumAdvCells;
@@ -3818,38 +3826,32 @@ outputStepStats(unsigned long long &totNumCells) {
   }
   
   broadcast(totNumAdvCells,uniqueProc(SerialTask::compute));
-  cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumAdvCells = " << totNumAdvCells << endl;
+  // cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumAdvCells = " << totNumAdvCells << endl;
   
   totNumCells = 0;
+  unsigned long long localNumPts = 0;
+  for (int lev = 0; lev <= finest_level; lev++) {
+    localNumPts += grids[lev].numPointsThisProc();
+  //  cout << "cpu = " << procID() << " level = " << lev << " time = " << hierarchy[lev]->time() << " localLevelNumPts = " << grids[lev].numPointsThisProc() << endl;
+  }
   
-  if (m_level == 0) {
-    Vector<AMRLevelAdvectDiffuse*>         hierarchy;
-    Vector<int>                            refRat;
-    Vector<DisjointBoxLayout>              grids;
-    Real                                   lev0Dx;
-    ProblemDomain                          lev0Domain;
-    
-    getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
-    int finest_level = hierarchy.size()-1;
-    
-    unsigned long long localNumPts = 0;
-    
-    for (int lev = m_level; lev <= finest_level; lev++) {
-      localNumPts += grids[lev].numPointsThisProc();
-      cout << "cpu = " << procID() << " level = " << lev << " localLevelNumPts = " << grids[lev].numPointsThisProc() << endl;
-    }
-    
-    // Gather and broadcast
-    Vector<unsigned long long> allLocalNumPts;
-    gather(allLocalNumPts,localNumPts,uniqueProc(SerialTask::compute));
+  // Gather and broadcast
+  Vector<unsigned long long> allLocalNumPts;
+  gather(allLocalNumPts,localNumPts,uniqueProc(SerialTask::compute));
 
-    if (procID() == uniqueProc(SerialTask::compute)) {
-      for(int i = 0; i < allLocalNumPts.size(); ++i)
-           totNumCells += allLocalNumPts[i];
+  if (procID() == uniqueProc(SerialTask::compute)) {
+    for(int i = 0; i < allLocalNumPts.size(); ++i)
+         totNumCells += allLocalNumPts[i];
+  }
+  
+  broadcast(totNumCells,uniqueProc(SerialTask::compute));
+  
+  if (procID() == uniqueProc(SerialTask::compute)) {
+    for (int lev = 0; lev <= finest_level; lev++) {
+      cout << "\tlevel" << lev << " totNumCells = " << " totNumAdvCells = " << endl;
+      cout << hierarchy[lev]->time() << " ";
     }
-    
-    broadcast(totNumCells,uniqueProc(SerialTask::compute));
-    cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumCells = " << totNumCells << endl;
+    cout << totNumCells << " " << totNumAdvCells << endl;
   }
 }
 
