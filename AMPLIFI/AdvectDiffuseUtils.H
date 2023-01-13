@@ -21,6 +21,7 @@
 #include "AdvectionFunctions.H"
 #include "memtrack.H"
 #include "parstream.H"
+#include "OldTimer.H"
 
 #include "dataFileIFReduced.hpp"
 
@@ -28,6 +29,10 @@
 
 extern DataFileIFReduced* neutDensityFile;
 
+extern std::string       AMPLIFIOutFilename;
+extern std::ofstream     AMPLIFIOut;
+extern double            startWTime;
+extern OldTimer          timer;
 ///
 /**
  */

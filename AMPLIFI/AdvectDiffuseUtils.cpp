@@ -49,6 +49,12 @@ namespace numerical {
 
 }
 
+std::string       AMPLIFIOutFilename("AMPLIFIOutput.txt");
+std::ofstream     AMPLIFIOut;
+double            startWTime;
+
+OldTimer          timer;
+
 void ADParseValue(Real* pos,
                   int* dir,
                   Side::LoHiSide* side,
@@ -1177,4 +1183,5 @@ void outputDataForCheck (int a_level, DisjointBoxLayout a_grids, const LevelData
   }
   pout() << endl;
 }
+
 #include "NamespaceFooter.H"

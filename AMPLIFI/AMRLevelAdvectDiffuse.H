@@ -12,6 +12,7 @@
 
 #ifndef _AMRLEVELADVECTDIFFUSE_H_
 #define _AMRLEVELADVECTDIFFUSE_H_
+#include <fstream>
 
 #include "FArrayBox.H"
 #include "LevelData.H"
@@ -314,7 +315,7 @@ protected:
   AMRLevelAdvectDiffuse* getFinerLevel() const;
   
   void testing();
-  void outputStepStats (unsigned long long& totNumCells);
+  void outputStepStats (std::ofstream&);
   
   // Conserved state, U, at old and new time
   LevelData<FArrayBox> m_UOld, m_UNew, m_dU, m_ionNew, m_ionOld, m_neut;
