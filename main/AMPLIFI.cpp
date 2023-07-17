@@ -24,6 +24,7 @@
 #include "FABView.H"
 #include "AdvectDiffuseUtils.H"
 #include "parstream.H"
+#include "OldTimer.H"
 
 #include "dataFileIFReduced.hpp"
 #include "gas.hpp"
@@ -75,12 +76,15 @@ void amrGodunov(const Real& a_stopTime,
 int
 main(int a_argc, char* a_argv[])
 {
+  timer.setup();
+  timer.start();
   
   int i;
   i = 1;
   
 #ifdef CH_MPI
   MPI_Init(&a_argc,&a_argv);
+  startWTime = MPI_Wtime();
 #endif
   { //scoping trick
 
@@ -127,6 +131,7 @@ main(int a_argc, char* a_argv[])
     if (procID() == uniqueProc(SerialTask::compute)) {
       pout() << "scalingFactor = " << scalingFactor << endl;
       pout() << "tBar = " << tBar << " lBar = " << lBar << " EBar = " << EBar << " nBar = " << nBar << " muBar = " << muBar << " phiBar = " << phiBar << endl;
+      AMPLIFIOut.open(AMPLIFIOutFilename);
     }
     
     Real stopTime = 0.0;

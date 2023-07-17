@@ -23,6 +23,7 @@
 #include "AMRIO.H"
 #include "computeSum.H"
 #include "computeNorm.H"
+#include "OldTimer.H"
 
 #include "AMRLevelAdvectDiffuse.H"
 #include "AdvectPhysicsF_F.H"
@@ -1099,8 +1100,7 @@ postTimeStep()
   if (m_phtzn.runSolve)
     photoionizationSolve();
   
-  unsigned long long totNumCells;
-  outputStepStats(totNumCells);
+  outputStepStats(AMPLIFIOut);
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::postTimeStep");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::postTimeStep");
   //  outputDataForCheck (m_level, m_grids, m_field.m_E);  
@@ -2488,8 +2488,12 @@ initialData()
     Real r0, mag0;
     Vector<Real> center(SpaceDim*num, 0.0);
     pp.get("radius", r0);
+    r0 /= lBar;
     pp.get("mag", mag0);
+    mag0 /= nBar;
     pp.getarr("center", center, 0, SpaceDim*num);
+    for (int i = 0; i < SpaceDim*num; i++)
+     center[i] /= lBar;
     
     Vector<Real> radius(SpaceDim*num, r0), mag(SpaceDim*num, mag0);
 //    pp.getarr("radius", radius, 0, SpaceDim*num);
@@ -2668,6 +2672,8 @@ postInitialize()
   if (m_phtzn.runSolve) {
     photoionizationSolve();
   }
+  
+  outputStepStats(AMPLIFIOut);
 }
 
 #ifdef CH_USE_HDF5
@@ -3802,7 +3808,30 @@ testing () {
 /*******/
 void
 AMRLevelAdvectDiffuse::
-outputStepStats(unsigned long long &totNumCells) {
+outputStepStats(std::ofstream& ofs) {
+  
+  unsigned long long localNumAdvCells = 0;
+  unsigned long long currNumAdvCells = 0;
+  Real time_eps = 1.0e-20;
+  
+  if (m_time > time_eps) {
+    localNumAdvCells = m_grids.numPointsThisProc();
+    // cout << "cpu = " << procID() << " level = " << m_level << " localNumAdvCells = " << m_grids.numPointsThisProc() << endl;
+    
+    // Gather and broadcast
+    Vector<unsigned long long> allLocalNumAdvCells;
+    gather(allLocalNumAdvCells,localNumAdvCells,uniqueProc(SerialTask::compute));
+
+    if (procID() == uniqueProc(SerialTask::compute)) {
+      for(int i = 0; i < allLocalNumAdvCells.size(); ++i)
+        currNumAdvCells += allLocalNumAdvCells[i];
+      totNumAdvCells += currNumAdvCells;
+    }
+    
+    broadcast(totNumAdvCells,uniqueProc(SerialTask::compute));
+    broadcast(currNumAdvCells,uniqueProc(SerialTask::compute));
+    // cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumAdvCells = " << totNumAdvCells << endl;
+  }
   
   Vector<AMRLevelAdvectDiffuse*>         hierarchy;
   Vector<int>                            refRat;
@@ -3811,24 +3840,8 @@ outputStepStats(unsigned long long &totNumCells) {
   ProblemDomain                          lev0Domain;
   getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
   int finest_level = hierarchy.size()-1;
-
-  unsigned long long localNumAdvCells;
-  localNumAdvCells = m_grids.numPointsThisProc();
-  // cout << "cpu = " << procID() << " level = " << m_level << " localNumAdvCells = " << m_grids.numPointsThisProc() << endl;
   
-  // Gather and broadcast
-  Vector<unsigned long long> allLocalNumAdvCells;
-  gather(allLocalNumAdvCells,localNumAdvCells,uniqueProc(SerialTask::compute));
-
-  if (procID() == uniqueProc(SerialTask::compute)) {
-    for(int i = 0; i < allLocalNumAdvCells.size(); ++i)
-    totNumAdvCells += allLocalNumAdvCells[i];
-  }
-  
-  broadcast(totNumAdvCells,uniqueProc(SerialTask::compute));
-  // cout << "AMRLevelAdvectDiffuse::outputStepStats " << m_level << " totNumAdvCells = " << totNumAdvCells << endl;
-  
-  totNumCells = 0;
+  unsigned long long totNumCells = 0;
   unsigned long long localNumPts = 0;
   for (int lev = 0; lev <= finest_level; lev++) {
     localNumPts += grids[lev].numPointsThisProc();
@@ -3847,11 +3860,29 @@ outputStepStats(unsigned long long &totNumCells) {
   broadcast(totNumCells,uniqueProc(SerialTask::compute));
   
   if (procID() == uniqueProc(SerialTask::compute)) {
-    for (int lev = 0; lev <= finest_level; lev++) {
-      cout << "\tlevel" << lev << " totNumCells = " << " totNumAdvCells = " << endl;
-      cout << hierarchy[lev]->time() << " ";
+    
+    if (m_time < time_eps && m_level == finest_level) {
+      ofs << setiosflags(ios::left) << setw(12) << "cpuTime";
+      ofs << setiosflags(ios::left) << setw(6) << "lev";
+      ofs << setiosflags(ios::left) << setw(12) << "cells";
+      ofs << setiosflags(ios::left) << setw(12) << "advCells";
+      ofs << setiosflags(ios::left) << setw(12) << "chgAdvCells";
+      ofs << setiosflags(ios::left) << setw(12) << "levTimes";
+      ofs << endl;
     }
-    cout << totNumCells << " " << totNumAdvCells << endl;
+#ifdef CH_MPI
+    ofs << setiosflags(ios::left) << setw(12) << MPI_Wtime() - startWTime;
+#endif
+//    ofs << setiosflags(ios::left) << setw(12) << timer.getTimeStampWC();
+    ofs << setiosflags(ios::left) << setw(6) << m_level;
+    ofs << setiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << totNumCells;
+    ofs << setiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << totNumAdvCells;
+    ofs << setiosflags(ios::left) << setw(12) << setiosflags(ios::fixed) << currNumAdvCells;
+    for (int lev = 0; lev <= finest_level; lev++) {
+      ofs << setiosflags(ios::left) << setw(12) << setprecision(4) << hierarchy[lev]->time();
+    }
+    ofs << endl;
+    
   }
 }
 

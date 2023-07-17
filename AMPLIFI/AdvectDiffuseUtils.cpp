@@ -49,6 +49,12 @@ namespace numerical {
 
 }
 
+std::string       AMPLIFIOutFilename("AMPLIFIOutput.txt");
+std::ofstream     AMPLIFIOut;
+double            startWTime;
+
+OldTimer          timer;
+
 void ADParseValue(Real* pos,
                   int* dir,
                   Side::LoHiSide* side,
@@ -579,6 +585,8 @@ getAmbientGas(gas& a_gas)
     if (fNames[i] == "linear") {
       paramVect[i][0] /= lBar*lBar;
       paramVect[i][1] /= 1.0/(EBar*lBar);
+    } else if (fNames[i] == "const") {
+      paramVect[i][0] /= lBar*lBar;
     } else {
       cout << "no coefficient nondimensionalization is done for process: " << processName << endl;
     }
@@ -1177,4 +1185,5 @@ void outputDataForCheck (int a_level, DisjointBoxLayout a_grids, const LevelData
   }
   pout() << endl;
 }
+
 #include "NamespaceFooter.H"
