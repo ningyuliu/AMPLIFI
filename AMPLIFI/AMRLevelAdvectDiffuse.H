@@ -371,7 +371,7 @@ protected:
   LevelData<FArrayBox> m_dUDiff;
   LevelData<FluxBox>   m_flux, m_muEdge;
   
-  bool m_doImplicitPoisson;
+  bool m_varyingField, m_doImplicitPoisson;
   static Vector<RefCountedPtr<LevelData<FArrayBox> > > s_aCoef;
   static Vector<RefCountedPtr<LevelData<FluxBox> > > s_bCoef;
   static Vector<RefCountedPtr<LevelData<FArrayBox> > > s_aCoefComp;

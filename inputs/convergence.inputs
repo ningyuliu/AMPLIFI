@@ -1,7 +1,8 @@
 ###############################################################
 # parameters and options for the numerical methods
 
-PoissonSolver.implicit    = false
+PoissonSolver.implicit      = false
+PoissonSolver.varyingField  = false
 
 Ac = 0.25
 Ai = 100
@@ -60,7 +61,7 @@ refine_thresh = 0.05
 regrid_interval = 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4
-max_grid_size = 64
+max_grid_size = 8
 fill_ratio = 0.85
 
 
@@ -102,16 +103,16 @@ gas.elecDiffCoef      = 0.1995
 #                          -2.8930e-23  6.089e-4
 #                          2.567e-23   8.889e-5
 
-mobility.name         =   mobility
-mobility.numPieces    =   5
-mobility.xlb          =   0       1e-25     2.6e-21   1.0e-20   2.0e-19
-mobility.funcNames    =   const   rcpLinear rcpLinear rcpLinear rcpLinear
-mobility.paramNums    =   1       2         2         2         2
-mobility.A            =   3.99e25
-                          6.87e24   3.38e2
-                          7.2973e23 1.63e4
-                          1.03e24   1.3e4
-                          7.4e23    7.1e4
+#mobility.name         =   mobility
+#mobility.numPieces    =   5
+#mobility.xlb          =   0       1e-25     2.6e-21   1.0e-20   2.0e-19
+#mobility.funcNames    =   const   rcpLinear rcpLinear rcpLinear rcpLinear
+#mobility.paramNums    =   1       2         2         2         2
+#mobility.A            =   3.99e25
+#                          6.87e24   3.38e2
+#                          7.2973e23 1.63e4
+#                          1.03e24   1.3e4
+#                          7.4e23    7.1e4
 
 ###############################################################
 # Test case with no sources
@@ -130,6 +131,15 @@ attachment.funcNames  =   const
 attachment.paramNums  =   1
 attachment.A          =   0
 
+###############################################################
+# Test case with const mobility
+
+mobility.name         =   mobility
+mobility.numPieces    =   1
+mobility.xlb          =   0
+mobility.funcNames    =   const
+mobility.paramNums    =   1
+mobility.A            =   1e24
 
 ###############################################################
 # initial plasma cloud(s)
@@ -137,7 +147,7 @@ attachment.A          =   0
 iniPlaCloud.number = 1
 iniPlaCloud.center = 6.25e-4 6.25e-4 6.25e-4
 iniPlaCloud.radius = 1.5e-4 1.5e-4 1.5e-4
-iniPlaCloud.mag    = 1e20
+iniPlaCloud.mag    = 2e19
 
 ###############################################################
 # background charge density in units of number density

@@ -247,6 +247,10 @@ define(const AdvectPhysics&        a_gphys,
   m_gas = a_gas;
   m_bcFunc  = a_bcFunc;
   ParmParse ppPoisson("PoissonSolver");
+  if (ppPoisson.contains("varyingField"))
+    ppPoisson.get("varyingField", m_varyingField);
+  else
+    m_varyingField = true;
   ppPoisson.get("implicit", m_doImplicitPoisson);
   m_EPotbcFunc = a_EPotbcFunc;
   m_phtznbcFunc = a_PIbcFunc;
@@ -655,7 +659,8 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
   
   if (m_doImplicitPoisson) {
     // m_flux is used in Poisson solve to set the variable coefficients
-    poissonSolveImplicit();
+    if (m_varyingField)
+      poissonSolveImplicit();
     for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
       Real eps = 1e-20;
       const Box& b = m_grids[dit()];
@@ -719,10 +724,12 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     }
   }
   
-  if (!m_doImplicitPoisson) {
+  if (!m_doImplicitPoisson && m_varyingField) {
     // Get the provisonal potential and mobility at the end of this step, which are used to fill ghost cells of the next finer level
-    poissonSolve();
-    fillMobility(true);
+    if (m_varyingField) {
+      poissonSolve();
+      fillMobility(true);
+    }
 //    fillAdvectionVelocity();
   }
   
@@ -1039,20 +1046,22 @@ postTimeStep()
   if (m_hasFiner) {
     if (m_doImplicitReflux) {
       doImplicitReflux();
-      poissonSolveComposite();
+      if (m_varyingField)
+        poissonSolveComposite();
     }
     // explicit Reflux
     else {
       if (m_doImplicitPoisson) {
-        poissonSolveImplicitComposite();
+        if (m_varyingField)
+          poissonSolveImplicitComposite();
         
       } else {
         Real scale = -1.0/m_dx;
         m_fluxRegister.reflux(m_UNew,scale);
         // Average from finer level data
         AMRLevelAdvectDiffuse* amrGodFinerPtr = getFinerLevel();
-        
-        poissonSolveComposite();
+        if (m_varyingField)
+          poissonSolveComposite();
       }
     } // end if we're doing explicit refluxing
   } // end if there is a finer level
@@ -3099,6 +3108,10 @@ writePlotHeader(HDF5Handle& a_handle) const
 //    istart += m_fieldOld.m_EEdge.nComp()*SpaceDim;
 //  }
   
+  sprintf(compStr,"component_%d",istart);
+  header.m_string[compStr] = "mu";
+  istart += m_mu.nComp();
+  
 //  for (int dir=0; dir<SpaceDim; dir++) {
 //    sprintf(compStr,"component_%d",istart+dir);
 //    header.m_string[compStr] = "VeEdgeToCell"+to_string(dir);
@@ -3210,6 +3223,8 @@ writePlotLevel(HDF5Handle& a_handle) const
     else
       numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
   
+  numPlotVar += m_mu.nComp();
+  
   LevelData<FArrayBox> plotData(m_UNew.disjointBoxLayout(), numPlotVar);
 
   // first copy data to plot data holder
@@ -3305,6 +3320,12 @@ writePlotLevel(HDF5Handle& a_handle) const
 //    unnormalize(plotData, istart, nComp, normalization::EBar);
 //    istart += nComp;
 //  }
+  
+  nComp = m_mu.nComp();
+  interv.define(istart, istart+nComp-1);
+  m_mu.copyTo(m_mu.interval(), plotData, interv);
+  unnormalize(plotData, istart, nComp, normalization::muBar);
+  istart += nComp;
   
 //  nComp = tmp.nComp();
 //  interv.define(istart, istart+nComp-1);
