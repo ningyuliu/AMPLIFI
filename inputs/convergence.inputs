@@ -2,7 +2,7 @@
 # parameters and options for the numerical methods
 
 PoissonSolver.implicit      = false
-PoissonSolver.varyingField  = false
+PoissonSolver.varyingField  = true
 
 Ac = 0.25
 Ai = 100
@@ -61,7 +61,7 @@ refine_thresh = 0.05
 regrid_interval = 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4
-max_grid_size = 8
+max_grid_size = 64
 fill_ratio = 0.85
 
 
