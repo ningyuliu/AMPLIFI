@@ -3108,9 +3108,9 @@ writePlotHeader(HDF5Handle& a_handle) const
 //    istart += m_fieldOld.m_EEdge.nComp()*SpaceDim;
 //  }
   
-  sprintf(compStr,"component_%d",istart);
-  header.m_string[compStr] = "mu";
-  istart += m_mu.nComp();
+//  sprintf(compStr,"component_%d",istart);
+//  header.m_string[compStr] = "mu";
+//  istart += m_mu.nComp();
   
 //  for (int dir=0; dir<SpaceDim; dir++) {
 //    sprintf(compStr,"component_%d",istart+dir);
@@ -3223,7 +3223,7 @@ writePlotLevel(HDF5Handle& a_handle) const
     else
       numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
   
-  numPlotVar += m_mu.nComp();
+//  numPlotVar += m_mu.nComp();
   
   LevelData<FArrayBox> plotData(m_UNew.disjointBoxLayout(), numPlotVar);
 
@@ -3321,11 +3321,11 @@ writePlotLevel(HDF5Handle& a_handle) const
 //    istart += nComp;
 //  }
   
-  nComp = m_mu.nComp();
-  interv.define(istart, istart+nComp-1);
-  m_mu.copyTo(m_mu.interval(), plotData, interv);
-  unnormalize(plotData, istart, nComp, normalization::muBar);
-  istart += nComp;
+//  nComp = m_mu.nComp();
+//  interv.define(istart, istart+nComp-1);
+//  m_mu.copyTo(m_mu.interval(), plotData, interv);
+//  unnormalize(plotData, istart, nComp, normalization::muBar);
+//  istart += nComp;
   
 //  nComp = tmp.nComp();
 //  interv.define(istart, istart+nComp-1);
@@ -3794,6 +3794,8 @@ fillAdvectionVelocity() {
     m_advVel[dit()].mult(m_muEdge[dit()], b, 0, 0);
     m_advVel[dit()].negate();
   }
+  
+  m_advVel.exchange();
   
   if (s_verbosity >= 3) {
     printDiagnosticInfo (m_level, m_dx, m_grids, m_advVel, "advVel", "fillAdvectionVelocity");
