@@ -1,8 +1,7 @@
 ###############################################################
 # parameters and options for the numerical methods
 
-PoissonSolver.implicit      = false
-PoissonSolver.varyingField  = true
+PoissonSolver.implicit    = true
 
 Ac = 0.25
 Ai = 100
@@ -14,7 +13,7 @@ dt_tolerance_factor = 1.1
 
 sourceNumericalScheme = 2
 implicitReflux = false
-use_limiting = false
+use_limiting = true
 
 # testing, diagnostics, etc.
 verbosity = 3
@@ -36,7 +35,7 @@ muBar          = 0.0382
 ###############################################################
 # output
 
-plot_interval = 160
+plot_interval = 5
 plot_prefix  = results/out
 max_time = 1.1e-9
 max_step = 4000
@@ -47,11 +46,11 @@ plot_period = -1
 # simulation domain, discretization info, etc.
 
 # if fixed_dt > 0, use it for the base level
-fixed_dt   = .625e-12
+fixed_dt   = 20e-12
 
 # this is the length of the longest side
-domain_length = .125e-2
-n_cell = 64 64 64
+domain_length = .25e-2
+n_cell = 80 80 128
 max_level = 0
 
 periodic_bc = 0 0 0
@@ -76,86 +75,52 @@ gas.uniformity    = true
 gas.density           = 2.688e25
 gas.elecDiffCoef      = 0.1995
 
-#bgdPlasma.numPieces   = 1
-#bgdPlasma.xlb         = 0
-#bgdPlasma.funcNames   = const
-#bgdPlasma.paramNums   = 1
-#bgdPlasma.A           = 1e12
+bgdPlasma.numPieces   = 1
+bgdPlasma.xlb         = 0
+bgdPlasma.funcNames   = const
+bgdPlasma.paramNums   = 1
+bgdPlasma.A           = 1e12
 
 ###############################################################
 # morrow coefficients, Ek = 1.2e-19 V-m^2
 
-#ionization.name       =   ionization
-#ionization.numPieces  =   3
-#ionization.xlb        =   0      1e-25  1.5e-19
-#ionization.funcNames  =   const rcpExp rcpExp
-#ionization.paramNums  =   1 2 2
-#ionization.A          =   0
-#                          6.619e-21  -5.593e-19
-#                          2.0e-20    -7.248e-19
-
-#attachment.name       =   attachment
-#attachment.numPieces  =   3
-#attachment.xlb        =   0   4.7512e-20    1.05e-19
-#attachment.funcNames  =   linear linear linear
-#attachment.paramNums  =   2 2 2
-#attachment.A          =   0           0
-#                          -2.8930e-23  6.089e-4
-#                          2.567e-23   8.889e-5
-
-#mobility.name         =   mobility
-#mobility.numPieces    =   5
-#mobility.xlb          =   0       1e-25     2.6e-21   1.0e-20   2.0e-19
-#mobility.funcNames    =   const   rcpLinear rcpLinear rcpLinear rcpLinear
-#mobility.paramNums    =   1       2         2         2         2
-#mobility.A            =   3.99e25
-#                          6.87e24   3.38e2
-#                          7.2973e23 1.63e4
-#                          1.03e24   1.3e4
-#                          7.4e23    7.1e4
-
-###############################################################
-# Test case with no sources
-
 ionization.name       =   ionization
-ionization.numPieces  =   1
-ionization.xlb        =   0
-ionization.funcNames  =   const
-ionization.paramNums  =   1
+ionization.numPieces  =   3
+ionization.xlb        =   0      1e-25  1.5e-19
+ionization.funcNames  =   const rcpExp rcpExp
+ionization.paramNums  =   1 2 2
 ionization.A          =   0
+                          6.619e-21  -5.593e-19
+                          2.0e-20    -7.248e-19
 
 attachment.name       =   attachment
-attachment.numPieces  =   1
-attachment.xlb        =   0
-attachment.funcNames  =   const
-attachment.paramNums  =   1
-attachment.A          =   0
-
-###############################################################
-# Test case with const mobility
+attachment.numPieces  =   3
+attachment.xlb        =   0   4.7512e-20    1.05e-19
+attachment.funcNames  =   linear linear linear
+attachment.paramNums  =   2 2 2
+attachment.A          =   0           0
+                          -2.8930e-23  6.089e-4
+                          2.567e-23   8.889e-5
 
 mobility.name         =   mobility
-mobility.numPieces    =   1
-mobility.xlb          =   0
-mobility.funcNames    =   const
-mobility.paramNums    =   1
-mobility.A            =   1e24
+mobility.numPieces    =   5
+mobility.xlb          =   0       1e-25     2.6e-21   1.0e-20   2.0e-19
+mobility.funcNames    =   const   rcpLinear rcpLinear rcpLinear rcpLinear
+mobility.paramNums    =   1       2         2         2         2
+mobility.A            =   3.99e25
+                          6.87e24   3.38e2
+                          7.2973e23 1.63e4
+                          1.03e24   1.3e4
+                          7.4e23    7.1e4
 
 ###############################################################
 # initial plasma cloud(s)
 
 iniPlaCloud.number = 1
-iniPlaCloud.center = 6.25e-4 6.25e-4 6.25e-4
-iniPlaCloud.radius = 1.5e-4 1.5e-4 1.5e-4
-iniPlaCloud.mag    = 2e19
+iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.125e-2
+iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
+iniPlaCloud.mag    = 1e20
 
-###############################################################
-# background charge density in units of number density
-
-bgdChargeCloud.number     = 1
-bgdChargeCloud.center     = 6.25e-4 6.25e-4 6.25e-4
-bgdChargeCloud.radius     = 2e-4 2e-4 2e-4
-bgdChargeCloud.mag        = -1e19
 
 ###############################################################
 # diffusion solver inputs
@@ -189,10 +154,10 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
-EPot.bc_lo      = 0 0 0
-EPot.bc_loValue = 0 0 0
-EPot.bc_hi      = 0 0 0
-EPot.bc_hiValue = 0 0 0
+EPot.bc_lo      = 3 3 3
+EPot.bc_loValue = -4.8e6 -4.8e6 -12000
+EPot.bc_hi      = 3 3 3
+EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 
 
 ###############################################################
