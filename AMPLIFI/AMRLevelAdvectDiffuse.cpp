@@ -663,8 +663,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
       poissonSolveImplicit();
     for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
       Real eps = 1e-20;
-//      const Box& b = m_grids[dit()];
-      const Box& b = m_flux[dit()].box();
+      const Box& b = m_grids[dit()];
       FluxBox& curFlux = m_flux[dit()];
       FluxBox& advVel = m_advVel[dit()];
       advVel += eps;
@@ -672,8 +671,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     }
     fillAdvectionVelocity();
     for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//      const Box& b = m_grids[dit()];
-      const Box& b = m_flux[dit()].box();
+      const Box& b = m_grids[dit()];
       FluxBox& curFlux = m_flux[dit()];
       FluxBox& advVel = m_advVel[dit()];
       curFlux.mult(advVel, b, 0, 0);
@@ -681,9 +679,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     // mobility is updated after the drift flux is computed so that the same drift flux is used in both Poisson's equation and the continuity equation
     fillMobility(true);
   }
-  
-  m_flux.exchange();
-  
+    
   for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit)
     m_UNew[dit()].plus(m_dUDiff[dit()], m_dt);
   
@@ -3798,6 +3794,7 @@ fillAdvectionVelocity() {
     Box b = m_advVel[dit()].box();
     m_advVel[dit()].mult(m_muEdge[dit()], b, 0, 0);
     m_advVel[dit()].negate();
+    pout() << "advVelBox: " << b << " muEdgBox: " << m_muEdge[dit()].box() << endl;
   }
   
   m_advVel.exchange();
