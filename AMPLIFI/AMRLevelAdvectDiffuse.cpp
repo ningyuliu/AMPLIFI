@@ -483,6 +483,7 @@ advance()
   m_phi.copyTo(m_phi.interval(), m_phiOld, m_phiOld.interval());
   m_field.copyTo(m_fieldOld);
   m_mu.copyTo(m_muOld);
+  m_advVel.copyTo(m_advVelOld);
   
   LevelData<FArrayBox> diffusiveSrc(m_grids, 1, IntVect::Unit);
   makeDiffusiveSource(diffusiveSrc, m_UOld);
@@ -669,7 +670,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
       advVel += eps;
       curFlux.divide(advVel, b, 0, 0);
     }
-    fillAdvectionVelocity();
+    fillAdvectionVelocity(true);
     for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
       const Box& b = m_grids[dit()];
       FluxBox& curFlux = m_flux[dit()];
@@ -724,14 +725,13 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     }
   }
   
-  if (!m_doImplicitPoisson && m_varyingField) {
+  if (!m_doImplicitPoisson && m_varyingField)
     // Get the provisonal potential and mobility at the end of this step, which are used to fill ghost cells of the next finer level
     if (m_varyingField) {
       poissonSolve();
       fillMobility(true);
+      fillAdvectionVelocity(true);
     }
-//    fillAdvectionVelocity();
-  }
   
   switch (m_sourceNumericalScheme) {
     
@@ -1078,11 +1078,15 @@ postTimeStep()
     int finest_level = hierarchy.size()-1;
     
     for (int lev = m_level; lev <= finest_level; lev++) {
-      if (lev == m_level)
+      if (lev == m_level) {
         hierarchy[lev]->fillMobility(true);
-      else
+        hierarchy[lev]->fillAdvectionVelocity(true);
+      }
+      else {
         hierarchy[lev]->fillMobility(false);
-      hierarchy[lev]->fillAdvectionVelocity();
+        hierarchy[lev]->fillAdvectionVelocity(false);
+      }
+      
       
 //      LevelData<FArrayBox> srsOld;
 //      srsOld.define(hierarchy[lev]->m_srs);
@@ -2241,8 +2245,6 @@ regrid(const Vector<Box>& a_newGrids)
     m_neut.define(m_grids,1,ivGhost);
   }
   
-  m_advVel.define(m_grids,1,ivGhost);
-  
   IntVect ivGhost1 = m_numGhost*IntVect::Unit;
   LevelData<FArrayBox> phiOld;
   phiOld.define(m_phi);
@@ -2252,6 +2254,9 @@ regrid(const Vector<Box>& a_newGrids)
   m_phiOld.define(m_grids, 1, ivGhost1);
   m_mu.define(m_grids, 1, ivGhost1);
   m_muOld.define(m_grids, 1, ivGhost1);
+  m_advVel.define(m_grids,1,ivGhost);
+  m_advVelOld.define(m_grids,1,ivGhost);
+  
   m_field.define(m_grids, ivGhost1, ivGhost);
   m_fieldOld.define(m_grids, ivGhost1, ivGhost);
   
@@ -2293,7 +2298,7 @@ regrid(const Vector<Box>& a_newGrids)
       m_neut[dit()].setVal(0.0);
     m_phi[dit()].setVal(0.0);
     m_mu[dit()].setVal(0.0);
-    m_muOld[dit()].setVal(0.0);
+//    m_muOld[dit()].setVal(0.0);
     m_advVel[dit()].setVal(0.0);
     m_phtzn.Psi[dit()].setVal(0.0);
     m_phtzn.rate[dit()].setVal(0.0);
@@ -2354,7 +2359,7 @@ regrid(const Vector<Box>& a_newGrids)
   
   computeEField(false);
   fillMobility(false);
-  fillAdvectionVelocity();
+  fillAdvectionVelocity(false);
   if (m_phtzn.runSolve) {
     m_phtzn.calcRate();
   }
@@ -2388,13 +2393,14 @@ initialGrid(const Vector<Box>& a_newGrids)
   m_ionOld.define(m_grids,m_gas.m_numOfIonSpe,ivGhost);
   if (!m_gas.m_uniformity)
     m_neut.define(m_grids,1,ivGhost);
-  m_advVel.define(m_grids,1,ivGhost);
   
   IntVect ivGhost1 = m_numGhost*IntVect::Unit;
   m_phi.define(m_grids, 1, ivGhost1);
   m_phiOld.define(m_grids, 1, ivGhost1);
   m_mu.define(m_grids, 1, ivGhost1);
   m_muOld.define(m_grids, 1, ivGhost1);
+  m_advVel.define(m_grids,1,ivGhost);
+  m_advVelOld.define(m_grids,1,ivGhost);
   
   m_dUDiff.define(m_grids,1,ivGhost);
   m_flux.define(m_grids,1,ivGhost);
@@ -2443,11 +2449,12 @@ initialData()
     m_ionOld[dit()].copy(m_ionNew[dit()], b);
     m_phi[dit()].setVal(0.0, m_phi[dit()].box(), 0);
     m_mu[dit()].setVal(0.0, m_mu[dit()].box(), 0);
-    m_muOld[dit()].setVal(0.0, m_mu[dit()].box(), 0);
+    m_muOld[dit()].setVal(0.0, m_muOld[dit()].box(), 0);
     m_field.m_E[dit()].setVal(0.0, m_field.m_E[dit()].box(), 0, SpaceDim);
     m_field.m_Emag[dit()].setVal(0.0, m_field.m_Emag[dit()].box(), 0);
     m_field.m_EEdge[dit()].setVal(0.0, m_field.m_EEdge[dit()].box());
     m_advVel[dit()].setVal(0.0, m_advVel[dit()].box());
+    m_advVelOld[dit()].setVal(0.0, m_advVelOld[dit()].box());
     m_phtzn.Psi[dit()].setVal(0.0, m_phtzn.Psi[dit()].box(), 0, 3);
     m_phtzn.rate[dit()].setVal(0.0, m_phtzn.rate[dit()].box(), 0);
     m_flux[dit()].setVal(0.0);
@@ -2666,7 +2673,7 @@ postInitialize()
     int finest_level = hierarchy.size()-1;
     for (int lev= m_level; lev <= finest_level; lev++) {
       hierarchy[lev]->fillMobility(false);
-      hierarchy[lev]->fillAdvectionVelocity();
+      hierarchy[lev]->fillAdvectionVelocity(false);
       
       if (m_doImplicitPoisson) {
         hierarchy[lev]->m_field.m_EEdge.copyTo(hierarchy[lev]->m_EEdgeOld);
@@ -3007,7 +3014,7 @@ readCheckpointLevel(HDF5Handle& a_handle)
   m_UOld.define(m_grids,1);
   m_advVel.define(m_grids,1, m_numGhost*IntVect::Unit);
   fillMobility(false);
-  fillAdvectionVelocity();
+  fillAdvectionVelocity(false);
   
   // Set up data structures
   levelSetup();
@@ -3773,14 +3780,14 @@ fillMobility(bool timeInterpForGhost) {
   averageCellToEdge(m_grids, m_mu, m_muEdge);
     
   if (s_verbosity >= 3) {
-    printDiagnosticInfo (m_level, m_dx, m_grids, m_mu, "mob", "AMRLevelAdvectDiffuse::fillMobility");
+    printDiagnosticInfo (m_level, m_dx, m_grids, m_mu, "mob", "AMRLevelAdvectDiffuse::fillMobility ");
   }
 }
 
 /*******/
 void
 AMRLevelAdvectDiffuse::
-fillAdvectionVelocity() {
+fillAdvectionVelocity(bool timeInterpForGhost) {
   if (s_verbosity >= 3)
     pout() << "AMRLevelAdvectDiffuse::fillAdvectionVelocity " << m_level << endl;
   
@@ -3797,7 +3804,15 @@ fillAdvectionVelocity() {
     pout() << "advVelBox: " << b << " muEdgBox: " << m_muEdge[dit()].box() << endl;
   }
   
-  m_advVel.exchange();
+  Real eps = 1.0e-10;
+  AMRLevelAdvectDiffuse* amrGodCoarserPtr = getCoarserLevel();
+  if (m_hasCoarser) {
+    if (!timeInterpForGhost)
+      fillGhostFace(m_advVel, amrGodCoarserPtr->m_advVel, 0, amrGodCoarserPtr->m_advVel, 0, eps, 0);
+    else
+      fillGhostFace(m_advVel, amrGodCoarserPtr->m_advVelOld, amrGodCoarserPtr->m_time-amrGodCoarserPtr->m_dt, amrGodCoarserPtr->m_advVel, amrGodCoarserPtr->m_time, m_dt, m_time+m_dt);
+  } else
+    m_advVel.exchange();
   
   if (s_verbosity >= 3) {
     printDiagnosticInfo (m_level, m_dx, m_grids, m_advVel, "advVel", "fillAdvectionVelocity");

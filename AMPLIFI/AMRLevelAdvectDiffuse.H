@@ -304,7 +304,7 @@ protected:
   void photoionizationSolve();
   
   void fillMobility(bool timeInterpForGhost);
-  void fillAdvectionVelocity();
+  void fillAdvectionVelocity(bool timeInterpForGhost);
   // Setup menagerie of data structures
   void levelSetup();
   
@@ -319,7 +319,7 @@ protected:
   
   // Conserved state, U, at old and new time
   LevelData<FArrayBox> m_UOld, m_UNew, m_dU, m_ionNew, m_ionOld, m_neut;
-  LevelData<FluxBox>   m_advVel;
+  LevelData<FluxBox>   m_advVel, m_advVelOld;
   
   Vector<string> m_stateNames;
   bool m_isDefined;
