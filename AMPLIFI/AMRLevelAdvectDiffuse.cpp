@@ -682,6 +682,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     fillMobility(true);
   }
   
+  // need to rethink about this
   m_flux.exchange();
   
   for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit)
