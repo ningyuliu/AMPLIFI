@@ -1,7 +1,7 @@
 ###############################################################
 # parameters and options for the numerical methods
 
-PoissonSolver.implicit    = true
+PoissonSolver.implicit    = false
 
 Ac = 0.25
 Ai = 100
@@ -13,7 +13,7 @@ dt_tolerance_factor = 1.1
 
 sourceNumericalScheme = 2
 implicitReflux = false
-use_limiting = true
+use_limiting = false
 
 # testing, diagnostics, etc.
 verbosity = 3
@@ -35,9 +35,9 @@ muBar          = 0.0382
 ###############################################################
 # output
 
-plot_interval = 5
+plot_interval = 100
 plot_prefix  = results/out
-max_time = 1.1e-9
+max_time = 20e-9
 max_step = 4000
 
 plot_period = -1
@@ -117,9 +117,9 @@ mobility.A            =   3.99e25
 # initial plasma cloud(s)
 
 iniPlaCloud.number = 1
-iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.125e-2
+iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.0625e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.mag    = 1e20
+iniPlaCloud.mag    = 1e17
 
 
 ###############################################################
@@ -155,9 +155,9 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_lo      = 3 3 3
-EPot.bc_loValue = -4.8e6 -4.8e6 -12000
+EPot.bc_loValue = -1.0e6 -1.0e6 -2500
 EPot.bc_hi      = 3 3 3
-EPot.bc_hiValue = -4.8e6 -4.8e6 0.
+EPot.bc_hiValue = -1.0e6 -1.0e6 0.
 
 
 ###############################################################
