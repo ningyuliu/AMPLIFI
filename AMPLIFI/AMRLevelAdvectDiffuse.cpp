@@ -504,6 +504,60 @@ advance()
 /*********/
 void
 AMRLevelAdvectDiffuse::
+updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt) {
+  
+  for (DataIterator dit=U.dataIterator(); dit.ok(); ++dit) {
+    FArrayBox dU, rateI, rateA;
+    dU.define(U[dit()].box(), U[dit()].nComp());
+    rateI.define(U[dit()].box(), U[dit()].nComp());
+    rateA.define(U[dit()].box(), U[dit()].nComp());
+    if (m_gas.m_uniformity) {
+      getRate(rateI, Emag[dit()], mu[dit()], "ionization");
+      getRate(rateA, Emag[dit()], mu[dit()], "attachment");
+    } else {
+      getRate(rateI, Emag[dit()], m_neut[dit()], mu[dit()], "ionization");
+      getRate(rateA, Emag[dit()], m_neut[dit()], mu[dit()], "attachment");
+    }
+    
+    dU.setVal(0.0);
+    dU.axby(rateI, rateA, dt, -dt);
+    dU *= U[dit()];
+    U[dit()] += dU;
+  }
+  U.exchange();
+}
+
+/*********/
+void
+AMRLevelAdvectDiffuse::
+updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const Real dt) {
+  
+  for (DataIterator dit=U.dataIterator(); dit.ok(); ++dit) {
+    FArrayBox dU, rateI, rateA;
+    dU.define(U[dit()].box(), U[dit()].nComp());
+    rateI.define(U[dit()].box(), U[dit()].nComp());
+    rateA.define(U[dit()].box(), U[dit()].nComp());
+    if (m_gas.m_uniformity) {
+      getRate(rateI, Emag[dit()], mu[dit()], "ionization");
+      getRate(rateA, Emag[dit()], mu[dit()], "attachment");
+    } else {
+      getRate(rateI, Emag[dit()], m_neut[dit()], mu[dit()], "ionization");
+      getRate(rateA, Emag[dit()], m_neut[dit()], mu[dit()], "attachment");
+    }
+    
+    dU.setVal(0.0);
+    dU.axby(rateI, rateA, 1.0, -1.0);
+    dU *= U[dit()];
+    dU += phtznRate[dit()];
+    dU *= dt;
+    U[dit()] += dU;
+  }
+  U.exchange();
+}
+
+/*********/
+void
+AMRLevelAdvectDiffuse::
 makeDiffusiveSource(LevelData<FArrayBox>& a_diffusiveSrc, const LevelData<FArrayBox>& U) {
   for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
     a_diffusiveSrc[dit()].setVal(0);
@@ -591,11 +645,20 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
                         &finerFRPtr,
                         tCoarserOld, tCoarserNew);
   
-  LevelData<FArrayBox> srs, srsTmp;
+  LevelData<FArrayBox> srs, srsTmp, srsRea, srsReaTmp; // divide sources into general source and reaction term
   srs.define(m_UNew);
   srsTmp.define(m_UNew);
   
+  // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
+  if (m_varyingField) {
+    poissonSolve();
+    fillMobility(false);
+    fillAdvectionVelocity(false);
+  }
+  
+  
 //  makeSource(m_UNew, 0.0);
+  
   
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
