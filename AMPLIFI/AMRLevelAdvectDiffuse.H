@@ -80,11 +80,13 @@ public:
     
   void getRate(LevelData<FArrayBox>& a_rate, const LevelData<FArrayBox>& a_Emag, const LevelData<FArrayBox>& a_mu, string procName);
   void getRate(FArrayBox& a_rate, const FArrayBox& a_Emag, const FArrayBox& a_mu, string procName);
-  
   void getRate(LevelData<FArrayBox>& a_rate, const LevelData<FArrayBox>& a_Emag, const LevelData<FArrayBox>& a_n, const LevelData<FArrayBox>& a_mu, string procName);
   void getRate(FArrayBox& a_rate, const FArrayBox& a_Emag, const FArrayBox& a_n, const FArrayBox& a_mu, string procName);
-  void updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt);
-  void updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const double dt);
+  
+  void updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt);
+  void updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const double dt);
+  void updateWithReactionContribution(FArrayBox& U, FArrayBox& ion, const FArrayBox& Uprov, const FArrayBox& RateI, const FArrayBox& RateA, const FArrayBox& phtznRate, const double dt);
+
   void makeDiffusiveSource(LevelData<FArrayBox>& a_diffusiveSource, const LevelData<FArrayBox>& U);
   
   /// Defines this AMRLevelAdvectDiffuse

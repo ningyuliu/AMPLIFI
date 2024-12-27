@@ -491,7 +491,8 @@ advance()
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::advance");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::advance");
   
-  Real newDt = diffusiveAdvance(diffusiveSrc);
+  //Real newDt = diffusiveAdvance(diffusiveSrc);
+  Real newDt = strangAdvance(diffusiveSrc);
   
   // Update the time and store the new timestep
   m_time += m_dt;
@@ -501,15 +502,13 @@ advance()
   return returnDt;
 }
 
-need to modify ion densities too
 /*********/
 void
 AMRLevelAdvectDiffuse::
-updateWithReactionContribution (LevelData<FArrayBox>& U, LevelData<FArrayBox>& UIon, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt) {
+updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt) {
   
   for (DataIterator dit=U.dataIterator(); dit.ok(); ++dit) {
-    FArrayBox dU, rateI, rateA;
-    dU.define(U[dit()].box(), U[dit()].nComp());
+    FArrayBox rateI, rateA;
     rateI.define(U[dit()].box(), U[dit()].nComp());
     rateA.define(U[dit()].box(), U[dit()].nComp());
     if (m_gas.m_uniformity) {
@@ -519,23 +518,24 @@ updateWithReactionContribution (LevelData<FArrayBox>& U, LevelData<FArrayBox>& U
       getRate(rateI, Emag[dit()], m_neut[dit()], mu[dit()], "ionization");
       getRate(rateA, Emag[dit()], m_neut[dit()], mu[dit()], "attachment");
     }
-    
-    dU.setVal(0.0);
-    dU.axby(rateI, rateA, dt, -dt);
-    dU *= U[dit()];
-    U[dit()] += dU;
+    rateI.mult(U[dit()]);
+    ion[dit()].plus(rateI, dt, 0, 0);
+    rateA.mult(U[dit()]);
+    ion[dit()].plus(rateA, dt, 0, 1);
+    U[dit()].plus(rateI, dt, 0, 0);
+    U[dit()].minus(rateA, dt, 0, 0);
   }
   U.exchange();
+  ion.exchange();
 }
 
 /*********/
 void
 AMRLevelAdvectDiffuse::
-updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const Real dt) {
+updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const Real dt) {
   
   for (DataIterator dit=U.dataIterator(); dit.ok(); ++dit) {
-    FArrayBox dU, rateI, rateA;
-    dU.define(U[dit()].box(), U[dit()].nComp());
+    FArrayBox rateI, rateA;
     rateI.define(U[dit()].box(), U[dit()].nComp());
     rateA.define(U[dit()].box(), U[dit()].nComp());
     if (m_gas.m_uniformity) {
@@ -545,15 +545,35 @@ updateWithReactionContribution (LevelData<FArrayBox>& U, const LevelData<FArrayB
       getRate(rateI, Emag[dit()], m_neut[dit()], mu[dit()], "ionization");
       getRate(rateA, Emag[dit()], m_neut[dit()], mu[dit()], "attachment");
     }
-    
-    dU.setVal(0.0);
-    dU.axby(rateI, rateA, 1.0, -1.0);
-    dU *= U[dit()];
-    dU += phtznRate[dit()];
-    dU *= dt;
-    U[dit()] += dU;
+    rateI.mult(U[dit()]);
+    rateI.plus(phtznRate[dit()]);
+    ion[dit()].plus(rateI, dt, 0, 0);
+    rateA.mult(U[dit()]);
+    ion[dit()].plus(rateA, dt, 0, 1);
+    U[dit()].plus(rateI, dt, 0, 0);
+    U[dit()].minus(rateA, dt, 0, 0);
   }
   U.exchange();
+  ion.exchange();
+}
+
+/*********/
+void
+AMRLevelAdvectDiffuse::
+updateWithReactionContribution(FArrayBox& U, FArrayBox& ion, const FArrayBox& Uprov, const FArrayBox& RateI, const FArrayBox& RateA, const FArrayBox& phtznRate, const double dt) {
+  
+  FArrayBox rateI, rateA;
+  rateI.define(U.box(), U.nComp());
+  rateA.define(U.box(), U.nComp());
+  rateI.copy(RateI);
+  rateA.copy(RateA);
+  rateI.mult(Uprov);
+  rateI.plus(phtznRate);
+  ion.plus(rateI, dt, 0, 0);
+  rateA.mult(Uprov);
+  ion.plus(rateA, dt, 0, 1);
+  U.plus(rateI, dt, 0, 0);
+  U.minus(rateA, dt, 0, 0);
 }
 
 /*********/
@@ -798,7 +818,6 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     }
   
   switch (m_sourceNumericalScheme) {
-    
     // Dhali and Williams, 1987, but with the rate calculated using average field
     case 2: {
       double alpha = 0.5;
@@ -820,31 +839,18 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
         
         FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
         Uhs.axby(m_UOld[dit()], m_UNew[dit()], 1-alpha, alpha);
-        srs[dit()].axby(rateI, rateA, 1.0, -1.0);
-       
-        srs[dit()].mult(m_UOld[dit()]);
         
+        srs[dit()].axby(rateI, rateA, 1.0, -1.0);
+        srs[dit()].mult(m_UOld[dit()]);
         srs[dit()].plus(m_phtzn.rate[dit()]);
         Uhs.plus(srs[dit()], 0.5*m_dt);
         
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(Uhs);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(Uhs);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
+        updateWithReactionContribution (m_UNew[dit()], m_ionNew[dit()], Uhs, rateI, rateA, m_phtzn.rate[dit()], m_dt);
       }
-      
       break;
     }
      
-    // differ with 2 only in Uhs, where source is calcuated using U mean
+    // differ with 2 only in Uhs, where source contribution to Uhs is calcuated using U mean
     case 3:
     {
       double alpha = 0.5;
@@ -866,126 +872,19 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
         
         FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
         Uhs.axby(m_UOld[dit()], m_UNew[dit()], 1-alpha, alpha);
+        
         srs[dit()].axby(rateI, rateA, 1.0, -1.0);
-        
         srs[dit()].mult(Uhs);
-        
         srs[dit()].plus(m_phtzn.rate[dit()]);
         Uhs.plus(srs[dit()], 0.5*m_dt);
         
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(Uhs);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(Uhs);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
+        updateWithReactionContribution (m_UNew[dit()], m_ionNew[dit()], Uhs, rateI, rateA, m_phtzn.rate[dit()], m_dt);
       }
       
       break;
     }
       
-//    // LeVeque, p. 390, 2002
-//    case 4: {
-//      double rateMax = 0;
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        FArrayBox rateNew(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//        rateNew.setVal(0.0);
-//        getRate(rateNew, m_field.m_Emag[dit()], m_mu[dit()], "ionization");
-//        rateMax = max(rateMax, rateNew.max());
-//      }
-//
-//      LevelData<FArrayBox> dUTmp;
-//      dUTmp.define(m_UOld);
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        dUTmp[dit()].setVal(0.0);
-//      }
-//
-//      int numOfIters = m_dt*8*rateMax;
-//      numOfIters = max(numOfIters, 1);
-//      numOfIters = 4;
-//      double dtSrs = m_dt/numOfIters;
-//      if (s_verbosity >= 3) {
-//        pout() << "AMRLevelAdvectDiffuse::diffusiveAdvance: source " << m_level << endl;
-//        pout() << "alpha = ";
-//      }
-//
-//      double eps = 1e-10;
-//      for (int isrs = 1; isrs <= numOfIters; isrs++) {
-//        double alpha = (isrs-0.5)*dtSrs/m_dt;
-//        if (s_verbosity >= 3)
-//          pout() << alpha << " ";
-//        for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//          FArrayBox ETmp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//          FArrayBox rate(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//          FArrayBox muTemp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//
-//          ETmp.axby(m_fieldOld.m_Emag[dit()], m_field.m_Emag[dit()], 1-alpha, alpha);
-//          muTemp.axby(m_muOld[dit()], m_mu[dit()], 1-alpha, alpha);
-//          getRate(rate, ETmp, muTemp, "ionization");
-//
-//          FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
-//          Uhs.axby(m_UOld[dit()], m_UNew[dit()], 0.5, 0.5);
-////          for (BoxIterator bit(m_grids.get(dit)); bit.ok(); ++bit) {
-////            const IntVect& iv = bit();
-////            if (abs(m_UOld[dit()](iv,0)) > eps && (abs(m_UNew[dit()](iv,0)-m_UOld[dit()](iv,0))/m_UOld[dit()](iv,0) > 0.5)) {
-////              double gr = log(abs(m_UNew[dit()](iv,0)/m_UOld[dit()](iv,0)))/m_dt;
-////              Uhs(iv, 0) = m_UOld[dit()](iv,0) * exp(gr * alpha*m_dt);
-////            }
-////            else
-////              Uhs(iv, 0) = m_UOld[dit()](iv,0)*(1-alpha) + m_UNew[dit()](iv,0)*alpha;
-////          }
-//
-////          Uhs.plus(dUTmp[dit()]);
-//
-//          m_srs[dit()].copy(rate);
-//          m_srs[dit()].mult(Uhs);
-//          m_srs[dit()].plus(m_phtzn.rate[dit()]);
-//          Uhs.plus(m_srs[dit()], 0.5*m_dt);
-//
-//          m_srs[dit()].copy(rate);
-//          m_srs[dit()].mult(Uhs);
-//          m_srs[dit()].plus(m_phtzn.rate[dit()]);
-//
-//          dUTmp[dit()].plus(m_srs[dit()], m_dt * 1.0/numOfIters);
-//        }
-//      }
-//
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        m_UNew[dit()].plus(dUTmp[dit()], m_grids[dit()], 0, 0);
-//        m_ionNew[dit()].plus(dUTmp[dit()], m_grids[dit()], 0, 0);
-//      }
-//      if (s_verbosity >= 3)
-//        pout() << endl;
-//      break;
-//    }
-//
-//    // Colella et al. 1999
-//    case 5:
-//    {
-//      double alpha = 0.5;
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        m_srs[dit()].mult(alpha);
-//        FArrayBox rate(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//        getRate(rate, m_field.m_Emag[dit()], m_mu[dit()], "ionization");
-//        rate.mult(m_UNew[dit()]);
-//        rate.plus(m_phtzn.rate[dit()]);
-//        rate.mult(alpha);
-//        m_srs[dit()].plus(rate);
-//
-//        // use this version so no update is made to ghost cells
-//        m_UNew[dit()].plus(m_srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-//        m_ionNew[dit()].plus(m_srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-//      }
-//
-//      break;
-//    }
-      
+    // no half step
     default:
       double alpha = 0.5;
       for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
@@ -1004,22 +903,13 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
           getRate(rateA, ETmp, m_neut[dit()], muTemp, "attachment");
         }
         
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(m_UOld[dit()]);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(m_UOld[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
+        updateWithReactionContribution (m_UNew[dit()], m_ionNew[dit()], m_UOld[dit()], rateI, rateA, m_phtzn.rate[dit()], m_dt);
       }
       
       break;
   }
+  m_UNew.exchange();
+  m_ionNew.exchange();
   
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::diffusiveAdvanceEnd");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::diffusiveAdvanceEnd");
@@ -1043,36 +933,22 @@ strangAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
                         &finerFRPtr,
                         tCoarserOld, tCoarserNew);
   
-  LevelData<FArrayBox> srs, srsTmp, srsRea, srsReaTmp; // divide sources into general source and reaction term
-  srs.define(m_UNew);
-  srsTmp.define(m_UNew);
-  
   // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
   if (m_varyingField) {
     poissonSolve();
     fillMobility(false);
     fillAdvectionVelocity(false);
   }
-
-  updateWithReactionContribution(m_UNew, m_field.m_Emag, m_mu, m_phtzn.rate, 0.5*m_dt);
+  updateWithReactionContribution(m_UNew, m_ionNew, m_field.m_Emag, m_mu, m_phtzn.rate, 0.5*m_dt);
   m_UNew.copyTo(m_UNew.interval(), m_UOld, m_UOld.interval());
-  
-  for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
-    srs[dit()].setVal(0.0);
-    srsTmp[dit()].setVal(0.0);
-  }
 
-  for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit)
-    srsTmp[dit()] += a_diffusiveSrc[dit()];
-  srsTmp.exchange();
-  
   //  patchgodunov L273
   //  localSource *= 0.5 * a_dt;
   // *finerFRPtr is set to zero at the beginning but *coarserFRPtr is incremented from prior value
   Real newDt = m_levelGodunov.step(m_UNew,
                                    m_flux,
                                    m_advVel,
-                                   srsTmp,
+                                   a_diffusiveSrc,
                                    *coarserDataOldPtr,
                                    tCoarserOld,
                                    *coarserDataNewPtr,
@@ -1091,7 +967,6 @@ strangAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     for (DataIterator dit=m_dU.dataIterator(); dit.ok(); ++dit) {
       m_dU[dit()] -= m_UOld[dit()];
       m_dU[dit()] /= m_dt;
-      //m_dU[dit()] += srs[dit()];
     }
     s_diffuseLevTGA->computeDiffusion(m_dUDiff, m_UOld, m_dU,
                                 finerFRPtr, coarserFRPtr,
@@ -1179,225 +1054,14 @@ strangAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
   
   switch (m_sourceNumericalScheme) {
     
-    // Dhali and Williams, 1987, but with the rate calculated using average field
-    case 2: {
-      double alpha = 0.5;
-      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-        FArrayBox ETmp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateI(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateA(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox muTemp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        
-        ETmp.axby(m_fieldOld.m_Emag[dit()], m_field.m_Emag[dit()], 1-alpha, alpha);
-        muTemp.axby(m_muOld[dit()], m_mu[dit()], 1-alpha, alpha);
-        if (m_gas.m_uniformity) {
-          getRate(rateI, ETmp, muTemp, "ionization");
-          getRate(rateA, ETmp, muTemp, "attachment");
-        } else {
-          getRate(rateI, ETmp, m_neut[dit()], muTemp, "ionization");
-          getRate(rateA, ETmp, m_neut[dit()], muTemp, "attachment");
-        }
-        
-        FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
-        Uhs.axby(m_UOld[dit()], m_UNew[dit()], 1-alpha, alpha);
-        srs[dit()].axby(rateI, rateA, 1.0, -1.0);
-       
-        srs[dit()].mult(m_UOld[dit()]);
-        
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        Uhs.plus(srs[dit()], 0.5*m_dt);
-        
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(Uhs);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(Uhs);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
-      }
-      
+      // Strang splitting - Almgren et al. [2010]
+    case 1: {
+      updateWithReactionContribution(m_UNew, m_ionNew, m_field.m_Emag, m_mu, m_phtzn.rate, 0.5*m_dt);
       break;
-    }
-     
-    // differ with 2 only in Uhs, where source is calcuated using U mean
-    case 3:
-    {
-      double alpha = 0.5;
-      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-        FArrayBox ETmp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateI(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateA(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox muTemp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        
-        ETmp.axby(m_fieldOld.m_Emag[dit()], m_field.m_Emag[dit()], 1-alpha, alpha);
-        muTemp.axby(m_muOld[dit()], m_mu[dit()], 1-alpha, alpha);
-        if (m_gas.m_uniformity) {
-          getRate(rateI, ETmp, muTemp, "ionization");
-          getRate(rateA, ETmp, muTemp, "attachment");
-        } else {
-          getRate(rateI, ETmp, m_neut[dit()], muTemp, "ionization");
-          getRate(rateA, ETmp, m_neut[dit()], muTemp, "attachment");
-        }
-        
-        FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
-        Uhs.axby(m_UOld[dit()], m_UNew[dit()], 1-alpha, alpha);
-        srs[dit()].axby(rateI, rateA, 1.0, -1.0);
-        
-        srs[dit()].mult(Uhs);
-        
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        Uhs.plus(srs[dit()], 0.5*m_dt);
-        
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(Uhs);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(Uhs);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
-      }
-      
-      break;
-    }
-      
-//    // LeVeque, p. 390, 2002
-//    case 4: {
-//      double rateMax = 0;
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        FArrayBox rateNew(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//        rateNew.setVal(0.0);
-//        getRate(rateNew, m_field.m_Emag[dit()], m_mu[dit()], "ionization");
-//        rateMax = max(rateMax, rateNew.max());
-//      }
-//
-//      LevelData<FArrayBox> dUTmp;
-//      dUTmp.define(m_UOld);
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        dUTmp[dit()].setVal(0.0);
-//      }
-//
-//      int numOfIters = m_dt*8*rateMax;
-//      numOfIters = max(numOfIters, 1);
-//      numOfIters = 4;
-//      double dtSrs = m_dt/numOfIters;
-//      if (s_verbosity >= 3) {
-//        pout() << "AMRLevelAdvectDiffuse::diffusiveAdvance: source " << m_level << endl;
-//        pout() << "alpha = ";
-//      }
-//
-//      double eps = 1e-10;
-//      for (int isrs = 1; isrs <= numOfIters; isrs++) {
-//        double alpha = (isrs-0.5)*dtSrs/m_dt;
-//        if (s_verbosity >= 3)
-//          pout() << alpha << " ";
-//        for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//          FArrayBox ETmp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//          FArrayBox rate(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//          FArrayBox muTemp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//
-//          ETmp.axby(m_fieldOld.m_Emag[dit()], m_field.m_Emag[dit()], 1-alpha, alpha);
-//          muTemp.axby(m_muOld[dit()], m_mu[dit()], 1-alpha, alpha);
-//          getRate(rate, ETmp, muTemp, "ionization");
-//
-//          FArrayBox Uhs(m_UNew[dit()].box(), m_UNew.nComp()); // U at half step
-//          Uhs.axby(m_UOld[dit()], m_UNew[dit()], 0.5, 0.5);
-////          for (BoxIterator bit(m_grids.get(dit)); bit.ok(); ++bit) {
-////            const IntVect& iv = bit();
-////            if (abs(m_UOld[dit()](iv,0)) > eps && (abs(m_UNew[dit()](iv,0)-m_UOld[dit()](iv,0))/m_UOld[dit()](iv,0) > 0.5)) {
-////              double gr = log(abs(m_UNew[dit()](iv,0)/m_UOld[dit()](iv,0)))/m_dt;
-////              Uhs(iv, 0) = m_UOld[dit()](iv,0) * exp(gr * alpha*m_dt);
-////            }
-////            else
-////              Uhs(iv, 0) = m_UOld[dit()](iv,0)*(1-alpha) + m_UNew[dit()](iv,0)*alpha;
-////          }
-//
-////          Uhs.plus(dUTmp[dit()]);
-//
-//          m_srs[dit()].copy(rate);
-//          m_srs[dit()].mult(Uhs);
-//          m_srs[dit()].plus(m_phtzn.rate[dit()]);
-//          Uhs.plus(m_srs[dit()], 0.5*m_dt);
-//
-//          m_srs[dit()].copy(rate);
-//          m_srs[dit()].mult(Uhs);
-//          m_srs[dit()].plus(m_phtzn.rate[dit()]);
-//
-//          dUTmp[dit()].plus(m_srs[dit()], m_dt * 1.0/numOfIters);
-//        }
-//      }
-//
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        m_UNew[dit()].plus(dUTmp[dit()], m_grids[dit()], 0, 0);
-//        m_ionNew[dit()].plus(dUTmp[dit()], m_grids[dit()], 0, 0);
-//      }
-//      if (s_verbosity >= 3)
-//        pout() << endl;
-//      break;
-//    }
-//
-//    // Colella et al. 1999
-//    case 5:
-//    {
-//      double alpha = 0.5;
-//      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-//        m_srs[dit()].mult(alpha);
-//        FArrayBox rate(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-//        getRate(rate, m_field.m_Emag[dit()], m_mu[dit()], "ionization");
-//        rate.mult(m_UNew[dit()]);
-//        rate.plus(m_phtzn.rate[dit()]);
-//        rate.mult(alpha);
-//        m_srs[dit()].plus(rate);
-//
-//        // use this version so no update is made to ghost cells
-//        m_UNew[dit()].plus(m_srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-//        m_ionNew[dit()].plus(m_srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-//      }
-//
-//      break;
-//    }
-      
+    }       
+    // no half step
     default:
-      double alpha = 0.5;
-      for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-        FArrayBox ETmp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateI(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox rateA(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        FArrayBox muTemp(m_field.m_Emag[dit()].box(), m_field.m_Emag.nComp());
-        
-        ETmp.axby(m_fieldOld.m_Emag[dit()], m_field.m_Emag[dit()], 1-alpha, alpha);
-        muTemp.axby(m_muOld[dit()], m_mu[dit()], 1-alpha, alpha);
-        if (m_gas.m_uniformity) {
-          getRate(rateI, ETmp, muTemp, "ionization");
-          getRate(rateA, ETmp, muTemp, "attachment");
-        } else {
-          getRate(rateI, ETmp, m_neut[dit()], muTemp, "ionization");
-          getRate(rateA, ETmp, m_neut[dit()], muTemp, "attachment");
-        }
-        
-        srs[dit()].copy(rateI);
-        srs[dit()].mult(m_UOld[dit()]);
-        srs[dit()].plus(m_phtzn.rate[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 0);
-        
-        srs[dit()].copy(rateA);
-        srs[dit()].mult(m_UOld[dit()]);
-        // use this version so no update is made to ghost cells
-        m_UNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], -m_dt, 0, 0);
-        m_ionNew[dit()].plus(srs[dit()], m_grids[dit()], m_grids[dit()], m_dt, 0, 1);
-      }
-      
+      MayDay::Error("invalid source scheme!");
       break;
   }
   

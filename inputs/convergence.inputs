@@ -11,7 +11,7 @@ initial_Ac = 0.05
 max_dt_growth = 1.1
 dt_tolerance_factor = 1.1
 
-sourceNumericalScheme = 2
+sourceNumericalScheme = 1
 implicitReflux = false
 use_limiting = false
 
