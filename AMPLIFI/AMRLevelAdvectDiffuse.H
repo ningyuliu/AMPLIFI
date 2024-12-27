@@ -216,6 +216,8 @@ protected:
   void printRefluxRHSMax(const std::string& a_preflix) ;
   
   Real diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSource);
+  Real strangAdvance(LevelData<FArrayBox>& a_diffusiveSource);
+  
   void defineSolvers();
   BCHolder                    m_bcFunc;
   // solver to do level diffusion and flux register interaction

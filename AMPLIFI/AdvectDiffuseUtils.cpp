@@ -549,6 +549,9 @@ getAmbientGas(gas& a_gas)
   pp = ParmParse("ionization");
   pp.get("name", processName);
   pp.get("numPieces", numPiece);
+  lb.resize(numPiece);
+  fNames.resize(numPiece);
+  paramNums.resize(numPiece);
   pp.getarr("xlb", lb, 0, numPiece);
   pp.getarr("funcNames", fNames, 0, numPiece);
   pp.getarr("paramNums", paramNums, 0, numPiece);
@@ -573,6 +576,9 @@ getAmbientGas(gas& a_gas)
   pp = ParmParse("attachment");
   pp.get("name", processName);
   pp.get("numPieces", numPiece);
+  lb.resize(numPiece);
+  fNames.resize(numPiece);
+  paramNums.resize(numPiece);
   pp.getarr("xlb", lb, 0, numPiece);
   pp.getarr("funcNames", fNames, 0, numPiece);
   pp.getarr("paramNums", paramNums, 0, numPiece);
@@ -597,6 +603,9 @@ getAmbientGas(gas& a_gas)
   pp = ParmParse("mobility");
   pp.get("name", processName);
   pp.get("numPieces", numPiece);
+  lb.resize(numPiece);
+  fNames.resize(numPiece);
+  paramNums.resize(numPiece);
   pp.getarr("xlb", lb, 0, numPiece);
   pp.getarr("funcNames", fNames, 0, numPiece);
   pp.getarr("paramNums", paramNums, 0, numPiece);
