@@ -228,6 +228,7 @@ define(const AdvectPhysics&        a_gphys,
   pp.get("verbosity",  a_verbosity);
   bool imReflux;
   pp.get("implicitReflux", imReflux);
+  pp.get("advanceScheme", m_advanceScheme);
   pp.get("sourceNumericalScheme", m_sourceNumericalScheme);
   verbosity(a_verbosity);
   pp.get("testing", s_testing);
@@ -491,9 +492,18 @@ advance()
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::advance");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::advance");
   
-  //Real newDt = diffusiveAdvance(diffusiveSrc);
-  Real newDt = strangAdvance(diffusiveSrc);
-  
+  Real newDt;
+  switch (m_advanceScheme) {
+    case 1:
+      newDt = diffusiveAdvance(diffusiveSrc);
+      break;
+    case 2:
+      newDt = strangAdvance(diffusiveSrc);
+      break;
+    default:
+      MayDay::Error("invalid advance scheme!");
+      break;
+  }
   // Update the time and store the new timestep
   m_time += m_dt;
   Real returnDt = m_cfl * newDt;
@@ -523,7 +533,7 @@ updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& io
     rateA.mult(U[dit()]);
     ion[dit()].plus(rateA, dt, 0, 1);
     U[dit()].plus(rateI, dt, 0, 0);
-    U[dit()].minus(rateA, dt, 0, 0);
+    U[dit()].plus(rateA, -dt, 0, 0);
   }
   U.exchange();
   ion.exchange();
@@ -551,7 +561,7 @@ updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& io
     rateA.mult(U[dit()]);
     ion[dit()].plus(rateA, dt, 0, 1);
     U[dit()].plus(rateI, dt, 0, 0);
-    U[dit()].minus(rateA, dt, 0, 0);
+    U[dit()].plus(rateA, -dt, 0, 0);
   }
   U.exchange();
   ion.exchange();
@@ -573,7 +583,7 @@ updateWithReactionContribution(FArrayBox& U, FArrayBox& ion, const FArrayBox& Up
   rateA.mult(Uprov);
   ion.plus(rateA, dt, 0, 1);
   U.plus(rateI, dt, 0, 0);
-  U.minus(rateA, dt, 0, 0);
+  U.plus(rateA, -dt, 0, 0);
 }
 
 /*********/
@@ -724,6 +734,10 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     finerFRPtr->setToZero();
   
   Interval interv(0, 0);
+  
+  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
+    m_dUDiff[dit()].setVal(0);
+  
   if (m_hasDiffusion) {
     //compute Du = unew-uold and put uold back into unew
     //so we can advance using leveltga
@@ -960,6 +974,8 @@ strangAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     finerFRPtr->setToZero();
   
   Interval interv(0, 0);
+  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
+    m_dUDiff[dit()].setVal(0);
   if (m_hasDiffusion) {
     //compute Du = unew-uold and put uold back into unew
     //so we can advance using leveltga

@@ -384,7 +384,7 @@ protected:
   static Vector<RefCountedPtr<LevelData<FluxBox> > > s_bCoefComp;
   LevelData<FluxBox>   m_EEdgeOld, m_EEdgeCoarseOld;
   
-  int m_sourceNumericalScheme;
+  int m_advanceScheme, m_sourceNumericalScheme;
   
   static bool s_testing;
   LevelData<FArrayBox> m_testOutput;

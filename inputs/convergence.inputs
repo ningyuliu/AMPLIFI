@@ -11,7 +11,8 @@ initial_Ac = 0.05
 max_dt_growth = 1.1
 dt_tolerance_factor = 1.1
 
-sourceNumericalScheme = 1
+advanceScheme = 1
+sourceNumericalScheme = 2
 implicitReflux = false
 use_limiting = false
 
@@ -35,9 +36,9 @@ muBar          = 0.0382
 ###############################################################
 # output
 
-plot_interval = 10
+plot_interval = 8
 plot_prefix  = results/out
-max_time = 1.1e-9
+max_time = 20e-9
 max_step = 4000
 
 plot_period = -1
@@ -46,11 +47,11 @@ plot_period = -1
 # simulation domain, discretization info, etc.
 
 # if fixed_dt > 0, use it for the base level
-fixed_dt   = 5e-12
+fixed_dt   = 320e-12
 
 # this is the length of the longest side
 domain_length = .25e-2
-n_cell = 80 80 128
+n_cell = 40 40 64
 max_level = 0
 
 periodic_bc = 0 0 0
@@ -73,7 +74,8 @@ gas.uniformity    = true
 
 ### ground pressure values
 gas.density           = 2.688e25
-gas.elecDiffCoef      = 0.1995
+gas.elecDiffCoef      = -1
+#gas.elecDiffCoef      = 0.1995
 
 bgdPlasma.numPieces   = 1
 bgdPlasma.xlb         = 0
@@ -117,9 +119,9 @@ mobility.A            =   3.99e25
 # initial plasma cloud(s)
 
 iniPlaCloud.number = 1
-iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.125e-2
+iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.0625e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.mag    = 1e20
+iniPlaCloud.mag    = 1e17
 
 
 ###############################################################
@@ -155,9 +157,9 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_lo      = 3 3 3
-EPot.bc_loValue = -4.8e6 -4.8e6 -12000
+EPot.bc_loValue = -1.0e6 -1.0e6 -2500
 EPot.bc_hi      = 3 3 3
-EPot.bc_hiValue = -4.8e6 -4.8e6 0.
+EPot.bc_hiValue = -1.0e6 -1.0e6 0.
 
 
 ###############################################################
