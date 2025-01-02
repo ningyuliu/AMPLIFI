@@ -730,6 +730,9 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
                                    m_time,
                                    m_dt);
   
+  printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::Godunov.step");
+  printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::Godunov.step");
+  
   if (m_hasFiner)
     finerFRPtr->setToZero();
   

@@ -61,9 +61,9 @@ LevelAdvect::define(const AdvectPhysics&        a_gphys,
   m_grids  = a_thisDisjointBoxLayout;
 
   // Order of the normal predictor (1 -> PLM, 2-> PPM)
-  m_normalPredOrder = 1;
+  m_normalPredOrder = 2;
 
-  m_useFourthOrderSlopes = false;
+  m_useFourthOrderSlopes = true;
   m_usePrimLimiting      = a_useLimiting;
   m_useCharLimiting      = false;
   m_useFlattening        = false;

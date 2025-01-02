@@ -71,9 +71,7 @@ public:
   void setBdrySlopes(FArrayBox&       a_dW,
                      const FArrayBox& a_W,
                      const int&       a_dir,
-                     const Real&      a_time)
-  {
-  }
+                     const Real&      a_time);
 
   /// does not apply here
   void artViscBC(FArrayBox&       a_F,

@@ -14,10 +14,10 @@ dt_tolerance_factor = 1.1
 advanceScheme = 1
 sourceNumericalScheme = 2
 implicitReflux = false
-use_limiting = false
+use_limiting = true
 
 # testing, diagnostics, etc.
-verbosity = 3
+verbosity = 9
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -36,7 +36,7 @@ muBar          = 0.0382
 ###############################################################
 # output
 
-plot_interval = 8
+plot_interval = 1
 plot_prefix  = results/out
 max_time = 20e-9
 max_step = 4000
@@ -47,11 +47,11 @@ plot_period = -1
 # simulation domain, discretization info, etc.
 
 # if fixed_dt > 0, use it for the base level
-fixed_dt   = 320e-12
+fixed_dt   = 160e-12
 
 # this is the length of the longest side
 domain_length = .25e-2
-n_cell = 40 40 64
+n_cell = 80 80 128
 max_level = 0
 
 periodic_bc = 0 0 0
@@ -74,8 +74,8 @@ gas.uniformity    = true
 
 ### ground pressure values
 gas.density           = 2.688e25
-gas.elecDiffCoef      = -1
-#gas.elecDiffCoef      = 0.1995
+#gas.elecDiffCoef      = -1
+gas.elecDiffCoef      = 0.1995
 
 bgdPlasma.numPieces   = 1
 bgdPlasma.xlb         = 0
@@ -146,6 +146,7 @@ diffusion.bc_value = 0.
 ###############################################################
 # Poisson's equation solver inputs
 
+PoissonSolver.varyingField  = false
 PoissonSolver.num_smooth  = 8
 PoissonSolver.tolerance   = 1.0e-10
 PoissonSolver.num_mg      = 1

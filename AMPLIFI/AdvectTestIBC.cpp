@@ -13,6 +13,7 @@
 #include "LoHiSide.H"
 
 #include "AdvectTestIBC.H"
+#include "hyperbolicBC.hpp"
 
 #include "LoHiCenter.H"
 #include "NamespaceHeader.H"
@@ -110,14 +111,54 @@ void AdvectTestIBC::primBC(FArrayBox&            a_WGdnv,
             }
 
           // Set the boundary fluxes
-          FORT_SOLIDBCF(CHF_FRA(a_WGdnv),
-                        CHF_CONST_FRA(a_Wextrap),
-                        CHF_CONST_FRA(a_W),
-                        CHF_CONST_INT(lohisign),
-                        CHF_CONST_INT(a_dir),
-                        CHF_BOX(boundaryBox));
+//          FORT_SOLIDBCF(CHF_FRA(a_WGdnv),
+//                        CHF_CONST_FRA(a_Wextrap),
+//                        CHF_CONST_FRA(a_W),
+//                        CHF_CONST_INT(lohisign),
+//                        CHF_CONST_INT(a_dir),
+//                        CHF_BOX(boundaryBox));
+          
+          SolidBC(a_WGdnv, a_Wextrap, a_W, a_dir, lohisign, boundaryBox);
         }
     }
+}
+
+// Set boundary slopes:
+//   The boundary slopes in a_dW are already set to one sided difference
+//   approximations.  If this function doesn't change them they will be
+//   used for the slopes at the boundaries.
+void AdvectTestIBC::setBdrySlopes(FArrayBox&       a_dW,
+                            const FArrayBox& a_W,
+                            const int&       a_dir,
+                            const Real&      a_time)
+{
+  // In periodic case, this doesn't do anything
+  if (!m_domain.isPeriodic(a_dir))
+  {
+    Box loBox,hiBox,centerBox,domain;
+    int hasLo,hasHi;
+    Box slopeBox = a_dW.box();
+    slopeBox.grow(a_dir,1);
+
+    // Generate the domain boundary boxes, loBox and hiBox, if there are
+    // domain boundarys there
+    loHiCenter(loBox,hasLo,hiBox,hasHi,centerBox,domain,
+               slopeBox,m_domain,a_dir);
+
+    // Set the boundary slopes if necessary
+    if ((hasLo != 0) || (hasHi != 0))
+    {
+//      FORT_SLOPEBCSF(CHF_FRA(a_dW),
+//                     CHF_CONST_FRA(a_W),
+//                     CHF_CONST_INT(a_dir),
+//                     CHF_BOX(loBox),
+//                     CHF_CONST_INT(hasLo),
+//                     CHF_BOX(hiBox),
+//                     CHF_CONST_INT(hasHi));
+      
+      SlopeBC(a_dW, a_W, a_dir, loBox, hasLo, hiBox, hasHi);
+    }
+  }
 }
 
 #include "NamespaceFooter.H"
