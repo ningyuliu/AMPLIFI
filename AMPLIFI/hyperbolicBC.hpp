@@ -14,7 +14,7 @@
 
 namespace hyperbolicBC {
   
-  const double smallDensity = 1e-8;
+  const double smallDensity = 1e-10;
   
 }
 

@@ -489,9 +489,6 @@ advance()
   LevelData<FArrayBox> diffusiveSrc(m_grids, 1, IntVect::Unit);
   makeDiffusiveSource(diffusiveSrc, m_UOld);
   
-  printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::advance");
-  printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::advance");
-  
   Real newDt;
   switch (m_advanceScheme) {
     case 1:
