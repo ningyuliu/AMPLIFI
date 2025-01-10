@@ -673,7 +673,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
                         &finerFRPtr,
                         tCoarserOld, tCoarserNew);
   
-  LevelData<FArrayBox> srs, srsTmp, srsRea, srsReaTmp; // divide sources into general source and reaction term
+  LevelData<FArrayBox> srs, srsTmp;
   srs.define(m_UNew);
   srsTmp.define(m_UNew);
   
@@ -683,10 +683,6 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     fillMobility(false);
     fillAdvectionVelocity(false);
   }
-  
-  
-//  makeSource(m_UNew, 0.0);
-  
   
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
@@ -706,6 +702,10 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     srs[dit()] *= m_UNew[dit()];
     srs[dit()] += m_phtzn.rate[dit()];
   }
+  
+  // patchgodunov L271: slopeBox is one larger than the valid cells, suggesting ghostcells are needed
+  // for the source term; This is consistent with the makeDiffusiveSource call.
+  // m_gdnvPhysics->incrementSource(localSource,W,slopeBox);
   srs.exchange();
   
   srs.copyTo(srsTmp);
@@ -1217,7 +1217,6 @@ postTimeStep()
 //      for (DataIterator dit=grids[lev].dataIterator(); dit.ok(); ++dit)
 //        srsOld[dit()].setVal(0.0);
 //      hierarchy[lev]->m_srs.copyTo(srsOld);
-//      hierarchy[lev]->makeSource(hierarchy[lev]->m_UNew, 0.0);
 //      for (DataIterator dit=grids[lev].dataIterator(); dit.ok(); ++dit) {
 //        hierarchy[lev]->m_UNew[dit()].plus(srsOld[dit()], -0.5*hierarchy[lev]->m_dt);
 //        hierarchy[lev]->m_ionNew[dit()].plus(srsOld[dit()], -0.5*hierarchy[lev]->m_dt);
