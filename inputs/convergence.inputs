@@ -14,10 +14,10 @@ dt_tolerance_factor = 1.1
 advanceScheme = 1
 sourceNumericalScheme = 2
 implicitReflux = false
-use_limiting = true
+use_limiting = false
 
 # testing, diagnostics, etc.
-verbosity = 9
+verbosity = 3
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -36,9 +36,9 @@ muBar          = 0.0382
 ###############################################################
 # output
 
-plot_interval = 1
+plot_interval = 10
 plot_prefix  = results/out
-max_time = 20e-9
+max_time = 1.1e-9
 max_step = 4000
 
 plot_period = -1
@@ -47,17 +47,17 @@ plot_period = -1
 # simulation domain, discretization info, etc.
 
 # if fixed_dt > 0, use it for the base level
-fixed_dt   = 160e-12
+fixed_dt   = 10e-12
 
 # this is the length of the longest side
 domain_length = .25e-2
-n_cell = 80 80 128
-max_level = 0
+n_cell = 40 40 64
+max_level = 2
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2
 tag_buffer_size = 3
-refine_thresh = 0.05
+refine_thresh = 0.001
 regrid_interval = 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4
@@ -74,7 +74,6 @@ gas.uniformity    = true
 
 ### ground pressure values
 gas.density           = 2.688e25
-#gas.elecDiffCoef      = -1
 gas.elecDiffCoef      = 0.1995
 
 bgdPlasma.numPieces   = 1
@@ -118,10 +117,12 @@ mobility.A            =   3.99e25
 ###############################################################
 # initial plasma cloud(s)
 
+iniPlaCloud.bgdDensity = 0.0
+
 iniPlaCloud.number = 1
-iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.0625e-2
+iniPlaCloud.center = 0.078125e-2 0.078125e-2 0.125e-2
 iniPlaCloud.radius = 0.02e-2 0.02e-2 0.02e-2
-iniPlaCloud.mag    = 1e17
+iniPlaCloud.mag    = 1e20
 
 
 ###############################################################
@@ -138,15 +139,14 @@ diffusionSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate
 # zero values for all boundaries; nothing needs to be done for normalization
 # future work
-diffusion.bc_lo   = 2 2 1
-diffusion.bc_hi   = 2 2 2
+diffusion.bc_lo   = 1 1 1
+diffusion.bc_hi   = 1 1 1
 diffusion.bc_value = 0.
 
 
 ###############################################################
 # Poisson's equation solver inputs
 
-PoissonSolver.varyingField  = false
 PoissonSolver.num_smooth  = 8
 PoissonSolver.tolerance   = 1.0e-10
 PoissonSolver.num_mg      = 1
@@ -158,9 +158,9 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_lo      = 3 3 3
-EPot.bc_loValue = -1.0e6 -1.0e6 -2500
+EPot.bc_loValue = -4.8e6 -4.8e6 -12000
 EPot.bc_hi      = 3 3 3
-EPot.bc_hiValue = -1.0e6 -1.0e6 0.
+EPot.bc_hiValue = -4.8e6 -4.8e6 0.
 
 
 ###############################################################

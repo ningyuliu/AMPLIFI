@@ -40,6 +40,8 @@
 #include "GodunovPhysicsF_F.H"
 #include "NamespaceHeader.H"
 
+#include "LevelTGAF_F.H"
+
 #include "additionalBCFunc.hpp"
 #include "photoionization.hpp"
 #include "physicalConstants.h"
@@ -586,6 +588,56 @@ updateWithReactionContribution(FArrayBox& U, FArrayBox& ion, const FArrayBox& Up
 /*********/
 void
 AMRLevelAdvectDiffuse::
+setSourceGhostCells(LevelData<FArrayBox>& a_src, const DisjointBoxLayout& a_grids, int a_lev) {
+  int ncomp = a_src.nComp();
+  for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++dit)
+    {
+      const Box& grid   = a_grids.get(dit());
+      const Box& srcBox = a_src[dit()].box();
+      for (int idir = 0; idir < SpaceDim; idir++)
+        {
+          for (SideIterator sit; sit.ok(); ++sit)
+            {
+              int iside = sign(sit());
+              Box bc_box = adjCellBox(grid, idir, sit(), 1);
+
+              for (int jdir = 0; jdir < SpaceDim; jdir++)
+                {
+                  //want corners too
+                  if (jdir != idir)
+                    {
+                      bc_box.grow(jdir, 1);
+                    }
+                }
+              //if fails might not have a ghost cell.
+              CH_assert(srcBox.contains(bc_box));
+              if (grid.size(idir) >= 4)
+                {
+                  FORT_HORESGHOSTBC(CHF_FRA(a_src[dit()]),
+                                    CHF_BOX(bc_box),
+                                    CHF_CONST_INT(idir),
+                                    CHF_CONST_INT(iside),
+                                    CHF_CONST_INT(ncomp));
+                }
+              else
+                {
+                  // valid region not wide enough to apply HOExtrap -- drop
+                  // to linear extrap
+                  FORT_RESGHOSTBC(CHF_FRA(a_src[dit()]),
+                                  CHF_BOX(bc_box),
+                                  CHF_CONST_INT(idir),
+                                  CHF_CONST_INT(iside),
+                                  CHF_CONST_INT(ncomp));
+                }
+
+            }
+        }
+    }
+}
+
+/*********/
+void
+AMRLevelAdvectDiffuse::
 makeDiffusiveSource(LevelData<FArrayBox>& a_diffusiveSrc, const LevelData<FArrayBox>& U) {
   for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
     a_diffusiveSrc[dit()].setVal(0);
@@ -678,11 +730,11 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
   srsTmp.define(m_UNew);
   
   // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
-  if (m_varyingField) {
-    poissonSolve();
-    fillMobility(false);
-    fillAdvectionVelocity(false);
-  }
+  //  if (m_varyingField) {
+  //    poissonSolve();
+  //    fillMobility(false);
+  //    fillAdvectionVelocity(false);
+  //  }
   
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
@@ -696,22 +748,24 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
       getRate(rateA, m_field.m_Emag[dit()], m_neut[dit()], m_mu[dit()], "attachment");
     }
     
-    srs[dit()].setVal(0.0);
-    srsTmp[dit()].setVal(0.0);
+    srs[dit()].setVal(0.0, srs[dit()].box(), 0);
+    srsTmp[dit()].setVal(0.0, srsTmp[dit()].box(), 0);
     srs[dit()].axby(rateI, rateA, 1.0, -1.0);
     srs[dit()] *= m_UNew[dit()];
     srs[dit()] += m_phtzn.rate[dit()];
   }
   
-  // patchgodunov L271: slopeBox is one larger than the valid cells, suggesting ghostcells are needed
-  // for the source term; This is consistent with the makeDiffusiveSource call.
-  // m_gdnvPhysics->incrementSource(localSource,W,slopeBox);
   srs.exchange();
   
   srs.copyTo(srsTmp);
-
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit)
     srsTmp[dit()] += a_diffusiveSrc[dit()];
+  
+  // patchgodunov L271: slopeBox is one larger than the valid cells, suggesting ghostcells are needed
+  // for the source term; This is consistent with the makeDiffusiveSource call.
+  // m_gdnvPhysics->incrementSource(localSource,W,slopeBox);
+  setSourceGhostCells(srsTmp, m_grids, m_level);
+  srsTmp.exchange();
   
   //  patchgodunov L273
   //  localSource *= 0.5 * a_dt;
@@ -3924,7 +3978,7 @@ fillAdvectionVelocity(bool timeInterpForGhost) {
     Box b = m_advVel[dit()].box();
     m_advVel[dit()].mult(m_muEdge[dit()], b, 0, 0);
     m_advVel[dit()].negate();
-    pout() << "advVelBox: " << b << " muEdgBox: " << m_muEdge[dit()].box() << endl;
+//    pout() << "advVelBox: " << b << " muEdgBox: " << m_muEdge[dit()].box() << endl;
   }
   
   Real eps = 1.0e-10;

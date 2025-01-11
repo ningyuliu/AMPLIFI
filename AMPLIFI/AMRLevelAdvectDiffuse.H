@@ -86,7 +86,12 @@ public:
   void updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const double dt);
   void updateWithReactionContribution(LevelData<FArrayBox>& U, LevelData<FArrayBox>& ion, const LevelData<FArrayBox>& Emag, const LevelData<FArrayBox>& mu, const LevelData<FArrayBox>& phtznRate, const double dt);
   void updateWithReactionContribution(FArrayBox& U, FArrayBox& ion, const FArrayBox& Uprov, const FArrayBox& RateI, const FArrayBox& RateA, const FArrayBox& phtznRate, const double dt);
-
+  
+  // borrow from LevelTGA.cpp
+  void setSourceGhostCells(LevelData<FArrayBox>&    a_src,
+                           const DisjointBoxLayout& a_grids,
+                           int a_lev);
+  
   void makeDiffusiveSource(LevelData<FArrayBox>& a_diffusiveSource, const LevelData<FArrayBox>& U);
   
   /// Defines this AMRLevelAdvectDiffuse
