@@ -1002,14 +1002,21 @@ strangAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
                         tCoarserOld, tCoarserNew);
   
   // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
-  if (m_varyingField) {
-    poissonSolve();
-    fillMobility(false);
-    fillAdvectionVelocity(false);
-  }
+  //  if (m_varyingField) {
+  //    poissonSolve();
+  //    fillMobility(false);
+  //    fillAdvectionVelocity(false);
+  //  }
+  
   updateWithReactionContribution(m_UNew, m_ionNew, m_field.m_Emag, m_mu, m_phtzn.rate, 0.5*m_dt);
   m_UNew.copyTo(m_UNew.interval(), m_UOld, m_UOld.interval());
 
+  // patchgodunov L271: slopeBox is one larger than the valid cells, suggesting ghostcells are needed
+  // for the source term; This is consistent with the makeDiffusiveSource call.
+  // m_gdnvPhysics->incrementSource(localSource,W,slopeBox);
+  setSourceGhostCells(a_diffusiveSrc, m_grids, m_level);
+  a_diffusiveSrc.exchange();
+  
   //  patchgodunov L273
   //  localSource *= 0.5 * a_dt;
   // *finerFRPtr is set to zero at the beginning but *coarserFRPtr is incremented from prior value
