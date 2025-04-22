@@ -45,7 +45,7 @@ void PoissonBCParseValueNeum(Real* pos, int* dir, Side::LoHiSide* side, Real* a_
   a_values[0] = bcVal[*dir] * normalization::scalingFactor / normalization::EBar;
 }
 
-// const. at zlow, zhigh, but linearly varies with z along the other boundaries, where bcValLo/Hi stores the electric field (or -rate)
+// const. at zlow, zhigh, but linearly varies with z along the other boundaries; bcValLo/Hi for these boundaries store the electric field (or -rate)
 void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Real* a_values) {
   
   ParmParse pp("EPot");

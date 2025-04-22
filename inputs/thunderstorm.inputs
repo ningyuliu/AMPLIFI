@@ -159,15 +159,15 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
-#EPot.bc_lo      = 3   3   0
-#EPot.bc_loValue = 1.8e6  1.8e6  1.44e5
-#EPot.bc_hi      = 3   3   0
-#EPot.bc_hiValue = 1.8e6  1.8e6  0.
+EPot.bc_lo      = 3       3       0
+EPot.bc_loValue = 1.8e6   1.8e6   0
+EPot.bc_hi      = 3       3       0
+EPot.bc_hiValue = 1.8e6   1.8e6   -1.44e5
 
-EPot.bc_lo      = 1   1   0
-EPot.bc_loValue = 0   0   0
-EPot.bc_hi      = 1   1   1
-EPot.bc_hiValue = 0   0   1.8e6
+#EPot.bc_lo      = 1   1   0
+#EPot.bc_loValue = 0   0   0
+#EPot.bc_hi      = 1   1   1
+#EPot.bc_hiValue = 0   0   -1.8e6
 
 ###############################################################
 # photoionization solver inputs
