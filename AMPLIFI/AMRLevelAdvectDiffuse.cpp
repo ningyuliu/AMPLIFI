@@ -730,11 +730,11 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
   srsTmp.define(m_UNew);
   
   // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
-  //  if (m_varyingField) {
-  //    poissonSolve();
-  //    fillMobility(false);
-  //    fillAdvectionVelocity(false);
-  //  }
+  if (m_varyingField && m_doImplicitPoisson) {
+    poissonSolve();
+    fillMobility(false);
+    fillAdvectionVelocity(false);
+  }
   
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
@@ -2084,16 +2084,16 @@ computeEField(bool timeInterpForGhost)
  
   if (m_hasCoarser) {
     AMRLevelAdvectDiffuse* amrGodCoarserPtr = getCoarserLevel();
-//    Real eps = 1.0e-10;
-//    if (timeInterpForGhost)
-//      fillGhost(m_pwl, m_phi, amrGodCoarserPtr->m_phiOld, amrGodCoarserPtr->m_time-amrGodCoarserPtr->m_dt, amrGodCoarserPtr->m_phi, amrGodCoarserPtr->m_time, m_dt, m_time+m_dt);
-//    else
-//      fillGhost(m_pwl, m_phi, amrGodCoarserPtr->m_phi, 0, amrGodCoarserPtr->m_phi, 0, eps, 0);
-    // need to use quadratic interpolation; otherwise, a fluctuation appears at the coarse-fine interface.
+    Real eps = 1.0e-10;
     if (timeInterpForGhost)
-      fillGhostQuad(m_qcfi, m_phi, amrGodCoarserPtr->m_phiOld, amrGodCoarserPtr->m_time-amrGodCoarserPtr->m_dt, amrGodCoarserPtr->m_phi, amrGodCoarserPtr->m_time, m_time+m_dt);
+      fillGhost(m_pwl, m_phi, amrGodCoarserPtr->m_phiOld, amrGodCoarserPtr->m_time-amrGodCoarserPtr->m_dt, amrGodCoarserPtr->m_phi, amrGodCoarserPtr->m_time, m_dt, m_time+m_dt);
     else
-      m_qcfi.coarseFineInterp(m_phi, amrGodCoarserPtr->m_phi);
+      fillGhost(m_pwl, m_phi, amrGodCoarserPtr->m_phi, 0, amrGodCoarserPtr->m_phi, 0, eps, 0);
+    // need to use quadratic interpolation; otherwise, a fluctuation appears at the coarse-fine interface.
+//    if (timeInterpForGhost)
+//      fillGhostQuad(m_qcfi, m_phi, amrGodCoarserPtr->m_phiOld, amrGodCoarserPtr->m_time-amrGodCoarserPtr->m_dt, amrGodCoarserPtr->m_phi, amrGodCoarserPtr->m_time, m_time+m_dt);
+//    else
+//      m_qcfi.coarseFineInterp(m_phi, amrGodCoarserPtr->m_phi);
   }
   
 
