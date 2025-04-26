@@ -255,6 +255,12 @@ define(const AdvectPhysics&        a_gphys,
   else
     m_varyingField = true;
   ppPoisson.get("implicit", m_doImplicitPoisson);
+  ParmParse ppEPot("EPot");
+  if (ppEPot.contains("bc_timeVarying"))
+    ppEPot.get("bc_timeVarying", m_EPotBCVarying);
+  else
+    m_EPotBCVarying = false;
+  ppPoisson.get("implicit", m_doImplicitPoisson);
   m_EPotbcFunc = a_EPotbcFunc;
   m_phtznbcFunc = a_PIbcFunc;
   m_phtzn.setCoefficients(SP3A, SP3Lambda);
@@ -1444,6 +1450,8 @@ poissonSolve() {
     
     int lbase = m_level;
     int lmax  = m_level;
+    if (m_EPotBCVarying)
+      m_EPotbcFunc.setTime(m_time);
     s_EPotAMRMG->solve(phi, rhs, lmax, lbase, false);
         
     (*phi[m_level]).copyTo(m_phi);
@@ -1518,6 +1526,8 @@ poissonSolveComposite() {
     
     int lbase = m_level;
     int lmax  = finest_level;
+    if (m_EPotBCVarying)
+      m_EPotbcFunc.setTime(m_time);
     s_EPotAMRMG->solve(phi, rhs, lmax, lbase, false);
     
     for (int lev = m_level; lev <= finest_level; lev++)
@@ -1631,7 +1641,8 @@ poissonSolveImplicit() {
     
   int lbase = m_level;
   int lmax  = m_level;
-  
+  if (m_EPotBCVarying)
+    m_EPotbcFunc.setTime(m_time);
   EPotImpAMRMG->solve(phi, rhs, lmax, lbase, false);
   
   (*phi[m_level]).copyTo(m_phi);
@@ -1868,7 +1879,9 @@ poissonSolveImplicitComposite() {
           hierarchy[lev+1]->m_coarseAverage.averageToCoarse(*rhs[lev], *rhs[lev+1]);
         }
       }
-
+      
+      if (m_EPotBCVarying)
+        m_EPotbcFunc.setTime(m_time);
       EPotImpAMRMG->solve(phi, rhs, lmax, lbase, false, true);
       
       for (int lev = m_level; lev <= finest_level; lev++) {

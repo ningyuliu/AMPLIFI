@@ -161,4 +161,57 @@ void field::copyTo(field& des) {
   m_Emag.copyTo(m_Emag.interval(), des.m_Emag, des.m_Emag.interval());
 }
 
+void TimeDependentBCFunction::operator()(FArrayBox&     a_state,
+                                          const Box&           a_valid,
+                                          const ProblemDomain& a_domain,
+                                          Real                 a_dx,
+                                          bool                 a_homogeneous)
+{
+  if (!a_domain.domainBox().contains(a_state.box())) {
+    
+    Box valid = a_valid;
+    int a_order = 1;
+    
+    for (int i=0; i<CH_SPACEDIM; ++i)
+      
+      // don't do anything if periodic
+      if (!a_domain.isPeriodic(i)) {
+        ParmParse pp("EPot");
+        std::vector<int>  bcLo = std::vector<int>();
+        std::vector<int>  bcHi = std::vector<int>();
+        pp.getarr("bc_lo", bcLo, 0, SpaceDim);
+        pp.getarr("bc_hi", bcHi, 0, SpaceDim);
+        Box ghostBoxLo = adjCellBox(valid, i, Side::Lo, 1);
+        Box ghostBoxHi = adjCellBox(valid, i, Side::Hi, 1);
+        
+        if (!a_domain.domainBox().contains(ghostBoxLo))
+          
+          switch (bcLo[i]) {
+            case 3:
+              DiriBC(a_state, valid, a_dx, a_homogeneous, m_holder, i, Side::Lo);
+              break;
+              
+            default:
+              MayDay::Error("bogus bc flag lo");
+              break;
+          }
+        
+        if (!a_domain.domainBox().contains(ghostBoxHi))
+          
+          switch (bcHi[i]) {
+            case 3:
+              DiriBC(a_state, valid, a_dx, a_homogeneous, m_holder, i, Side::Hi);
+              break;
+              
+            default:
+              MayDay::Error("bogus bc flag hi");
+              break;
+          }
+        
+      }
+      // end if is not periodic in ith direction
+  }
+}
+
+
 #include "NamespaceFooter.H"

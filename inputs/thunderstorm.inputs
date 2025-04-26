@@ -51,7 +51,7 @@ fixed_dt   = -1.0
 
 # this is the length of the longest side
 domain_length = 8e-2
-n_cell = 16 16 64
+n_cell = 32 32 128
 max_level = 1
 
 periodic_bc = 0 0 0
@@ -159,6 +159,7 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
+EPot.bc_timeVarying = true
 EPot.bc_lo      = 3       3       0
 EPot.bc_loValue = 1.8e6   1.8e6   0
 EPot.bc_hi      = 3       3       0

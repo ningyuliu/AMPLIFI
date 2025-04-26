@@ -816,12 +816,23 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   // nu = nu / (normalization::lBar*normalization::lBar/normalization::tBar);
   nu = a_gas.m_elecDiffCoef;
   
-  a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
-  (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
-                                    ADParseBC, EPotParseBC, PIParseBC, cfl, domainLength,
-                                    refineThresh, tagBufferSize,
-                                    initialCFL, useLimiting, nu));
-
+  bool EPotBCVarying = false;
+  ParmParse ppEPot("EPot");
+  if (ppEPot.contains("bc_timeVarying"))
+    ppEPot.get("bc_timeVarying", EPotBCVarying);
+  
+  if (!EPotBCVarying)
+    a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
+    (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
+                                      ADParseBC, EPotParseBC, PIParseBC, cfl, domainLength,
+                                      refineThresh, tagBufferSize,
+                                      initialCFL, useLimiting, nu));
+  else
+    a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
+    (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
+                                      ADParseBC, BCHolder(RefCountedPtr<TimeDependentBCFunction>(new TimeDependentBCFunction())), PIParseBC, cfl, domainLength,
+                                      refineThresh, tagBufferSize,
+                                      initialCFL, useLimiting, nu));
 }
 
 void

@@ -10,10 +10,14 @@
 
 // This is for representing electric field and related boundary conditions
 
+#include <functional>
+#include <cmath>
+
 #include "RealVect.H"
 #include "IntVectSet.H"
 #include "FArrayBox.H"
 #include "LevelData.H"
+#include "BCFunc.H"
 
 #include "NamespaceHeader.H"
 
@@ -46,6 +50,65 @@ protected:
   // verbosity level
   static int s_verbosity;
   
+};
+
+
+class TimeBCValueFunction : public BCValueFunction
+{
+public:
+    using ValueFunc = std::function<Real(const Real* pt, int dir, Side::LoHiSide side, Real time)>;
+
+    TimeBCValueFunction() : m_time(0.0)
+    {
+        // Default behavior: sine wave in time
+        m_func = [](const Real* pt, int dir, Side::LoHiSide side, Real time) {
+            return sin(2.0 * M_PI * time);
+        };
+    }
+
+    void setTime(Real a_time) { m_time = a_time; }
+
+    void setValueFunction(ValueFunc func) { m_func = func; }
+
+    void operator()(Real* a_pos, int* a_dir, Side::LoHiSide* a_side, Real* a_value) override
+    {
+        a_value[0] = m_func(a_pos, *a_dir, *a_side, m_time);
+    }
+
+    Real m_time;
+
+private:
+    ValueFunc m_func;
+};
+
+class TimeDependentBCFunction : public BCFunction
+{
+public:
+    TimeDependentBCFunction()
+    {
+        m_valueFunc = RefCountedPtr<TimeBCValueFunction>(new TimeBCValueFunction());
+        m_holder = BCValueHolder(m_valueFunc);
+    }
+
+    void operator()(FArrayBox&           a_state,
+                    const Box&           a_valid,
+                    const ProblemDomain& a_domain,
+                    Real                 a_dx,
+                    bool                 a_homogeneous) override;
+
+    void setTime(Real a_time)
+    {
+        m_valueFunc->setTime(a_time);
+    }
+
+    void setValueFunction(TimeBCValueFunction::ValueFunc func)
+    {
+        m_valueFunc->setValueFunction(func);
+    }
+
+private:
+    RefCountedPtr<TimeBCValueFunction> m_valueFunc;
+    BCValueHolder m_holder;
 };
 
 
