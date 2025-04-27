@@ -24,6 +24,7 @@
 #include "electricField.hpp"
 #include "globalVariables.h"
 #include "parameterizedFunction.hpp"
+#include "electricField.hpp"
 
 #include "NamespaceHeader.H"
 
@@ -816,23 +817,30 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
   // nu = nu / (normalization::lBar*normalization::lBar/normalization::tBar);
   nu = a_gas.m_elecDiffCoef;
   
-  bool EPotBCVarying = false;
+  bool EPotBCVaryingFlag = false;
   ParmParse ppEPot("EPot");
   if (ppEPot.contains("bc_timeVarying"))
-    ppEPot.get("bc_timeVarying", EPotBCVarying);
+    ppEPot.get("bc_timeVarying", EPotBCVaryingFlag);
   
-  if (!EPotBCVarying)
+  if (!EPotBCVaryingFlag)
     a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
     (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
                                       ADParseBC, EPotParseBC, PIParseBC, cfl, domainLength,
                                       refineThresh, tagBufferSize,
                                       initialCFL, useLimiting, nu));
-  else
-    a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>
-    (new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
-                                      ADParseBC, BCHolder(RefCountedPtr<TimeDependentBCFunction>(new TimeDependentBCFunction())), PIParseBC, cfl, domainLength,
-                                      refineThresh, tagBufferSize,
-                                      initialCFL, useLimiting, nu));
+  else {
+    // Create the TimeDependentBCFunction
+    RefCountedPtr<TimeDependentBCFunction> EPotBCFunc(new TimeDependentBCFunction());
+
+    // Now set its value function
+    EPotBCFunc->setValueFunction(linearTimeLinearZ);
+    BCHolder EPotTimeVaryBC(EPotBCFunc);
+    a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>(
+        new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
+                                         ADParseBC, EPotTimeVaryBC, PIParseBC, cfl, domainLength,
+                                         refineThresh, tagBufferSize,
+                                         initialCFL, useLimiting, nu));
+  }
 }
 
 void

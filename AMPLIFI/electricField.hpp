@@ -33,6 +33,8 @@ extern void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Rea
 
 extern void EPotParseBC(FArrayBox& a_state, const Box& a_valid, const ProblemDomain& a_domain, Real a_dx, bool a_homogeneous);
 
+extern Real linearTimeLinearZ(Real* pos, int* dir, Side::LoHiSide* side, Real time);
+
 class field {
   
 public:
@@ -56,12 +58,12 @@ protected:
 class TimeBCValueFunction : public BCValueFunction
 {
 public:
-    using ValueFunc = std::function<Real(const Real* pt, int dir, Side::LoHiSide side, Real time)>;
+    using ValueFunc = std::function<Real(Real* pt, int* dir, Side::LoHiSide* side, Real time)>;
 
     TimeBCValueFunction() : m_time(0.0)
     {
         // Default behavior: sine wave in time
-        m_func = [](const Real* pt, int dir, Side::LoHiSide side, Real time) {
+        m_func = [](Real* pt, int* dir, Side::LoHiSide* side, Real time) {
             return sin(2.0 * M_PI * time);
         };
     }
@@ -72,7 +74,7 @@ public:
 
     void operator()(Real* a_pos, int* a_dir, Side::LoHiSide* a_side, Real* a_value) override
     {
-        a_value[0] = m_func(a_pos, *a_dir, *a_side, m_time);
+        a_value[0] = m_func(a_pos, a_dir, a_side, m_time);
     }
 
     Real m_time;
@@ -87,6 +89,7 @@ public:
     TimeDependentBCFunction()
     {
         m_valueFunc = RefCountedPtr<TimeBCValueFunction>(new TimeBCValueFunction());
+        // use the holder to interface Chombo's existing BC implementations like DiriBC
         m_holder = BCValueHolder(m_valueFunc);
     }
 
@@ -98,7 +101,8 @@ public:
 
     void setTime(Real a_time)
     {
-        m_valueFunc->setTime(a_time);
+      m_valueFunc->setTime(a_time);
+      pout() << "calling TimeDependentBCFunction.setTime() " << endl;
     }
 
     void setValueFunction(TimeBCValueFunction::ValueFunc func)
@@ -111,6 +115,21 @@ private:
     BCValueHolder m_holder;
 };
 
+inline void setTimeHelper(BCHolder& bcHolder, Real time)
+{
+    RefCountedPtr<BCFunction> bcfunc = bcHolder.getBCFunction();
+    if (bcfunc != nullptr)
+    {
+        // Use the conversion operator to get the raw pointer
+      TimeDependentBCFunction* timeDepBC = dynamic_cast<TimeDependentBCFunction*>(bcfunc.operator->());
+
+        if (timeDepBC != nullptr)
+        {
+          timeDepBC->setTime(time);
+          pout() << "inside setTimeHelper" << endl;
+        }
+    }
+}
 
 #include "NamespaceFooter.H"
 

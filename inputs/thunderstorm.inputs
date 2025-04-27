@@ -7,7 +7,7 @@ Ac = 0.25
 Ai = 100
 Ad = 100
 
-initial_Ac = 0.05
+initial_Ac = 0.01
 max_dt_growth = 1.1
 dt_tolerance_factor = 1.1
 
@@ -17,7 +17,7 @@ implicitReflux = false
 use_limiting = true
 
 # testing, diagnostics, etc.
-verbosity = 2
+verbosity = 3
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -50,7 +50,7 @@ max_step = 4000
 fixed_dt   = -1.0
 
 # this is the length of the longest side
-domain_length = 8e-2
+domain_length = 4e-2
 n_cell = 32 32 128
 max_level = 1
 
@@ -122,7 +122,7 @@ iniPlaCloud.bgdDensity = 0.0
 iniPlaCloud.number        = 20
 iniPlaCloud.radius        = 1e-3 1e-3 1e-3
 iniPlaCloud.randCenter    = true
-iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
+iniPlaCloud.distCenter    = 0.5e-2 0.5e-2 2e-2
 iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 2e-2
 iniPlaCloud.randMag       = true
 iniPlaCloud.magLim        = 1e17 1e19
@@ -160,10 +160,21 @@ PoissonSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_timeVarying = true
-EPot.bc_lo      = 3       3       0
-EPot.bc_loValue = 1.8e6   1.8e6   0
-EPot.bc_hi      = 3       3       0
-EPot.bc_hiValue = 1.8e6   1.8e6   -1.44e5
+
+bc_timeVarying.numPieces  =   2
+bc_timeVarying.paramNums  =   2 1
+bc_timeVarying.xlb =  0        1000e-9
+bc_timeVarying.A   = -0.72e3  -0.72e5
+                     -0.72e5
+bc_timeVarying.B   =  1.8e4    1.8e6
+                      1.8e6
+EPot.bc_lo      = 3       3       3
+EPot.bc_hi      = 3       3       3
+
+#EPot.bc_lo      = 3       3       0
+#EPot.bc_loValue = 1.8e6   1.8e6   0
+#EPot.bc_hi      = 3       3       0
+#EPot.bc_hiValue = 1.8e6   1.8e6  -0.72e5
 
 #EPot.bc_lo      = 1   1   0
 #EPot.bc_loValue = 0   0   0
