@@ -17,7 +17,7 @@ implicitReflux = false
 use_limiting = true
 
 # testing, diagnostics, etc.
-verbosity = 3
+verbosity = 2
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -50,9 +50,12 @@ max_step = 4000
 fixed_dt   = -1.0
 
 # this is the length of the longest side
-domain_length = 4e-2
-n_cell = 32 32 128
-max_level = 1
+#domain_length = 4e-2
+#n_cell = 32 32 128
+#max_level = 1
+domain_length = 8e-2
+n_cell = 16 16 64
+max_level = 6
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
@@ -122,7 +125,7 @@ iniPlaCloud.bgdDensity = 0.0
 iniPlaCloud.number        = 20
 iniPlaCloud.radius        = 1e-3 1e-3 1e-3
 iniPlaCloud.randCenter    = true
-iniPlaCloud.distCenter    = 0.5e-2 0.5e-2 2e-2
+iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
 iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 2e-2
 iniPlaCloud.randMag       = true
 iniPlaCloud.magLim        = 1e17 1e19
@@ -165,10 +168,10 @@ bc_timeVarying.numPieces    =   2
 bc_timeVarying.paramNums    =   2       1
 bc_timeVarying.xlb          =   0       0.5e-6
 bc_timeVarying.funcNames    =   linear  const
-bc_timeVarying.u            =  -0.72e3  -1.44e11
-                               -0.72e5
-bc_timeVarying.udot         =   1.8e4    3.6e12
-                                1.8e6
+bc_timeVarying.u            =  -1.68e3  -3.36e11
+                               -1.68e5
+bc_timeVarying.udot         =   2.1e4    4.2e12
+                                2.1e6
 EPot.bc_lo      = 3       3       3
 EPot.bc_hi      = 3       3       3
 

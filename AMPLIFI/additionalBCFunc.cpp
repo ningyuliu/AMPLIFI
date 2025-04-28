@@ -60,3 +60,5 @@ void RobinBC(FArrayBox& a_state, const Box& a_valid, Real a_dx, bool a_homogeneo
   
   delete[] value;
 }
+
+#include "NamespaceFooter.H"
