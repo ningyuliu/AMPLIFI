@@ -13,8 +13,11 @@
 #include "LayoutIterator.H"
 #include "BCFunc.H"
 
+#include "parameterizedFunction.hpp"
+
 #include "electricField.hpp"
 #include "globalVariables.h"
+
 #include "NamespaceHeader.H"
 
 int field::s_verbosity;
@@ -161,75 +164,38 @@ void field::copyTo(field& des) {
   m_Emag.copyTo(m_Emag.interval(), des.m_Emag, des.m_Emag.interval());
 }
 
-
-Real linearTimeLinearZ(Real* pos, int* dir, Side::LoHiSide* side, Real time) {
-  
+Real linearTimeLinearZ(Real* pos, int* dir, Side::LoHiSide* side, Real time,
+                       std::vector<piecewiseFunction>& timeFunctions) {
   Real u;
+  piecewiseFunction& uHiZFunc = timeFunctions[0];
+  piecewiseFunction& udotFunc = timeFunctions[1];
 
-  ParmParse pp("bc_timeVarying");
-  
-  int numPiece = 2;
-  vector<double> lb;
-  vector<string> fNames;
-  vector<int>    paramNums;
-  vector<vector<double>> paramVectA, paramVectB;
+  Real uHiZ = uHiZFunc.value(time);
+  Real dudz = udotFunc.value(time);
 
-  lb.resize(numPiece);
-  paramNums.resize(numPiece);
-  pp.getarr("xlb", lb, 0, numPiece);
-  pp.getarr("paramNums", paramNums, 0, numPiece);
-  
-  paramVectA.resize(numPiece);
-  paramVectB.resize(numPiece);
-  for (int i = 0, startIdx = 0; i < numPiece; i++) {
-    paramVectA[i].resize(paramNums[i]);
-    pp.getarr("A", paramVectA[i], startIdx, paramNums[i]);
-    paramVectB[i].resize(paramNums[i]);
-    pp.getarr("B", paramVectB[i], startIdx, paramNums[i]);
-    startIdx += paramNums[i];
-    lb[i] /= normalization::tBar;
-    for (int j = 0; j < paramNums[i]; j++) {
-      paramVectA[i][j] /= normalization::phiBar;
-      paramVectB[i][j] *= normalization::scalingFactor / normalization::EBar;
-    }
-  }
-  
-  Real uHiZ, dudz;
-  if (time < lb[1]) {
-    int i = 0, j = 0;
-    uHiZ = paramVectA[i][j] + (paramVectA[i][j+1]-paramVectA[i][j]) / (lb[j+1]-lb[j]) * time;
-    dudz = paramVectB[i][j] + (paramVectB[i][j+1]-paramVectB[i][j]) / (lb[j+1]-lb[j]) * time;
-  }
-  else {
-    int i = 1;
-    uHiZ = paramVectA[i][0];
-    dudz = paramVectB[i][0];
-  }
-  
-  // assuming bc_value = 0 for low z
-  if (*dir == SpaceDim-1)
-    if(*side == Side::Lo)
+  // Assuming bc_value = 0 for low z
+  if (*dir == SpaceDim - 1) {
+    if (*side == Side::Lo)
       u = 0;
     else
       u = uHiZ;
-  else
-    u = -pos[SpaceDim-1] * dudz;
-  
+  } else
+    u = -pos[SpaceDim - 1] * dudz;
+
   return u;
 }
+
 
 void TimeDependentBCFunction::operator()(FArrayBox&     a_state,
                                           const Box&           a_valid,
                                           const ProblemDomain& a_domain,
                                           Real                 a_dx,
-                                          bool                 a_homogeneous)
-{
+                                          bool                 a_homogeneous) {
   if (!a_domain.domainBox().contains(a_state.box())) {
     
     Box valid = a_valid;
     
     for (int i=0; i<CH_SPACEDIM; ++i)
-      
       // don't do anything if periodic
       if (!a_domain.isPeriodic(i)) {
         ParmParse pp("EPot");
@@ -263,9 +229,7 @@ void TimeDependentBCFunction::operator()(FArrayBox&     a_state,
               MayDay::Error("bogus bc flag hi");
               break;
           }
-        
       }
-      // end if is not periodic in ith direction
   }
 }
 

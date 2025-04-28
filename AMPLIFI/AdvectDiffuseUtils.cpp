@@ -829,11 +829,70 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
                                       refineThresh, tagBufferSize,
                                       initialCFL, useLimiting, nu));
   else {
-    // Create the TimeDependentBCFunction
     RefCountedPtr<TimeDependentBCFunction> EPotBCFunc(new TimeDependentBCFunction());
 
-    // Now set its value function
+    int numPiece;
+    vector<double> lb;
+    vector<string> fNames;
+    vector<int>    paramNums;
+    vector<vector<double>> uParamVect, udotParamVect;
+    
+    pp = ParmParse("bc_timeVarying");
+    pp.get("numPieces", numPiece);
+    lb.resize(numPiece);
+    fNames.resize(numPiece);
+    paramNums.resize(numPiece);
+    pp.getarr("xlb", lb, 0, numPiece);
+    pp.getarr("funcNames", fNames, 0, numPiece);
+    pp.getarr("paramNums", paramNums, 0, numPiece);
+    uParamVect.resize(numPiece);
+    udotParamVect.resize(numPiece);
+    for (int i = 0, startIdx = 0; i < numPiece; i++) {
+      uParamVect[i].resize(paramNums[i]);
+      pp.getarr("u", uParamVect[i], startIdx, paramNums[i]);
+      udotParamVect[i].resize(paramNums[i]);
+      pp.getarr("udot", udotParamVect[i], startIdx, paramNums[i]);
+      startIdx += paramNums[i];
+      lb[i] *= (1/scalingFactor) / tBar;
+      if (fNames[i] == "linear") {
+        uParamVect[i][0] /= phiBar;
+        uParamVect[i][1] *= scalingFactor * (1/phiBar) * tBar; // V/s
+        udotParamVect[i][0] *= scalingFactor / EBar;
+        udotParamVect[i][1] *= scalingFactor * scalingFactor * (1/EBar) * tBar; // V/m/s
+      } else if (fNames[i] == "const") {
+        uParamVect[i][0] /= phiBar;
+        udotParamVect[i][0] *= scalingFactor / EBar;
+      } else {
+        cout << "no coefficient nondimensionalization is done for time-varying BCs" << endl;
+      }
+    }
+    
+    if (procID() == uniqueProc(SerialTask::compute)) {
+      pout() << "time-varying BCs parameters" << endl;
+      pout() << "functions = ";
+      for (const auto& fname : fNames) {
+          pout() << fname << " ";
+      }
+      pout() << endl;
+      pout() << "lb = ";
+      for (const auto& lbvalue : lb) {
+          pout() << lbvalue*tBar << " ";
+      }
+      pout() << endl;
+      pout() << "uParam = " << uParamVect[0][0]*phiBar << " " << uParamVect[0][1]*phiBar*(1/tBar) << "; " << uParamVect[1][0]*phiBar << endl;
+      pout() << "udotParam = " << udotParamVect[0][0]*EBar << " " << udotParamVect[0][1]*EBar*(1/tBar) << "; " << udotParamVect[1][0]*EBar << endl;
+    }
+    // Now create two piecewise functions: one for , one for udot
+    piecewiseFunction u(numPiece, lb, fNames, uParamVect);
+    piecewiseFunction udot(numPiece, lb, fNames, udotParamVect);
+
+    // Assign to EPotBCFunc
+    EPotBCFunc->m_valueFunc->m_timeFunctions.clear();
+    EPotBCFunc->m_valueFunc->m_timeFunctions.push_back(u);
+    EPotBCFunc->m_valueFunc->m_timeFunctions.push_back(udot);
+
     EPotBCFunc->setValueFunction(linearTimeLinearZ);
+
     BCHolder EPotTimeVaryBC(EPotBCFunc);
     a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>(
         new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,

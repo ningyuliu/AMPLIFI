@@ -1452,7 +1452,7 @@ poissonSolve() {
     int lmax  = m_level;
   if (m_EPotBCVarying) {
     setTimeHelper(m_EPotbcFunc, m_time+m_dt);
-    pout() << "m_time+m_dt = " << m_time+m_dt << endl;
+    // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
   }
     s_EPotAMRMG->solve(phi, rhs, lmax, lbase, false);
         
@@ -1532,7 +1532,7 @@ poissonSolveComposite() {
       for (int lev = lbase; lev <= lmax; lev++) {
         // all these levels are at the same time; no need to use individual levels' times
         setTimeHelper(hierarchy[lev]->m_EPotbcFunc, m_time+m_dt);
-        pout() << "m_time+m_dt = " << m_time+m_dt << endl;
+        // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
       }
     s_EPotAMRMG->solve(phi, rhs, lmax, lbase, false);
     
@@ -1649,7 +1649,7 @@ poissonSolveImplicit() {
   int lmax  = m_level;
   if (m_EPotBCVarying) {
     setTimeHelper(m_EPotbcFunc, m_time+m_dt);
-    pout() << "m_time+m_dt = " << m_time+m_dt << endl;
+    // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
   }
   EPotImpAMRMG->solve(phi, rhs, lmax, lbase, false);
   
@@ -1881,7 +1881,7 @@ poissonSolveImplicitComposite() {
       for (int lev = lbase; lev <= lmax; lev++) {
         // all these levels are at the same time; no need to use individual levels' times
         setTimeHelper(hierarchy[lev]->m_EPotbcFunc, m_time+m_dt);
-        pout() << "m_time+m_dt = " << m_time+m_dt << endl;
+        // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
       }
     while ((totSurfCharge > surfChargeRelTol * (totVolCharge+chargeTol) || iter == 0) && iter <= maxNewtonIter && relChange > relChangeTol) {
       // note rhs contains additional terms that depend on the correction

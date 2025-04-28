@@ -19,6 +19,8 @@
 #include "LevelData.H"
 #include "BCFunc.H"
 
+#include "parameterizedFunction.hpp"
+
 #include "NamespaceHeader.H"
 
 // define a BC with constant value
@@ -33,7 +35,7 @@ extern void PoissonBCLinearAlongZ(Real* pos, int* dir, Side::LoHiSide* side, Rea
 
 extern void EPotParseBC(FArrayBox& a_state, const Box& a_valid, const ProblemDomain& a_domain, Real a_dx, bool a_homogeneous);
 
-extern Real linearTimeLinearZ(Real* pos, int* dir, Side::LoHiSide* side, Real time);
+extern Real linearTimeLinearZ(Real* pos, int* dir, Side::LoHiSide* side, Real time,  std::vector<piecewiseFunction>& funcs);
 
 class field {
   
@@ -55,80 +57,67 @@ protected:
 };
 
 
-class TimeBCValueFunction : public BCValueFunction
-{
+class TimeBCValueFunction : public BCValueFunction {
 public:
-    using ValueFunc = std::function<Real(Real* pt, int* dir, Side::LoHiSide* side, Real time)>;
+  using ValueFunc = std::function<Real(Real* pt, int* dir, Side::LoHiSide* side, Real time,  std::vector<piecewiseFunction>& funcs)>;
 
-    TimeBCValueFunction() : m_time(0.0)
-    {
-        // Default behavior: sine wave in time
-        m_func = [](Real* pt, int* dir, Side::LoHiSide* side, Real time) {
-            return sin(2.0 * M_PI * time);
-        };
-    }
+  TimeBCValueFunction() : m_time(0.0) {
+      // Default behavior: sine wave in time
+      m_func = [](Real* pt, int* dir, Side::LoHiSide* side, Real time, std::vector<piecewiseFunction>& funcs){
+          return sin(2.0 * M_PI * time);
+      };
+  }
+  void setTime(Real a_time) { m_time = a_time; }
+  void setValueFunction(ValueFunc func) { m_func = func; }
+  void operator()(Real* a_pos, int* a_dir, Side::LoHiSide* a_side, Real* a_value) override {
+      a_value[0] = m_func(a_pos, a_dir, a_side, m_time, m_timeFunctions);
+  }
 
-    void setTime(Real a_time) { m_time = a_time; }
-
-    void setValueFunction(ValueFunc func) { m_func = func; }
-
-    void operator()(Real* a_pos, int* a_dir, Side::LoHiSide* a_side, Real* a_value) override
-    {
-        a_value[0] = m_func(a_pos, a_dir, a_side, m_time);
-    }
-
-    Real m_time;
+  Real m_time;
+  // Multiple piecewise functions to capture time dependence of u, du/dx (in this order).
+  std::vector<piecewiseFunction> m_timeFunctions;
 
 private:
-    ValueFunc m_func;
+  ValueFunc m_func;
 };
 
-class TimeDependentBCFunction : public BCFunction
-{
+class TimeDependentBCFunction : public BCFunction {
 public:
-    TimeDependentBCFunction()
-    {
-        m_valueFunc = RefCountedPtr<TimeBCValueFunction>(new TimeBCValueFunction());
-        // use the holder to interface Chombo's existing BC implementations like DiriBC
-        m_holder = BCValueHolder(m_valueFunc);
-    }
+  TimeDependentBCFunction() {
+      m_valueFunc = RefCountedPtr<TimeBCValueFunction>(new TimeBCValueFunction());
+      // use the holder to interface with Chombo's existing BC implementations like DiriBC
+      m_holder = BCValueHolder(m_valueFunc);
+  }
+  void operator()(FArrayBox&           a_state,
+                  const Box&           a_valid,
+                  const ProblemDomain& a_domain,
+                  Real                 a_dx,
+                  bool                 a_homogeneous) override;
 
-    void operator()(FArrayBox&           a_state,
-                    const Box&           a_valid,
-                    const ProblemDomain& a_domain,
-                    Real                 a_dx,
-                    bool                 a_homogeneous) override;
+  void setTime(Real a_time) {
+    m_valueFunc->setTime(a_time);
+    //pout() << "calling TimeDependentBCFunction.setTime() " << endl;
+  }
 
-    void setTime(Real a_time)
-    {
-      m_valueFunc->setTime(a_time);
-      pout() << "calling TimeDependentBCFunction.setTime() " << endl;
-    }
+  void setValueFunction(TimeBCValueFunction::ValueFunc func) {
+    m_valueFunc->setValueFunction(func);
+  }
 
-    void setValueFunction(TimeBCValueFunction::ValueFunc func)
-    {
-        m_valueFunc->setValueFunction(func);
-    }
-
+  RefCountedPtr<TimeBCValueFunction> m_valueFunc;
 private:
-    RefCountedPtr<TimeBCValueFunction> m_valueFunc;
-    BCValueHolder m_holder;
+  BCValueHolder m_holder;
 };
 
-inline void setTimeHelper(BCHolder& bcHolder, Real time)
-{
-    RefCountedPtr<BCFunction> bcfunc = bcHolder.getBCFunction();
-    if (bcfunc != nullptr)
-    {
-        // Use the conversion operator to get the raw pointer
-      TimeDependentBCFunction* timeDepBC = dynamic_cast<TimeDependentBCFunction*>(bcfunc.operator->());
-
-        if (timeDepBC != nullptr)
-        {
-          timeDepBC->setTime(time);
-          pout() << "inside setTimeHelper" << endl;
-        }
+// a helper function to call setTime()
+inline void setTimeHelper(BCHolder& bcHolder, Real time) {
+  RefCountedPtr<BCFunction> bcfunc = bcHolder.getBCFunction();
+  if (bcfunc != nullptr) {
+    TimeDependentBCFunction* timeDepBC = dynamic_cast<TimeDependentBCFunction*>(bcfunc.operator->());
+    if (timeDepBC != nullptr) {
+      timeDepBC->setTime(time);
+      // pout() << "inside setTimeHelper" << endl;
     }
+  }
 }
 
 #include "NamespaceFooter.H"

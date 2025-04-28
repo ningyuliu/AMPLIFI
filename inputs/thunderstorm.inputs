@@ -161,13 +161,14 @@ PoissonSolver.verbosity   = 1
 # 3 = dirichlet, with linearly varying potential with z;
 EPot.bc_timeVarying = true
 
-bc_timeVarying.numPieces  =   2
-bc_timeVarying.paramNums  =   2 1
-bc_timeVarying.xlb =  0        1000e-9
-bc_timeVarying.A   = -0.72e3  -0.72e5
-                     -0.72e5
-bc_timeVarying.B   =  1.8e4    1.8e6
-                      1.8e6
+bc_timeVarying.numPieces    =   2
+bc_timeVarying.paramNums    =   2       1
+bc_timeVarying.xlb          =   0       0.5e-6
+bc_timeVarying.funcNames    =   linear  const
+bc_timeVarying.u            =  -0.72e3  -1.44e11
+                               -0.72e5
+bc_timeVarying.udot         =   1.8e4    3.6e12
+                                1.8e6
 EPot.bc_lo      = 3       3       3
 EPot.bc_hi      = 3       3       3
 
