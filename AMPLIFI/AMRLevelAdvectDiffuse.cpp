@@ -4035,95 +4035,83 @@ void
 AMRLevelAdvectDiffuse::
 outputTimeSeries(std::ofstream& ofs)
 {
-  Real time_eps = 1.0e-20;
-
-  Vector<AMRLevelAdvectDiffuse*> hierarchy;
-  Vector<int>                    refRat;
-  Vector<DisjointBoxLayout>      grids;
-  Real                           lev0Dx;
-  ProblemDomain                  lev0Domain;
-
-  getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
-  int finest_level = hierarchy.size() - 1;
-
-  const int spaceDim = SpaceDim; // Typically 2 or 3
-  Vector<Vector<Real>> totalCurrentMomentPerLevel;
-  totalCurrentMomentPerLevel.resize(finest_level + 1);
-  for (int lev = 0; lev < numLevels; ++lev)
-    totalCurrentMomentPerLevel[lev].resize(spaceDim, 0.0);
-
-  // --------------------------------
-  // Sum current moment from current level to finest
-  // --------------------------------
-  Vector<LevelData<FArrayBox>* > phi(finest_level+1, NULL);
-  for (int lev = m_level; lev<= finest_level; lev++) {
-    rhs[lev]  = new LevelData<FArrayBox>(grids[lev], 1, IntVect::Zero);
-    phi[lev]  = new LevelData<FArrayBox>(grids[lev], 1, m_numGhost*IntVect::Unit);
+  if (m_level == 0) {
+    Real time_eps = 1.0e-20;
+    Vector<AMRLevelAdvectDiffuse*> hierarchy;
+    Vector<int>                    refRat;
+    Vector<DisjointBoxLayout>      grids;
+    Real                           lev0Dx;
+    ProblemDomain                  lev0Domain;
     
-    hierarchy[lev]->m_ionNew.copyTo(Interval(0, 0), *rhs[lev], Interval(0, 0));
-    for (DataIterator dit=rhs[lev]->dataIterator(); dit.ok(); ++dit) {
-      (*rhs[lev])[dit()].minus(hierarchy[lev]->m_ionNew[dit()], 1, 0);
-      (*rhs[lev])[dit()] -= hierarchy[lev]->m_UNew[dit()];
-    }
+    getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
+    int finest_level = hierarchy.size() - 1;
     
-    amrpop->scale(*rhs[lev], -1);
-          
-    hierarchy[lev]->m_phi.copyTo(*phi[lev]);
-  } // end loop over levels for setup.
-  
-  for (int lev = m_level; lev <= finest_level; lev++)
-  {
-    LevelData<FArrayBox>& J = hierarchy[lev]->m_J.m_E;
-    CH_assert(J.nComp() >= spaceDim);
-
-    Real dxLev = lev0Dx;
-    for (int r = 0; r < lev; ++r)
-      dxLev /= refRat[r];
-
-    for (int dir = 0; dir < spaceDim; ++dir)
-    {
-      Interval compInterval(dir, dir);
-      Real sum = computeSum(J, dxLev, compInterval);
-      totalCurrentMoment[dir] += sum;
-    }
-  }
-
-  // --------------------------------
-  // Output line to stream
-  // --------------------------------
-  if (procID() == uniqueProc(SerialTask::compute))
-  {
-    if (m_time < time_eps && m_level == finest_level)
-    {
-      ofs << std::setiosflags(std::ios::left) << std::setw(12) << "cpuTime";
-      ofs << std::setw(6) << "lev";
+    const int spaceDim = SpaceDim; // Typically 2 or 3
+    Vector<Vector<Real>> totalCurrentMoments;
+    totalCurrentMoments.resize(finest_level + 1);
+    for (int lev = 0; lev <= finest_level; ++lev)
+      totalCurrentMoments[lev].resize(spaceDim, 0.0);
+    
+    // --------------------------------
+    // Sum current moment from current level to finest
+    // --------------------------------
+    Vector<LevelData<FArrayBox>* > J(finest_level+1, NULL);
+    for (int lev = 0; lev<= finest_level; lev++)
+      J[lev] = &(hierarchy[lev]->m_J.m_E);
+    
+    for (int lev = 0; lev <= finest_level; lev++) {
+      LevelData<FArrayBox>& J = hierarchy[lev]->m_J.m_E;
+      CH_assert(J.nComp() >= spaceDim);
+      
+      Real dxLev = lev0Dx;
+      for (int r = 0; r < lev; ++r)
+        dxLev /= refRat[r];
+      
       for (int dir = 0; dir < spaceDim; ++dir)
       {
-        ofs << std::setw(18) << ("Jdir" + std::to_string(dir));
+        Interval compInterval(dir, dir);
+        totalCurrentMoments[lev][dir]= computeSum(J, dxLev, compInterval, lev);
+  
       }
-      ofs << std::setw(12) << "levTimes";
+    }
+    
+    // --------------------------------
+    // Output line to stream
+    // --------------------------------
+    if (procID() == uniqueProc(SerialTask::compute))
+    {
+      if (m_time < time_eps && m_level == finest_level)
+      {
+        ofs << std::setiosflags(std::ios::left) << std::setw(12) << "cpuTime";
+        ofs << std::setw(6) << "lev";
+        for (int dir = 0; dir < spaceDim; ++dir)
+        {
+          ofs << std::setw(18) << ("Jdir" + std::to_string(dir));
+        }
+        ofs << std::setw(12) << "levTimes";
+        ofs << std::endl;
+      }
+      
+#ifdef CH_MPI
+      ofs << std::setw(12) << std::fixed << MPI_Wtime() - startWTime;
+#else
+      ofs << std::setw(12) << std::fixed << timer.getTimeStampWC();
+#endif
+      
+      ofs << std::setw(6) << m_level;
+      
+      for (int dir = 0; dir < spaceDim; ++dir)
+      {
+        ofs << std::setw(18) << std::setprecision(6) << totalCurrentMoment[dir];
+      }
+      
+      for (int lev = 0; lev <= finest_level; lev++)
+      {
+        ofs << std::setw(12) << std::setprecision(4) << hierarchy[lev]->time();
+      }
+      
       ofs << std::endl;
     }
-
-#ifdef CH_MPI
-    ofs << std::setw(12) << std::fixed << MPI_Wtime() - startWTime;
-#else
-    ofs << std::setw(12) << std::fixed << timer.getTimeStampWC();
-#endif
-
-    ofs << std::setw(6) << m_level;
-
-    for (int dir = 0; dir < spaceDim; ++dir)
-    {
-      ofs << std::setw(18) << std::setprecision(6) << totalCurrentMoment[dir];
-    }
-
-    for (int lev = 0; lev <= finest_level; lev++)
-    {
-      ofs << std::setw(12) << std::setprecision(4) << hierarchy[lev]->time();
-    }
-
-    ofs << std::endl;
   }
 }
 
