@@ -325,6 +325,7 @@ protected:
   // Get the next finer level
   AMRLevelAdvectDiffuse* getFinerLevel() const;
   
+  void outputTimeSeries(std::ofstream& ofs);
   void testing();
   void outputStepStats (std::ofstream&);
   
@@ -372,7 +373,7 @@ protected:
   
   gas m_gas;
   // m_fieldOld and m_phiOld may not be needed;
-  field m_field, m_fieldOld;
+  field m_field, m_fieldOld, m_J;
   LevelData<FArrayBox> m_phiOld, m_phi;
   LevelData<FArrayBox> m_mu;
   LevelData<FArrayBox> m_muOld;

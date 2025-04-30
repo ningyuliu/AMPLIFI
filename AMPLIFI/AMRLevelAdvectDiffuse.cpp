@@ -1246,18 +1246,19 @@ postTimeStep()
       if (m_doImplicitPoisson) {
         if (m_varyingField)
           poissonSolveImplicitComposite();
-        
+        else {
+          Real scale = -1.0/m_dx;
+          m_fluxRegister.reflux(m_UNew,scale);
+        }
       } else {
         Real scale = -1.0/m_dx;
         m_fluxRegister.reflux(m_UNew,scale);
-        // Average from finer level data
-        AMRLevelAdvectDiffuse* amrGodFinerPtr = getFinerLevel();
         if (m_varyingField)
           poissonSolveComposite();
       }
     } // end if we're doing explicit refluxing
   } // end if there is a finer level
-
+  
   Real time_eps = 1.0e-10;
   if (m_level == 0 || (abs(m_coarser_level_ptr->time() - m_time) > time_eps)) {
     Vector<AMRLevelAdvectDiffuse*>         hierarchy;
@@ -1278,19 +1279,6 @@ postTimeStep()
         hierarchy[lev]->fillMobility(false);
         hierarchy[lev]->fillAdvectionVelocity(false);
       }
-      
-      
-//      LevelData<FArrayBox> srsOld;
-//      srsOld.define(hierarchy[lev]->m_srs);
-//      for (DataIterator dit=grids[lev].dataIterator(); dit.ok(); ++dit)
-//        srsOld[dit()].setVal(0.0);
-//      hierarchy[lev]->m_srs.copyTo(srsOld);
-//      for (DataIterator dit=grids[lev].dataIterator(); dit.ok(); ++dit) {
-//        hierarchy[lev]->m_UNew[dit()].plus(srsOld[dit()], -0.5*hierarchy[lev]->m_dt);
-//        hierarchy[lev]->m_ionNew[dit()].plus(srsOld[dit()], -0.5*hierarchy[lev]->m_dt);
-//        hierarchy[lev]->m_UNew[dit()].plus(hierarchy[lev]->m_srs[dit()], 0.5*hierarchy[lev]->m_dt);
-//        hierarchy[lev]->m_ionNew[dit()].plus(hierarchy[lev]->m_srs[dit()], 0.5*hierarchy[lev]->m_dt);
-//      }
     }
     
     // Average from finer level data
@@ -1299,6 +1287,15 @@ postTimeStep()
         hierarchy[lev]->m_coarseAverage.averageToCoarse(hierarchy[lev-1]->m_UNew, hierarchy[lev]->m_UNew);
         hierarchy[lev]->m_coarseAverageM.averageToCoarse(hierarchy[lev-1]->m_ionNew, hierarchy[lev]->m_ionNew);
       }
+    
+    Interval interv(0, 0);
+    for (int lev = finest_level; lev >= m_level; lev--) {
+      hierarchy[lev]->m_flux.copyTo(interv, hierarchy[lev]->m_J.m_EEdge, interv);
+      hierarchy[lev]->m_J.m_EEdge.exchange();
+      EdgeToCell(hierarchy[lev]->m_J.m_EEdge, hierarchy[lev]->m_J.m_E);
+      if (hierarchy[lev]->m_hasCoarser)
+        hierarchy[lev]->m_coarseAverageFace.averageToCoarse(hierarchy[lev-1]->m_J.m_EEdge, hierarchy[lev]->m_J.m_EEdge);
+    }
   }
   
   if (m_phtzn.runSolve)
@@ -1996,6 +1993,9 @@ poissonSolveImplicitComposite() {
         curdU *= -1.0/cl->m_dx;
         cl->m_UNew[dit()] += curdU;
         cl->m_UNew[dit()] += (*dge[lev])[dit()];
+        // TODO: double check the following update to electron flux for current calculation
+        curFlux *= (1/m_dt); 
+        cl->m_J.m_EEdge[dit()] += curFlux;
       }
       
       if (s_verbosity >= 3) {
@@ -2468,6 +2468,7 @@ regrid(const Vector<Box>& a_newGrids)
   
   m_field.define(m_grids, ivGhost1, ivGhost);
   m_fieldOld.define(m_grids, ivGhost1, ivGhost);
+  m_J.define(m_grids, ivGhost1, ivGhost);
   
   LevelData<FluxBox> EEdgeOld, EEdgeCoarseOld;
   if (m_doImplicitPoisson) {
@@ -2617,6 +2618,7 @@ initialGrid(const Vector<Box>& a_newGrids)
   
   m_field.define(m_grids, ivGhost1, ivGhost);
   m_fieldOld.define(m_field);
+  m_J.define(m_field);
   
   if (m_doImplicitPoisson) {
     s_aCoef[m_level] = (RefCountedPtr<LevelData<FArrayBox> >(new LevelData<FArrayBox> (m_grids, 1, IntVect::Zero)));
@@ -4027,6 +4029,104 @@ fillAdvectionVelocity(bool timeInterpForGhost) {
     printDiagnosticInfo (m_level, m_dx, m_grids, m_advVel, "advVel", "fillAdvectionVelocity");
   }
 }
+
+/*******/
+void
+AMRLevelAdvectDiffuse::
+outputTimeSeries(std::ofstream& ofs)
+{
+  Real time_eps = 1.0e-20;
+
+  Vector<AMRLevelAdvectDiffuse*> hierarchy;
+  Vector<int>                    refRat;
+  Vector<DisjointBoxLayout>      grids;
+  Real                           lev0Dx;
+  ProblemDomain                  lev0Domain;
+
+  getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
+  int finest_level = hierarchy.size() - 1;
+
+  const int spaceDim = SpaceDim; // Typically 2 or 3
+  Vector<Vector<Real>> totalCurrentMomentPerLevel;
+  totalCurrentMomentPerLevel.resize(finest_level + 1);
+  for (int lev = 0; lev < numLevels; ++lev)
+    totalCurrentMomentPerLevel[lev].resize(spaceDim, 0.0);
+
+  // --------------------------------
+  // Sum current moment from current level to finest
+  // --------------------------------
+  Vector<LevelData<FArrayBox>* > phi(finest_level+1, NULL);
+  for (int lev = m_level; lev<= finest_level; lev++) {
+    rhs[lev]  = new LevelData<FArrayBox>(grids[lev], 1, IntVect::Zero);
+    phi[lev]  = new LevelData<FArrayBox>(grids[lev], 1, m_numGhost*IntVect::Unit);
+    
+    hierarchy[lev]->m_ionNew.copyTo(Interval(0, 0), *rhs[lev], Interval(0, 0));
+    for (DataIterator dit=rhs[lev]->dataIterator(); dit.ok(); ++dit) {
+      (*rhs[lev])[dit()].minus(hierarchy[lev]->m_ionNew[dit()], 1, 0);
+      (*rhs[lev])[dit()] -= hierarchy[lev]->m_UNew[dit()];
+    }
+    
+    amrpop->scale(*rhs[lev], -1);
+          
+    hierarchy[lev]->m_phi.copyTo(*phi[lev]);
+  } // end loop over levels for setup.
+  
+  for (int lev = m_level; lev <= finest_level; lev++)
+  {
+    LevelData<FArrayBox>& J = hierarchy[lev]->m_J.m_E;
+    CH_assert(J.nComp() >= spaceDim);
+
+    Real dxLev = lev0Dx;
+    for (int r = 0; r < lev; ++r)
+      dxLev /= refRat[r];
+
+    for (int dir = 0; dir < spaceDim; ++dir)
+    {
+      Interval compInterval(dir, dir);
+      Real sum = computeSum(J, dxLev, compInterval);
+      totalCurrentMoment[dir] += sum;
+    }
+  }
+
+  // --------------------------------
+  // Output line to stream
+  // --------------------------------
+  if (procID() == uniqueProc(SerialTask::compute))
+  {
+    if (m_time < time_eps && m_level == finest_level)
+    {
+      ofs << std::setiosflags(std::ios::left) << std::setw(12) << "cpuTime";
+      ofs << std::setw(6) << "lev";
+      for (int dir = 0; dir < spaceDim; ++dir)
+      {
+        ofs << std::setw(18) << ("Jdir" + std::to_string(dir));
+      }
+      ofs << std::setw(12) << "levTimes";
+      ofs << std::endl;
+    }
+
+#ifdef CH_MPI
+    ofs << std::setw(12) << std::fixed << MPI_Wtime() - startWTime;
+#else
+    ofs << std::setw(12) << std::fixed << timer.getTimeStampWC();
+#endif
+
+    ofs << std::setw(6) << m_level;
+
+    for (int dir = 0; dir < spaceDim; ++dir)
+    {
+      ofs << std::setw(18) << std::setprecision(6) << totalCurrentMoment[dir];
+    }
+
+    for (int lev = 0; lev <= finest_level; lev++)
+    {
+      ofs << std::setw(12) << std::setprecision(4) << hierarchy[lev]->time();
+    }
+
+    ofs << std::endl;
+  }
+}
+
 
 /*******/
 void
