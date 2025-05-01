@@ -53,8 +53,10 @@ namespace numerical {
 std::string       AMPLIFIOutFilename("AMPLIFIOutput.txt");
 std::ofstream     AMPLIFIOut;
 double            startWTime;
-
 OldTimer          timer;
+
+std::string       timeSeriesFilename("timeSeries.txt");
+std::ofstream     timeSeriesOut;
 
 void ADParseValue(Real* pos,
                   int* dir,

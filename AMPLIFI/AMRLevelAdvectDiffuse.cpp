@@ -1301,6 +1301,7 @@ postTimeStep()
   if (m_phtzn.runSolve)
     photoionizationSolve();
   
+  outputTimeSeries(timeSeriesOut);
   outputStepStats(AMPLIFIOut);
   printDiagnosticInfo (m_level, m_dx, m_grids, m_UNew, "U", "AMRLevelAdvectDiffuse::postTimeStep");
   printDiagnosticInfo (m_level, m_dx, m_grids, m_ionNew, "ion", "AMRLevelAdvectDiffuse::postTimeStep");
@@ -2900,6 +2901,12 @@ postInitialize()
     photoionizationSolve();
   }
   
+  if (!timeSeriesOut.is_open()) {
+    timeSeriesOut.open(timeSeriesFilename.c_str(), std::ios::out | std::ios::trunc);
+    if (!timeSeriesOut)
+      MayDay::Error("Unable to open time series output file");
+  }
+  outputTimeSeries(timeSeriesOut);
   outputStepStats(AMPLIFIOut);
 }
 
@@ -3263,107 +3270,56 @@ writePlotHeader(HDF5Handle& a_handle) const
   }
   istart += m_ionNew.nComp();
   
-  if (!m_gas.m_uniformity) {
-    sprintf(compStr,"component_%d",istart);
-    header.m_string[compStr] = "neut";
-    istart += m_neut.nComp();
-  }
-  
   sprintf(compStr,"component_%d",istart);
   header.m_string[compStr] = "E";
   istart += m_field.m_Emag.nComp();
   
-//  sprintf(compStr,"component_%d",istart);
-//  header.m_string[compStr] = "EOld";
-//  istart += m_fieldOld.m_Emag.nComp();
-  
-//  sprintf(compStr,"component_%d",istart);
-//  header.m_string[compStr] = "srs";
-//  istart += m_srs.nComp();
-  
-  sprintf(compStr,"component_%d",istart);
-  header.m_string[compStr] = "PI";
-  istart += m_phtzn.rate.nComp();
-  
-//  sprintf(compStr,"component_%d",istart);
-//  for (int comp = 0; comp < m_phtzn.Psi.nComp(); ++comp) {
-//    sprintf(compStr,"component_%d",istart+comp);
-//    header.m_string[compStr] = "PI"+to_string(comp+1);
-//  }
-//  istart += m_phtzn.Psi.nComp();
-
   sprintf(compStr,"component_%d",istart);
   header.m_string[compStr] = "phi";
   istart += m_phi.nComp();
 
-//  sprintf(compStr,"component_%d",istart);
-//  header.m_string[compStr] = "phiOld";
-//  istart += m_phiOld.nComp();
-//
-//  for (int comp = 0; comp < m_field.m_E.nComp(); ++comp) {
-//    sprintf(compStr,"component_%d",istart+comp);
-//    header.m_string[compStr] = "E"+to_string(comp+1);
-//  }
-//  istart += m_field.m_E.nComp();
-//
-//  for (int comp = 0; comp < m_fieldOld.m_E.nComp(); ++comp) {
-//    sprintf(compStr,"component_%d",istart+comp);
-//    header.m_string[compStr] = "EOld"+to_string(comp+1);
-//  }
-//  istart += m_fieldOld.m_E.nComp();
-
-//  if(m_doImplicitPoisson) {
-//    for (int dir=0; dir<SpaceDim; dir++) {
-//      sprintf(compStr,"component_%d",istart+dir);
-//      header.m_string[compStr] = "EEdgeToCell"+to_string(dir);
-//    }
-//    istart += m_field.m_EEdge.nComp()*SpaceDim;
-//
-//    for (int dir=0; dir<SpaceDim; dir++) {
-//      sprintf(compStr,"component_%d",istart+dir);
-//      header.m_string[compStr] = "EEdgeToCellOld"+to_string(dir);
-//    }
-//    istart += m_fieldOld.m_EEdge.nComp()*SpaceDim;
-//  }
-  
-//  sprintf(compStr,"component_%d",istart);
-//  header.m_string[compStr] = "mu";
-//  istart += m_mu.nComp();
-  
-//  for (int dir=0; dir<SpaceDim; dir++) {
-//    sprintf(compStr,"component_%d",istart+dir);
-//    header.m_string[compStr] = "VeEdgeToCell"+to_string(dir);
-//  }
-//  istart += m_advVel.nComp()*SpaceDim;
-  
-//  for (int dir=0; dir<SpaceDim; dir++) {
-//    sprintf(compStr,"component_%d",istart+dir);
-//    header.m_string[compStr] = "flux"+to_string(dir);
-//  }
-//  istart += m_flux.nComp()*SpaceDim;
-  
-//  if(m_doImplicitPoisson) {
-//    for (int dir=0; dir<SpaceDim; dir++) {
-//      sprintf(compStr,"component_%d",istart+dir);
-//      header.m_string[compStr] = "bCoeff"+to_string(dir);
-//    }
-//    istart += (*s_bCoef[m_level]).nComp()*SpaceDim;
-//  }
-//
-//  if(m_doImplicitPoisson) {
-//    for (int dir=0; dir<SpaceDim; dir++) {
-//      sprintf(compStr,"component_%d",istart+dir);
-//      header.m_string[compStr] = "bCoeffComp"+to_string(dir);
-//    }
-//    istart += (*s_bCoefComp[m_level]).nComp()*SpaceDim;
-//  }
-  
   if (s_testing) {
+
+    sprintf(compStr,"component_%d",istart);
+    header.m_string[compStr] = "PI";
+    istart += m_phtzn.rate.nComp();
+    
+    for (int dir=0; dir<SpaceDim; dir++) {
+      sprintf(compStr,"component_%d",istart+dir);
+      header.m_string[compStr] = "flux"+to_string(dir);
+    }
+    istart += m_flux.nComp()*SpaceDim;
+  
+    for (int comp = 0; comp < m_J.m_E.nComp(); ++comp) {
+      sprintf(compStr,"component_%d",istart+comp);
+      header.m_string[compStr] = "J"+to_string(comp+1);
+    }
+    istart += m_J.m_E.nComp();
+    
+    if (m_doImplicitPoisson) {
+      for (int dir=0; dir<SpaceDim; dir++) {
+        sprintf(compStr,"component_%d",istart+dir);
+        header.m_string[compStr] = "bCoeff"+to_string(dir);
+      }
+      istart += (*s_bCoef[m_level]).nComp()*SpaceDim;
+
+      for (int dir=0; dir<SpaceDim; dir++) {
+        sprintf(compStr,"component_%d",istart+dir);
+        header.m_string[compStr] = "bCoeffComp"+to_string(dir);
+      }
+      istart += (*s_bCoefComp[m_level]).nComp()*SpaceDim;
+    }
+    
+    if (!m_gas.m_uniformity) {
+      sprintf(compStr,"component_%d",istart);
+      header.m_string[compStr] = "neut";
+      istart += m_neut.nComp();
+    }
+    
     sprintf(compStr,"component_%d",istart);
     header.m_string[compStr] = "test";
     istart += m_testOutput.nComp();
   }
-    
   header.m_int["num_components"] = istart;
 
   // Write the header
@@ -3421,28 +3377,16 @@ writePlotLevel(HDF5Handle& a_handle) const
   // Write the data for this level
   int numPlotVar;
   
-//  int numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + m_field.m_E.nComp();
-
-//  int numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + m_field.m_E.nComp() + m_advVel.nComp()*SpaceDim;
+  numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phi.nComp();
   
-  
-  
-//  int numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phi.nComp() + m_field.m_E.nComp() + m_field.m_EEdge.nComp()*SpaceDim;
-  if (m_doImplicitPoisson)
+  if (s_testing) {
+    numPlotVar += m_phtzn.rate.nComp() + m_flux.nComp()*SpaceDim + m_J.m_E.nComp();
+    if (m_doImplicitPoisson)
+      numPlotVar += (*s_bCoef[m_level]).nComp()*SpaceDim + (*s_bCoefComp[m_level]).nComp()*SpaceDim;
     if (!m_gas.m_uniformity)
-      numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_neut.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
-    else
-      numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
-//    numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + m_phiOld.nComp() + m_field.m_E.nComp() + m_fieldOld.m_E.nComp() + (*s_bCoef[m_level]).nComp()*SpaceDim + (*s_bCoefComp[m_level]).nComp()*SpaceDim;
-  else
-//    numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + m_flux.nComp()*SpaceDim;
-    if (!m_gas.m_uniformity)
-      numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_neut.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
-    else
-      numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phtzn.rate.nComp() + m_phi.nComp() + s_testing*m_testOutput.nComp();
-  
-//  numPlotVar += m_mu.nComp();
-  
+      numPlotVar += m_neut.nComp();
+    numPlotVar += s_testing*m_testOutput.nComp();
+  }
   LevelData<FArrayBox> plotData(m_UNew.disjointBoxLayout(), numPlotVar);
 
   // first copy data to plot data holder
@@ -3458,14 +3402,6 @@ writePlotLevel(HDF5Handle& a_handle) const
   m_ionNew.copyTo(m_ionNew.interval(), plotData, interv);
   unnormalize(plotData, istart, nComp, normalization::nBar);
   istart += nComp;
-
-  if (!m_gas.m_uniformity) {
-    nComp = m_neut.nComp();
-    interv.define(istart, istart+nComp-1);
-    m_neut.copyTo(m_neut.interval(), plotData, interv);
-    unnormalize(plotData, istart, nComp, normalization::nBar);
-    istart += nComp;
-  }
   
   nComp = m_field.m_Emag.nComp();
   interv.define(istart, istart+nComp-1);
@@ -3473,128 +3409,67 @@ writePlotLevel(HDF5Handle& a_handle) const
   unnormalize(plotData, istart, nComp, normalization::EBar);
   istart += nComp;
   
-//  nComp = m_fieldOld.m_Emag.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_fieldOld.m_Emag.copyTo(m_fieldOld.m_Emag.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::EBar);
-//  istart += nComp;
-
-//  nComp = m_srs.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_srs.copyTo(m_srs.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, 1/(pow(normalization::lBar,3)*normalization::tBar));
-//  istart += nComp;
-  
-  nComp = m_phtzn.rate.nComp();
-  interv.define(istart, istart+nComp-1);
-  m_phtzn.rate.copyTo(m_phtzn.rate.interval(), plotData, interv);
-  unnormalize(plotData, istart, nComp, 1/(pow(normalization::lBar,3)*normalization::tBar));
-  istart += nComp;
-  
-//  nComp = m_phtzn.Psi.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_phtzn.Psi.copyTo(m_phtzn.Psi.interval(), plotData, interv);
-//  for (int comp = 0; comp <m_phtzn.Psi.nComp(); comp++)
-//    unnormalize(plotData, istart+comp, 1, m_phtzn.A[comp]/pow(lBar,4)*constants::c0);
-//  istart += nComp;
-  
   nComp = m_phi.nComp();
   interv.define(istart, istart+nComp-1);
   m_phi.copyTo(m_phi.interval(), plotData, interv);
   unnormalize(plotData, istart, nComp, normalization::phiBar);
   istart += nComp;
   
-//  nComp = m_phiOld.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_phiOld.copyTo(m_phiOld.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::phiBar);
-//  istart += nComp;
-//
-//  nComp = m_field.m_E.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_field.m_E.copyTo(m_field.m_E.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::EBar);
-//  istart += nComp;
-//
-//  nComp = m_fieldOld.m_E.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_fieldOld.m_E.copyTo(m_fieldOld.m_E.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::EBar);
-//  istart += nComp;
-
-//  if (m_doImplicitPoisson) {
-//    LevelData<FArrayBox> tmp1(m_UNew.getBoxes(), SpaceDim);
-//    EdgeToCell(m_field.m_EEdge, tmp1);
-//    nComp = tmp1.nComp();
-//    interv.define(istart, istart+nComp-1);
-//    tmp1.copyTo(tmp1.interval(), plotData, interv);
-//    unnormalize(plotData, istart, nComp, normalization::EBar);
-//    istart += nComp;
-//
-//    EdgeToCell(m_fieldOld.m_EEdge, tmp1);
-//    nComp = tmp1.nComp();
-//    interv.define(istart, istart+nComp-1);
-//    tmp1.copyTo(tmp1.interval(), plotData, interv);
-//    unnormalize(plotData, istart, nComp, normalization::EBar);
-//    istart += nComp;
-//  }
-  
-//  nComp = m_mu.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  m_mu.copyTo(m_mu.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::muBar);
-//  istart += nComp;
-  
-//  nComp = tmp.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  tmp.copyTo(tmp.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::EBar);
-//  istart += nComp;
-  
-//  LevelData<FArrayBox> tmp(m_UNew.getBoxes(), SpaceDim);
-//  EdgeToCell(m_advVel, tmp);
-//  nComp = tmp.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  tmp.copyTo(tmp.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::lBar/normalization::tBar);
-//  istart += nComp;
-  
-//  LevelData<FArrayBox> tmp(m_UNew.getBoxes(), SpaceDim);
-//  EdgeToCell(m_flux, tmp);
-//  nComp = tmp.nComp();
-//  interv.define(istart, istart+nComp-1);
-//  tmp.copyTo(tmp.interval(), plotData, interv);
-//  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
-//  istart += nComp;
-
-//  LevelData<FArrayBox> tmp(m_UNew.getBoxes(), SpaceDim);
-//  if (m_doImplicitPoisson) {
-//    EdgeToCell((*s_bCoef[m_level]), tmp);
-//    nComp = tmp.nComp();
-//    interv.define(istart, istart+nComp-1);
-//    tmp.copyTo(tmp.interval(), plotData, interv);
-//  //  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
-//    unnormalize(plotData, istart, nComp, 1.0);
-//    istart += nComp;
-//  }
-//
-//  if (m_doImplicitPoisson) {
-//    EdgeToCell((*s_bCoefComp[m_level]), tmp);
-//    nComp = tmp.nComp();
-//    interv.define(istart, istart+nComp-1);
-//    tmp.copyTo(tmp.interval(), plotData, interv);
-//  //  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
-//    unnormalize(plotData, istart, nComp, 1.0);
-//    istart += nComp;
-//  }
-  
   if (s_testing) {
+
+    nComp = m_phtzn.rate.nComp();
+    interv.define(istart, istart+nComp-1);
+    m_phtzn.rate.copyTo(m_phtzn.rate.interval(), plotData, interv);
+    unnormalize(plotData, istart, nComp, 1/(pow(normalization::lBar,3)*normalization::tBar));
+    istart += nComp;
+    
+    LevelData<FArrayBox> tmp(m_UNew.getBoxes(), SpaceDim);
+    EdgeToCell(m_flux, tmp);
+    nComp = tmp.nComp();
+    interv.define(istart, istart+nComp-1);
+    tmp.copyTo(tmp.interval(), plotData, interv);
+    unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
+    istart += nComp;
+
+    nComp = m_J.m_E.nComp();
+    interv.define(istart, istart+nComp-1);
+    m_J.m_E.copyTo(m_J.m_E.interval(), plotData, interv);
+    unnormalize(plotData, istart, nComp,  normalization::nBar*lBar/tBar);
+    istart += nComp;
+    
+    if (m_doImplicitPoisson) {
+      EdgeToCell((*s_bCoef[m_level]), tmp);
+      nComp = tmp.nComp();
+      interv.define(istart, istart+nComp-1);
+      tmp.copyTo(tmp.interval(), plotData, interv);
+    //  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
+      unnormalize(plotData, istart, nComp, 1.0);
+      istart += nComp;
+    
+      EdgeToCell((*s_bCoefComp[m_level]), tmp);
+      nComp = tmp.nComp();
+      interv.define(istart, istart+nComp-1);
+      tmp.copyTo(tmp.interval(), plotData, interv);
+    //  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
+      unnormalize(plotData, istart, nComp, 1.0);
+      istart += nComp;
+    }
+    
+    if (!m_gas.m_uniformity) {
+      nComp = m_neut.nComp();
+      interv.define(istart, istart+nComp-1);
+      m_neut.copyTo(m_neut.interval(), plotData, interv);
+      unnormalize(plotData, istart, nComp, normalization::nBar);
+      istart += nComp;
+    }
+    
     nComp = m_testOutput.nComp();
     interv.define(istart, istart+nComp-1);
     m_testOutput.copyTo(m_testOutput.interval(), plotData, interv);
     unnormalize(plotData, istart, nComp, 1.0);
     istart += nComp;
   }
+  
   write(a_handle,m_UNew.disjointBoxLayout());
   write(a_handle,plotData,"data");
 
@@ -4032,9 +3907,7 @@ fillAdvectionVelocity(bool timeInterpForGhost) {
 
 /*******/
 void
-AMRLevelAdvectDiffuse::
-outputTimeSeries(std::ofstream& ofs)
-{
+AMRLevelAdvectDiffuse::outputTimeSeries(std::ofstream& ofs) {
   if (m_level == 0) {
     Real time_eps = 1.0e-20;
     Vector<AMRLevelAdvectDiffuse*> hierarchy;
@@ -4042,73 +3915,45 @@ outputTimeSeries(std::ofstream& ofs)
     Vector<DisjointBoxLayout>      grids;
     Real                           lev0Dx;
     ProblemDomain                  lev0Domain;
-    
+
     getHierarchyAndGrids(hierarchy, grids, refRat, lev0Domain, lev0Dx);
     int finest_level = hierarchy.size() - 1;
-    
-    const int spaceDim = SpaceDim; // Typically 2 or 3
-    Vector<Vector<Real>> totalCurrentMoments;
-    totalCurrentMoments.resize(finest_level + 1);
+
+    const int spaceDim = SpaceDim;
+    Vector<Vector<Real>> currentMoments(finest_level + 1, Vector<Real>(spaceDim, 0.0));
+
+    Vector<LevelData<FArrayBox>*> J(finest_level + 1, nullptr);
     for (int lev = 0; lev <= finest_level; ++lev)
-      totalCurrentMoments[lev].resize(spaceDim, 0.0);
-    
-    // --------------------------------
-    // Sum current moment from current level to finest
-    // --------------------------------
-    Vector<LevelData<FArrayBox>* > J(finest_level+1, NULL);
-    for (int lev = 0; lev<= finest_level; lev++)
       J[lev] = &(hierarchy[lev]->m_J.m_E);
-    
-    for (int lev = 0; lev <= finest_level; lev++) {
-      LevelData<FArrayBox>& J = hierarchy[lev]->m_J.m_E;
-      CH_assert(J.nComp() >= spaceDim);
-      
+
+    for (int lev = 0; lev <= finest_level; ++lev) {
       Real dxLev = lev0Dx;
       for (int r = 0; r < lev; ++r)
         dxLev /= refRat[r];
-      
-      for (int dir = 0; dir < spaceDim; ++dir)
-      {
+
+      for (int dir = 0; dir < spaceDim; ++dir) {
         Interval compInterval(dir, dir);
-        totalCurrentMoments[lev][dir]= computeSum(J, dxLev, compInterval, lev);
-  
+        currentMoments[lev][dir] = computeSum(J, refRat, dxLev, compInterval, lev);
       }
     }
-    
-    // --------------------------------
-    // Output line to stream
-    // --------------------------------
-    if (procID() == uniqueProc(SerialTask::compute))
-    {
-      if (m_time < time_eps && m_level == finest_level)
-      {
-        ofs << std::setiosflags(std::ios::left) << std::setw(12) << "cpuTime";
-        ofs << std::setw(6) << "lev";
-        for (int dir = 0; dir < spaceDim; ++dir)
-        {
-          ofs << std::setw(18) << ("Jdir" + std::to_string(dir));
+
+    if (procID() == uniqueProc(SerialTask::compute)) {
+      // Header
+      if (m_time < time_eps) {
+        ofs << std::setiosflags(std::ios::left) << std::setw(12) << "time";
+        for (int lev = 0; lev <= finest_level; ++lev) {
+          for (int dir = 0; dir < spaceDim; ++dir) {
+            ofs << std::setw(18) << ("J" + std::to_string(dir) + "_lev" + std::to_string(lev));
+          }
         }
-        ofs << std::setw(12) << "levTimes";
         ofs << std::endl;
       }
-      
-#ifdef CH_MPI
-      ofs << std::setw(12) << std::fixed << MPI_Wtime() - startWTime;
-#else
-      ofs << std::setw(12) << std::fixed << timer.getTimeStampWC();
-#endif
-      
-      ofs << std::setw(6) << m_level;
-      
-      for (int dir = 0; dir < spaceDim; ++dir)
-      {
-        ofs << std::setw(18) << std::setprecision(6) << totalCurrentMoment[dir];
-      }
-      
-      for (int lev = 0; lev <= finest_level; lev++)
-      {
-        ofs << std::setw(12) << std::setprecision(4) << hierarchy[lev]->time();
-      }
+
+      // Data line
+      ofs << std::setw(12) << std::setprecision(4) << time()*tBar;
+      for (int lev = 0; lev <= finest_level; ++lev)
+        for (int dir = 0; dir < spaceDim; ++dir)
+          ofs << std::setw(18) << std::setprecision(6) << -constants::e*currentMoments[lev][dir]*(muBar*nBar*EBar*pow(lBar,3));
       
       ofs << std::endl;
     }

@@ -33,6 +33,10 @@ extern std::string       AMPLIFIOutFilename;
 extern std::ofstream     AMPLIFIOut;
 extern double            startWTime;
 extern OldTimer          timer;
+
+extern std::string       timeSeriesFilename;
+extern std::ofstream     timeSeriesOut;
+
 ///
 /**
  */
