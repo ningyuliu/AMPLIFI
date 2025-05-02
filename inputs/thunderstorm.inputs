@@ -122,10 +122,33 @@ mobility.A            =   3.99e25
 
 iniPlaCloud.bgdDensity = 0.0
 
+#iniPlaCloud.number = 1
+#iniPlaCloud.center = .5e-2 .5e-2 2e-2
+#iniPlaCloud.radius = 2e-3 2e-3 2e-3
+#iniPlaCloud.mag    = 1e19
+
+iniPlaCloud.number        =    2
+iniPlaCloud.type          =    spheroid cylinder
+iniPlaCloud.center        =    .5e-2 .5e-2 1e-2
+                               .5e-2 .5e-2 3e-2
+iniPlaCloud.radius        =    1e-3
+                               1e-3
+iniPlaCloud.axisLength    =    2e-3
+                               2e-3
+iniPlaCloud.mag           =    1e19
+                               1e19
+iniPlaCloud.sharpness     =    2000
+                               2000
+iniPlaCloud.axisDirection =    0.0 0.0 1.0
+                          =    0.0 0.0 1.0
 iniPlaCloud.number = 1
+iniPlaCloud.type = cylinder
 iniPlaCloud.center = .5e-2 .5e-2 2e-2
-iniPlaCloud.radius = 2e-3 2e-3 2e-3
-iniPlaCloud.mag    = 1e19
+iniPlaCloud.radius = 2e-3 1e-3  // Radial and axial radii
+iniPlaCloud.length = 5e-3  // Length for the cylinder
+iniPlaCloud.mag = 1e19
+iniPlaCloud.sharpness = 20
+iniPlaCloud.axisDirection = 0.0 0.0 1.0  // Z-axis direction
 
 #iniPlaCloud.number        = 1
 #iniPlaCloud.radius        = 2e-3 2e-3 2e-3

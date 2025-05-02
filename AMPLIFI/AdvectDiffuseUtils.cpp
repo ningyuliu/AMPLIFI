@@ -25,6 +25,7 @@
 #include "globalVariables.h"
 #include "parameterizedFunction.hpp"
 #include "electricField.hpp"
+#include "blob.hpp"
 
 #include "NamespaceHeader.H"
 
@@ -716,6 +717,9 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   } else
     pp.getarr("mag", mag, 0, blobNum);
   
+  MultiBlob blobs;
+  parseBlobsFromParmParse(blobs);
+  
   pp = ParmParse("bgdPlasma");
   int numPiece;
   vector<double> lb;
@@ -785,7 +789,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
     }
   }
   
-  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, bgdDensity));
+  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, blobs, bgdDensity));
 }
 
 void

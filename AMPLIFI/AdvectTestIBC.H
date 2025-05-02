@@ -24,6 +24,7 @@
 #include "PhysIBC.H"
 #include "SolidBCF_F.H"
 #include "parameterizedFunction.hpp"
+#include "blob.hpp"
 
 #include "NamespaceHeader.H"
 
@@ -33,10 +34,11 @@ class AdvectTestIBC:public PhysIBC
 public:
 
   ///
-  AdvectTestIBC(const int               a_number,
-                const Vector<RealVect>& a_center,
-                const Vector<RealVect>& a_a,
-                const Vector<Real>&     a_mag,
+  AdvectTestIBC(const int                    a_number,
+                const Vector<RealVect>&      a_center,
+                const Vector<RealVect>&      a_a,
+                const Vector<Real>&          a_mag,
+                const MultiBlob&             a_blob,
                 const piecewiseFunction&     a_bgdDensity)
   {
     m_number = a_number;
@@ -47,7 +49,8 @@ public:
       m_center[j] = a_center[j];
       m_a[j]   = a_a[j];
     }
-    m_mag    = a_mag;
+    m_mag        = a_mag;
+    m_blob       = a_blob;
     m_bgdDensity = a_bgdDensity;
   }
   
@@ -87,11 +90,12 @@ public:
 
 protected:
 
-  int              m_number;
-  Vector<RealVect> m_center;
-  Vector<RealVect> m_a;
-  Vector<Real>     m_mag;
-  piecewiseFunction m_bgdDensity;
+  int                 m_number;
+  Vector<RealVect>    m_center;
+  Vector<RealVect>    m_a;
+  Vector<Real>        m_mag;
+  MultiBlob           m_blob;
+  piecewiseFunction   m_bgdDensity;
 
 private:
   //weak construction is bad

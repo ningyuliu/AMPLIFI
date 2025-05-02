@@ -23,7 +23,7 @@
 //   its define() must be called before it is used).
 PhysIBC* AdvectTestIBC::new_physIBC()
 {
-  AdvectTestIBC* retval = new AdvectTestIBC(m_number, m_center, m_a, m_mag, m_bgdDensity);
+  AdvectTestIBC* retval = new AdvectTestIBC(m_number, m_center, m_a, m_mag, m_blob, m_bgdDensity);
   return static_cast<PhysIBC*>(retval);
 }
 
@@ -66,6 +66,7 @@ void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U)
       point *= m_dx;
       point += ccOffset;
       vector<double> pvec(SpaceDim);
+      a_U[dit()](iv, 0) = m_blob.value(pvec);
       for(int i = 0; i != pvec.size(); i++)
         pvec[i] = point[i];
       a_U[dit()](iv, 0) += m_bgdDensity.value(pvec);
