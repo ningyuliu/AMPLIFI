@@ -3925,7 +3925,8 @@ AMRLevelAdvectDiffuse::outputTimeSeries(std::ofstream& ofs) {
     Vector<LevelData<FArrayBox>*> J(finest_level + 1, nullptr);
     for (int lev = 0; lev <= finest_level; ++lev)
       J[lev] = &(hierarchy[lev]->m_J.m_E);
-
+    
+    // TODO: add diffusion flux
     for (int lev = 0; lev <= finest_level; ++lev) {
       Real dxLev = lev0Dx;
       for (int r = 0; r < lev; ++r)
@@ -3948,8 +3949,7 @@ AMRLevelAdvectDiffuse::outputTimeSeries(std::ofstream& ofs) {
         }
         ofs << std::endl;
       }
-
-      // Data line
+      
       ofs << std::setw(12) << std::setprecision(4) << time()*tBar;
       for (int lev = 0; lev <= finest_level; ++lev)
         for (int dir = 0; dir < spaceDim; ++dir)
