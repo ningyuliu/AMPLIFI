@@ -717,6 +717,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   } else
     pp.getarr("mag", mag, 0, blobNum);
   
+//  testBlob();
   MultiBlob blobs;
   parseBlobsFromParmParse(blobs);
   

@@ -26,6 +26,12 @@ public:
     virtual double value(const std::vector<double>& x) const = 0;
 };
 
+/* tanh profile: value(x) = amplitude * 0.5 * {1 - tanh[sharpness * (distance - radius)]}, where
+the distance is to the respective focus. Rewrite it as
+value(x) = amplitude * 0.5 * {1 - tanh[sharpness/radius * (distance/radius - 1.0)]} or
+value(x) = amplitude * 0.5 * {1 - tanh[sharpnessNorm * (distance/radius - 1.0)]}, i.e., sharpnessNorm is
+the sharpness normalized to radius. sharpnessNorm is what should be given as an input. */
+
 class SpheroidalBlob : public Blob {
 public:
     SpheroidalBlob(
@@ -61,20 +67,15 @@ public:
         for (int d = 0; d < SpaceDim; ++d)
             l += delta[d] * m_axis[d];
 
-        std::vector<double> axial(SpaceDim);
-        for (int d = 0; d < SpaceDim; ++d)
-            axial[d] = m_axis[d] * l;
+      double s2 = 0.0;
+      for (int d = 0; d < SpaceDim; ++d) {
+          double diff = delta[d] - l * m_axis[d];
+          s2 += diff * diff;
+      }
 
-        double radialDist2 = 0.0;
-        for (int d = 0; d < SpaceDim; ++d) {
-            double diff = delta[d] - axial[d];
-            radialDist2 += diff * diff;
-        }
-
-        double normalizedDist2 = (l * l) / (m_axisLength * m_axisLength) + radialDist2 / (m_radius * m_radius);
-        double dist = std::sqrt(normalizedDist2) - 1.0;
-
-        return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * dist));
+        double normalizedDist = sqrt((l * l) / (m_axisLength * m_axisLength) + s2 / (m_radius * m_radius));
+      
+        return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * (normalizedDist - 1)));
     }
 
 private:
@@ -121,26 +122,23 @@ public:
         for (int d = 0; d < SpaceDim; ++d)
             l += delta[d] * m_axis[d];
 
-        std::vector<double> closest(SpaceDim);
-        for (int d = 0; d < SpaceDim; ++d)
-            closest[d] = m_center[d] + l * m_axis[d];
-
-        double r2 = 0.0;
-        for (int d = 0; d < SpaceDim; ++d) {
-            double diff = x[d] - closest[d];
-            r2 += diff * diff;
-        }
+      double s2 = 0.0;
+      for (int d = 0; d < SpaceDim; ++d) {
+          double diff = delta[d] - l * m_axis[d];
+          s2 += diff * diff;
+      }
 
         double dist;
         double halfLength = 0.5 * m_axisLength;
         if (std::fabs(l) <= halfLength) {
-            dist = std::sqrt(r2) - m_radius;
+            dist = std::sqrt(s2);
         } else {
             double dl = std::fabs(l) - halfLength;
-            dist = std::sqrt(r2 + dl * dl) - m_radius;
+            dist = std::sqrt(s2 + dl * dl);
         }
-
-        return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * dist));
+      double normalizedDist = dist/m_radius;
+    
+      return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * (normalizedDist - 1)));
     }
 
 private:
@@ -182,6 +180,7 @@ private:
 };
 
 extern void parseBlobsFromParmParse(MultiBlob& multiBlob);
+extern int testBlob();
 
 #include "NamespaceFooter.H"
 #endif /* blob_hpp */

@@ -38,12 +38,12 @@ void parseBlobsFromParmParse(MultiBlob& multiBlob)
   // Apply normalization
     for (int i = 0; i < blobNum; i++) {
         for (int d = 0; d < SpaceDim; d++) {
-            centers[d + i * SpaceDim] /= normalization::scalingFactor / normalization::lBar;
+            centers[d + i * SpaceDim] = centers[d + i * SpaceDim] / normalization::scalingFactor / normalization::lBar;
         }
-        radius[i] /= normalization::scalingFactor / normalization::lBar;
-        mags[i] *= normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
-        axisLengths[i] /= normalization::scalingFactor / normalization::lBar;
-        sharpness[i] *= normalization::scalingFactor / normalization::lBar;  // If sharpness is scaled by length
+        radius[i] = radius[i] / normalization::scalingFactor / normalization::lBar;
+        mags[i] = mags[i] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
+        axisLengths[i] = axisLengths[i] / normalization::scalingFactor / normalization::lBar;
+        // sharpness[i] = sharpness[i] / (1/normalization::scalingFactor) / (1/normalization::lBar);  // If sharpness is scaled by length
     }
   
     for (int i = 0; i < blobNum; ++i)
@@ -112,6 +112,85 @@ void parseBlobsFromParmParse(MultiBlob& multiBlob)
 
         multiBlob.addBlob(blob);
     }
+}
+
+
+// Simple function to print blob value at a point
+void printValueAtPoint(const Blob& blob, const std::vector<double>& x, const std::string& label) {
+    std::cout << label << " at [";
+    for (int i = 0; i < SpaceDim; ++i) {
+        std::cout << x[i] << (i < SpaceDim - 1 ? ", " : "");
+    }
+    std::cout << "] = " << blob.value(x) << "\n";
+}
+
+int testBlob() {
+    // Center at origin
+    std::vector<double> center = {0.0, 0.0, 0.0};
+
+    // Axis aligned along z-direction
+    std::vector<double> axis = {0.0, 0.0, 1.0};
+
+    // Parameters
+    double axisLength = 2.0;
+    double radius = 1.0;
+    double sharpness = 2.0;
+    double amplitude = 1.0;
+
+    // Create a spheroidal blob
+    RefCountedPtr<Blob> spheroid(new SpheroidalBlob(center, axis, axisLength, radius, sharpness, amplitude));
+
+    // Create a cylindrical blob
+    RefCountedPtr<Blob> cylinder(new CylinderBlob(center, axis, axisLength, radius, sharpness, amplitude));
+
+    // Print test values at some points
+    std::vector<std::vector<double>> testPoints = {
+        {0.0, 0.0, 0.0},   // center
+        {0.5, 0.0, 0.0},   // radial
+        {0.0, 0.0, 1.0},   // axial
+        {1.0, 0.0, 1.0},   // edge
+        {2.0, 0.0, 0.0}    // outside
+    };
+
+//    std::cout << "SpheroidalBlob values:\n";
+//    for (const auto& pt : testPoints) {
+//        printValueAtPoint(*spheroid, pt, "  Value");
+//    }
+//
+//    std::cout << "\nCylinderBlob values:\n";
+//    for (const auto& pt : testPoints) {
+//        printValueAtPoint(*cylinder, pt, "  Value");
+//    }
+//
+//    // MultiBlob example
+//    MultiBlob multiBlob;
+//    multiBlob.addBlob(spheroid);
+//    multiBlob.addBlob(cylinder);
+//
+//    std::cout << "\nMultiBlob (Spheroid + Cylinder) values:\n";
+//    for (const auto& pt : testPoints) {
+//        printValueAtPoint(multiBlob, pt, "  Value");
+//    }
+
+    center = {33070, 33070, 66140};
+    axisLength = 6614;
+    radius = 6614;
+  sharpness = 0.001;
+    SpheroidalBlob sph(center, axis, axisLength, radius, sharpness, amplitude);
+    testPoints = {
+//        {33070, 33070, 66140},   // center
+//        {33070+0.5*radius, 33070, 66140},   // radial
+//        {33070, 33070, 66140+0.5*axisLength+0.5*radius},   // axial
+//        {33070+0.5*radius, 33070, 66140+0.5*axisLength+0.5*radius},   // edge
+//        {33070+2*33070, 0.0, 0.0},    // outside
+        {1111, 1111, 1111}
+    };
+    std::cout << "\nSpheroidalBlob values:\n";
+    for (const auto& pt : testPoints) {
+        printValueAtPoint(sph, pt, "  Value");
+    }
+    
+    return 0;
 }
 
 #include "NamespaceFooter.H"

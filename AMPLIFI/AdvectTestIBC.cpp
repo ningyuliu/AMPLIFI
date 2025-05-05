@@ -28,13 +28,11 @@ PhysIBC* AdvectTestIBC::new_physIBC()
 }
 
 // Set up initial conditions
-void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U)
-{
+void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U) {
   DisjointBoxLayout grids = a_U.disjointBoxLayout();
   LevelData<FArrayBox> tmp;
   tmp.define(a_U);
-  for (DataIterator dit = grids.dataIterator(); dit.ok(); ++dit)
-  {
+  for (DataIterator dit = grids.dataIterator(); dit.ok(); ++dit) {
     a_U[dit()].setVal(0.0, a_U[dit()].box(), 0);
     tmp[dit()].setVal(0.0, tmp[dit()].box(), 0);
     
@@ -47,7 +45,6 @@ void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U)
 //      tmp[dit()].mult(m_mag[i]);
 //      a_U[dit()].plus(tmp[dit()]);
 //    }
-    
     for (BoxIterator bit(grids.get(dit)); bit.ok(); ++bit) {
       const IntVect& iv = bit();
       for (int i = 0; i < m_number; i++) {
@@ -66,11 +63,11 @@ void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U)
       point *= m_dx;
       point += ccOffset;
       vector<double> pvec(SpaceDim);
-      a_U[dit()](iv, 0) = m_blob.value(pvec);
       for(int i = 0; i != pvec.size(); i++)
         pvec[i] = point[i];
+      a_U[dit()](iv, 0) = m_blob.value(pvec);
       a_U[dit()](iv, 0) += m_bgdDensity.value(pvec);
-    }    
+    }
   }
 }
 
