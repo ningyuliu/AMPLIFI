@@ -78,7 +78,6 @@ public:
         return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * (normalizedDist - 1)));
     }
 
-private:
     std::vector<double> m_center;
     std::vector<double> m_axis;
     double m_axisLength;
@@ -141,7 +140,6 @@ public:
       return m_amplitude * 0.5 * (1.0 - std::tanh(m_sharpness * (normalizedDist - 1)));
     }
 
-private:
     std::vector<double> m_center;
     std::vector<double> m_axis;
     double m_axisLength;
@@ -174,12 +172,12 @@ public:
         }
         return sum;
     }
-
-private:
+  
     Vector<RefCountedPtr<Blob> > m_blobs;
 };
 
-extern void void generateRandomBlobs(MultiBlob& multiBlob);
+extern void generateRandomBlobs(MultiBlob& multiBlob);
+extern void outputBlobs(const MultiBlob& multiBlob);
 extern void parseBlobsFromParmParse(MultiBlob& multiBlob);
 extern int testBlob();
 

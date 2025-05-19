@@ -35,21 +35,10 @@ public:
 
   ///
   AdvectTestIBC(const int                    a_number,
-                const Vector<RealVect>&      a_center,
-                const Vector<RealVect>&      a_a,
-                const Vector<Real>&          a_mag,
                 const MultiBlob&             a_blob,
                 const piecewiseFunction&     a_bgdDensity)
   {
     m_number = a_number;
-    m_center.resize(m_number);
-    m_a.resize(m_number);
-    m_mag.resize(m_number);
-    for (int j = 0; j < m_number; j++) {
-      m_center[j] = a_center[j];
-      m_a[j]   = a_a[j];
-    }
-    m_mag        = a_mag;
     m_blob       = a_blob;
     m_bgdDensity = a_bgdDensity;
   }
@@ -91,9 +80,6 @@ public:
 protected:
 
   int                 m_number;
-  Vector<RealVect>    m_center;
-  Vector<RealVect>    m_a;
-  Vector<Real>        m_mag;
   MultiBlob           m_blob;
   piecewiseFunction   m_bgdDensity;
 

@@ -25,8 +25,23 @@ void generateRandomBlobs(MultiBlob& multiBlob) {
   
   Vector<Real> distCenter(SpaceDim, 0.0);
   Vector<Real> distBoxLength(SpaceDim, 0.0);
+  Vector<Real> radLim(2), axisLengthLim(2), sharpLim(2), magLim(2);
   pp.getarr("distCenter", distCenter, 0, SpaceDim);
   pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
+  pp.getarr("magLim", magLim, 0, 2);
+  pp.getarr("radLim", radLim, 0, 2);
+  pp.getarr("axisLengthLim", axisLengthLim, 0, 2);
+  pp.getarr("sharpLim", sharpLim, 0, 2);
+
+  for (int d = 0; d < SpaceDim; d++) {
+    distCenter[d] = distCenter[d] / normalization::scalingFactor / normalization::lBar;
+    distBoxLength[d] = distBoxLength[d] / normalization::scalingFactor / normalization::lBar;
+  }
+  for (int i = 0; i < 2; i++) {
+    radLim[i] = radLim[i] / normalization::scalingFactor / normalization::lBar;
+    axisLengthLim[i] = axisLengthLim[i] / normalization::scalingFactor / normalization::lBar;
+    magLim[i] = magLim[i] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
+  }
   
   // Generate random centers
   for (int i = 0; i < blobNum; i++) {
@@ -34,18 +49,11 @@ void generateRandomBlobs(MultiBlob& multiBlob) {
       center[dir + i * SpaceDim] = ((1.0 * rand() / RAND_MAX) - 0.5) * distBoxLength[dir] + distCenter[dir];
     }
   }
-  // Randomize radius, axis length, sharpness, and magnitude
-  Vector<Real> radLim(2), axisLengthLim(2), sharpLim(2), magLim(2);
-  pp.getarr("radLim", radLim, 0, 2);
-  pp.getarr("axisLengthLim", axisLengthLim, 0, 2);
-  pp.getarr("sharpLim", sharpLim, 0, 2);
-  pp.getarr("magLim", magLim, 0, 2);
-  
   for (int i = 0; i < blobNum; i++) {
     radius[i] = (rand() / static_cast<double>(RAND_MAX)) * (radLim[1] - radLim[0]) + radLim[0];
     axisLength[i] = (rand() / static_cast<double>(RAND_MAX)) * (axisLengthLim[1] - axisLengthLim[0]) + axisLengthLim[0];
-    sharpness[i] = (rand() / static_cast<double>(RAND_MAX)) * (sharpLim[1] - sharpLim[0]) + sharpLim[0];
     mag[i] = (rand() / static_cast<double>(RAND_MAX)) * (magLim[1] - magLim[0]) + magLim[0];
+    sharpness[i] = (rand() / static_cast<double>(RAND_MAX)) * (sharpLim[1] - sharpLim[0]) + sharpLim[0];
     
     // Generate random axis direction
     std::vector<double> axis(SpaceDim);
@@ -63,14 +71,6 @@ void generateRandomBlobs(MultiBlob& multiBlob) {
     for (int d = 0; d < SpaceDim; ++d) {
       blobCenter[d] = center[i * SpaceDim + d];
     }
-    
-    
-    for (int d = 0; d < SpaceDim; d++) {
-        centers[d + i * SpaceDim] = centers[d + i * SpaceDim] / normalization::scalingFactor / normalization::lBar;
-    }
-    radius[i] = radius[i] / normalization::scalingFactor / normalization::lBar;
-    mags[i] = mags[i] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
-    axisLengths[i] = axisLengths[i] / normalization::scalingFactor / normalization::lBar;
     
     RefCountedPtr<Blob> blob(new SpheroidalBlob(blobCenter, axis, axisLength[i], radius[i], sharpness[i], mag[i]));
     multiBlob.addBlob(blob);
@@ -175,6 +175,24 @@ void parseBlobsFromParmParse(MultiBlob& multiBlob) {
         }
 
         multiBlob.addBlob(blob);
+    }
+}
+
+void outputBlobs(const MultiBlob& multiBlob) {
+    std::cout << "Generated Blobs:\n";
+    for (int i = 0; i < multiBlob.numBlobs(); ++i) {
+        const SpheroidalBlob* sphBlob = dynamic_cast<const SpheroidalBlob*>(multiBlob.m_blobs[i].operator->());
+        if (sphBlob) {
+            std::cout << "Blob " << i + 1 << ": Spheroidal\n";
+            std::cout << "  Center: ";
+            for (double c : sphBlob->m_center) std::cout << c << " ";
+            std::cout << "\n  Axis: ";
+            for (double a : sphBlob->m_axis) std::cout << a << " ";
+            std::cout << "\n  Axis Length: " << sphBlob->m_axisLength
+                      << "\n  Radius: " << sphBlob->m_radius
+                      << "\n  Sharpness: " << sphBlob->m_sharpness
+                      << "\n  Amplitude: " << sphBlob->m_amplitude << "\n";
+        }
     }
 }
 

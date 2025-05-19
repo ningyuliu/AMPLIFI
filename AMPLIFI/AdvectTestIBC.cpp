@@ -23,7 +23,7 @@
 //   its define() must be called before it is used).
 PhysIBC* AdvectTestIBC::new_physIBC()
 {
-  AdvectTestIBC* retval = new AdvectTestIBC(m_number, m_center, m_a, m_mag, m_blob, m_bgdDensity);
+  AdvectTestIBC* retval = new AdvectTestIBC(m_number, m_blob, m_bgdDensity);
   return static_cast<PhysIBC*>(retval);
 }
 
@@ -34,30 +34,8 @@ void AdvectTestIBC::initialize(LevelData<FArrayBox>& a_U) {
   tmp.define(a_U);
   for (DataIterator dit = grids.dataIterator(); dit.ok(); ++dit) {
     a_U[dit()].setVal(0.0, a_U[dit()].box(), 0);
-    tmp[dit()].setVal(0.0, tmp[dit()].box(), 0);
-    
-//    for (int i = 0; i < m_number; i++) {
-//      FORT_ADVECTINITF(CHF_FRA1(tmp[dit()],0),
-//                       CHF_CONST_REALVECT(m_center[i]),
-//                       CHF_CONST_REAL(m_a[i]),
-//                       CHF_CONST_REAL(m_dx),
-//                       CHF_BOX(grid));
-//      tmp[dit()].mult(m_mag[i]);
-//      a_U[dit()].plus(tmp[dit()]);
-//    }
     for (BoxIterator bit(grids.get(dit)); bit.ok(); ++bit) {
-      const IntVect& iv = bit();
-      for (int i = 0; i < m_number; i++) {
-        double val = m_mag[i];
-        for (int dir = 0; dir < SpaceDim; dir++) {
-          double tmp = 0;
-          tmp = (iv[dir]+0.5)*m_dx - m_center[i][dir];
-          tmp = tmp*tmp/m_a[i][dir]/m_a[i][dir];
-          val *= exp(-tmp);
-        }
-        a_U[dit()](iv, 0) += val;
-      }
-      
+      const IntVect& iv = bit();      
       RealVect point(iv);
       RealVect ccOffset = 0.5*m_dx*RealVect::Unit;
       point *= m_dx;

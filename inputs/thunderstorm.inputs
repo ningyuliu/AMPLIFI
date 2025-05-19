@@ -122,25 +122,31 @@ mobility.A            =   3.99e25
 
 iniPlaCloud.bgdDensity = 0.0
 
-#iniPlaCloud.number = 1
-#iniPlaCloud.center = .5e-2 .5e-2 2e-2
-#iniPlaCloud.radius = 2e-3 2e-3 2e-3
-#iniPlaCloud.mag    = 1e19
+iniPlaCloud.number        =    2
 
-iniPlaCloud.number        =    1
-iniPlaCloud.type          =    spheroid cylinder
-iniPlaCloud.center        =    .5e-2 .5e-2 1e-2
-                               .5e-2 .5e-2 3e-2
-iniPlaCloud.radius        =    1e-3 1e-3 1e-3
-                               1e-3 1e-3 1e-3
-iniPlaCloud.axisLength    =    2e-3
-                               1e-3
-iniPlaCloud.mag           =    1e19
-                               1e19
-iniPlaCloud.sharpness     =    5
-                               0.001
-iniPlaCloud.axisDirection =    0.0 0.0 1.0
-                               0.0 0.0 1.0
+### randomly generated ###
+iniPlaCloud.randBlobs     = true
+iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
+iniPlaCloud.distBoxLength = 1e-2 1e-2 2e-2
+iniPlaCloud.radLim        = 1e-3 1.0e-3
+iniPlaCloud.axisLengthLim = 2e-3 2.01e-3
+iniPlaCloud.magLim        = 0.99e19 1e19
+iniPlaCloud.sharpLim      = 5e-3 5.01e-3
+
+### specified generated ###
+#iniPlaCloud.type          =    spheroid cylinder
+#iniPlaCloud.center        =    .5e-2 .5e-2 1e-2
+#                               .5e-2 .5e-2 3e-2
+#iniPlaCloud.radius        =    1e-3 1e-3 1e-3
+#                               1e-3 1e-3 1e-3
+#iniPlaCloud.axisLength    =    2e-3
+#                               1e-3
+#iniPlaCloud.mag           =    1e19
+#                               1e19
+#iniPlaCloud.sharpness     =    5
+#                               0.001
+#iniPlaCloud.axisDirection =    0.0 0.0 1.0
+#                               0.0 0.0 1.0
                                
 #iniPlaCloud.number = 1
 #iniPlaCloud.type = cylinder

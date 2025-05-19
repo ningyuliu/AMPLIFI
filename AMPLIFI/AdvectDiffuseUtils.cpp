@@ -724,8 +724,10 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   if (pp.contains("randBlobs")) {
     bool randVar;
     pp.get("randBlobs", randVar);
-    if (randVar)
+    if (randVar) {
       generateRandomBlobs(blobs);
+      outputBlobs(blobs);
+    }
     else
       MayDay::Error("wrong value for randBlobs");
   } else {
@@ -778,32 +780,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   }
   
   piecewiseFunction bgdDensity = piecewiseFunction(numPiece, lb, fNames, paramVect);
-  
-  Vector<RealVect> centRV(blobNum), aRV(blobNum);
-  for (int j = 0; j < blobNum; j++) {
-    for (int idir = 0; idir < SpaceDim; idir++) {
-      (centRV[j])[idir] = center[idir+j*SpaceDim] / normalization::scalingFactor / normalization::lBar;
-      (aRV[j])[idir] = radius[idir+j*SpaceDim] / normalization::scalingFactor / normalization::lBar;
-    }
-    mag[j] = mag[j] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
-  }
-  
-  pp = ParmParse("bgdPlasma");
-  if (pp.contains("inhomForIniPlaCloud")) {
-    bool flag;
-    pp.get("inhomForIniPlaCloud", flag);
-    if (flag) {
-      for (int j = 0; j < blobNum; j++) {
-        vector<double> pvec(SpaceDim);
-        for(int i = 0; i != pvec.size(); i++)
-          pvec[i] = centRV[j][i];
-        mag[j] /= normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
-        mag[j] *= bgdDensity.value(pvec);
-      }
-    }
-  }
-  
-  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, centRV, aRV, mag, blobs, bgdDensity));
+  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, blobs, bgdDensity));
 }
 
 void
