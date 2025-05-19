@@ -32,22 +32,22 @@
 // give default values
 namespace normalization {
 
-  double scalingFactor = 1.0;
+double scalingFactor = 1.0;
 
-  double EBar = 1e5;
-  double muBar = 0.0382;
-  double lBar = sqrt(constants::e/(constants::eps0*EBar));
-  double tBar = lBar/(muBar*EBar);
-  double nBar = pow(lBar, -3);
-  double phiBar = EBar*lBar;
+double EBar = 1e5;
+double muBar = 0.0382;
+double lBar = sqrt(constants::e/(constants::eps0*EBar));
+double tBar = lBar/(muBar*EBar);
+double nBar = pow(lBar, -3);
+double phiBar = EBar*lBar;
 
 }
 
 namespace numerical {
 
-  double Ac;
-  double Ai;
-  double Ad;
+double Ac;
+double Ai;
+double Ad;
 
 }
 
@@ -473,7 +473,7 @@ getAmbientGas(gas& a_gas)
                  std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
   std::transform(SP3Lambda.begin(), SP3Lambda.end(), SP3Lambda.begin(),
                  std::bind(std::multiplies<double>(), std::placeholders::_1, pO2Torr*lBar));
-    
+  
   if (!uniformity) {
     if (pp.contains("densityInputFile")) { // input data from a file
       string inputFileNamePtr;
@@ -634,14 +634,14 @@ getAmbientGas(gas& a_gas)
   a_gas = air;
   
   /*Real n;
-  n = N;
-  cout << "E=0: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(0.0) << "; " << "E=5: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(5/n) << "; " << "E=20: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(20/n) << endl;
-
-  cout << "E=0: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(0.0) << "; " << "E=1.6: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(1.6/n) << "; " << "E=3.2: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(3.2/n) << "; " << "E=12.8: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(12.8/n) << endl;
-
-  cout << "E=0.0: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.0) << "; " << "E=0.002: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.002/n) << "; " << "E=0.012: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.012/n) << "; " << "E=0.2: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.2/n) << "; " << "E=10: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(2.0/n) << endl;
-
-  cout << "n = " << n << endl;*/
+   n = N;
+   cout << "E=0: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(0.0) << "; " << "E=5: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(5/n) << "; " << "E=20: " << 1.0/lBar*n*a_gas.EDpdentProcs["ionization"].value(20/n) << endl;
+   
+   cout << "E=0: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(0.0) << "; " << "E=1.6: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(1.6/n) << "; " << "E=3.2: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(3.2/n) << "; " << "E=12.8: " << 1.0/lBar*n*a_gas.EDpdentProcs["attachment"].value(12.8/n) << endl;
+   
+   cout << "E=0.0: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.0) << "; " << "E=0.002: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.002/n) << "; " << "E=0.012: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.012/n) << "; " << "E=0.2: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(0.2/n) << "; " << "E=10: " << muBar/n*a_gas.EDpdentProcs["mobility"].value(2.0/n) << endl;
+   
+   cout << "n = " << n << endl;*/
   
 }
 
@@ -652,74 +652,87 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   int blobNum;
   pp.get("number", blobNum);
   
-  Vector<Real> radius(SpaceDim*blobNum, 0.0);
-  pp.getarr("radius", radius, 0, SpaceDim);
-  for (int i = 1; i < blobNum; i++)
-    for (int dir = 0; dir < SpaceDim; dir++)
-      radius[dir+i*SpaceDim] = radius[dir];
+  //  Vector<Real> radius(SpaceDim*blobNum, 0.0);
+  //  pp.getarr("radius", radius, 0, SpaceDim);
+  //  for (int i = 1; i < blobNum; i++)
+  //    for (int dir = 0; dir < SpaceDim; dir++)
+  //      radius[dir+i*SpaceDim] = radius[dir];
+  //
+  //  Vector<Real> center(SpaceDim*blobNum, 0.0);
+  //  if (pp.contains("randCenter")) {
+  //    bool randVar;
+  //    pp.get("randCenter", randVar);
+  //    if (randVar) {
+  //      Vector<Real> distCenter(SpaceDim, 0.0);
+  //      Vector<Real> distBoxLength(SpaceDim, 0.0);
+  //
+  //      pp.getarr("distCenter", distCenter, 0, SpaceDim);
+  //      pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
+  //
+  //      const std::string varName("iniPlaCloud.center");
+  //      std::string valStr;
+  //      // random generator is called on one processor only
+  //      if (procID() == uniqueProc(SerialTask::compute))
+  //        for (int i = 0; i < blobNum; i++)
+  //          for (int dir = 0; dir < SpaceDim; dir++) {
+  //            center[dir+i*SpaceDim] = ((1.0*rand()/RAND_MAX) - 0.5) * distBoxLength[dir] + distCenter[dir];
+  //            valStr += to_string(center[dir+i*SpaceDim]);
+  //            valStr += " ";
+  //          }
+  //
+  //      broadcast(valStr,uniqueProc(SerialTask::compute));
+  //      broadcast(center,uniqueProc(SerialTask::compute));
+  //      pp.setStr(varName, valStr);
+  //    } else
+  //      pp.getarr("center", center, 0, SpaceDim*blobNum);
+  //
+  //  } else
+  //    pp.getarr("center", center, 0, SpaceDim*blobNum);
+  //
+  //  Vector<Real> mag(blobNum, 0.0);
+  //  if (pp.contains("randMag")) {
+  //    bool randVar;
+  //    pp.get("randMag", randVar);
+  //    if (randVar) {
+  //      Vector<Real> magLimit;
+  //      pp.getarr("magLim", magLimit, 0, 2);
+  //
+  //      const std::string varName("iniPlaCloud.mag");
+  //      std::string valStr;
+  //      if (procID() == uniqueProc(SerialTask::compute))
+  //        for (int i = 0; i < blobNum; i++) {
+  //          mag[i] = (1.0*rand()/RAND_MAX) * (magLimit[1]-magLimit[0]) + magLimit[0];
+  //          valStr += to_string(mag[i]);
+  //          valStr += " ";
+  //        }
+  //      broadcast(valStr,uniqueProc(SerialTask::compute));
+  //      broadcast(mag,uniqueProc(SerialTask::compute));
+  //      pp.setStr(varName, valStr);
+  //    } else {
+  //      double mag0;
+  //      pp.get("mag", mag0);
+  //      for (int i = 0; i < blobNum; i++)
+  //        mag[i] = mag0;
+  //    }
+  //  } else
+  //    pp.getarr("mag", mag, 0, blobNum);
   
-  Vector<Real> center(SpaceDim*blobNum, 0.0);
-  if (pp.contains("randCenter")) {
-    bool randVar;
-    pp.get("randCenter", randVar);
-    if (randVar) {
-      Vector<Real> distCenter(SpaceDim, 0.0);
-      Vector<Real> distBoxLength(SpaceDim, 0.0);
-      
-      pp.getarr("distCenter", distCenter, 0, SpaceDim);
-      pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
-      
-      const std::string varName("iniPlaCloud.center");
-      std::string valStr;
-      // random generator is called on one processor only
-      if (procID() == uniqueProc(SerialTask::compute))
-        for (int i = 0; i < blobNum; i++)
-          for (int dir = 0; dir < SpaceDim; dir++) {
-            center[dir+i*SpaceDim] = ((1.0*rand()/RAND_MAX) - 0.5) * distBoxLength[dir] + distCenter[dir];
-            valStr += to_string(center[dir+i*SpaceDim]);
-            valStr += " ";
-          }
-      
-      broadcast(valStr,uniqueProc(SerialTask::compute));
-      broadcast(center,uniqueProc(SerialTask::compute));
-      pp.setStr(varName, valStr);
-    } else
-      pp.getarr("center", center, 0, SpaceDim*blobNum);
-      
-  } else
-    pp.getarr("center", center, 0, SpaceDim*blobNum);
-  
-  Vector<Real> mag(blobNum, 0.0);
-  if (pp.contains("randMag")) {
-    bool randVar;
-    pp.get("randMag", randVar);
-    if (randVar) {
-      Vector<Real> magLimit;
-      pp.getarr("magLim", magLimit, 0, 2);
-      
-      const std::string varName("iniPlaCloud.mag");
-      std::string valStr;
-      if (procID() == uniqueProc(SerialTask::compute))
-        for (int i = 0; i < blobNum; i++) {
-          mag[i] = (1.0*rand()/RAND_MAX) * (magLimit[1]-magLimit[0]) + magLimit[0];
-          valStr += to_string(mag[i]);
-          valStr += " ";
-        }
-      broadcast(valStr,uniqueProc(SerialTask::compute));
-      broadcast(mag,uniqueProc(SerialTask::compute));
-      pp.setStr(varName, valStr);
-    } else {
-      double mag0;
-      pp.get("mag", mag0);
-      for (int i = 0; i < blobNum; i++)
-        mag[i] = mag0;
-    }
-  } else
-    pp.getarr("mag", mag, 0, blobNum);
-  
-//  testBlob();
   MultiBlob blobs;
-  parseBlobsFromParmParse(blobs);
+  
+  
+  // Initialize random number generator
+  if (pp.contains("randBlobs")) {
+    bool randVar;
+    pp.get("randBlobs", randVar);
+    if (randVar)
+      generateRandomBlobs(blobs);
+    else
+      MayDay::Error("wrong value for randBlobs");
+  } else {
+    //  testBlob();
+    MultiBlob blobs;
+    parseBlobsFromParmParse(blobs);
+  }
   
   pp = ParmParse("bgdPlasma");
   int numPiece;
@@ -837,7 +850,7 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
                                       initialCFL, useLimiting, nu));
   else {
     RefCountedPtr<TimeDependentBCFunction> EPotBCFunc(new TimeDependentBCFunction());
-
+    
     int numPiece;
     vector<double> lb;
     vector<string> fNames;
@@ -878,12 +891,12 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
       pout() << "time-varying BCs parameters" << endl;
       pout() << "functions = ";
       for (const auto& fname : fNames) {
-          pout() << fname << " ";
+        pout() << fname << " ";
       }
       pout() << endl;
       pout() << "lb = ";
       for (const auto& lbvalue : lb) {
-          pout() << lbvalue*tBar << " ";
+        pout() << lbvalue*tBar << " ";
       }
       pout() << endl;
       pout() << "uParam = " << uParamVect[0][0]*phiBar << " " << uParamVect[0][1]*phiBar*(1/tBar) << "; " << uParamVect[1][0]*phiBar << endl;
@@ -892,20 +905,20 @@ getAMRLADFactory(RefCountedPtr<AMRLevelAdvectDiffuseFactory>&  a_fact,
     // Now create two piecewise functions: one for , one for udot
     piecewiseFunction u(numPiece, lb, fNames, uParamVect);
     piecewiseFunction udot(numPiece, lb, fNames, udotParamVect);
-
+    
     // Assign to EPotBCFunc
     EPotBCFunc->m_valueFunc->m_timeFunctions.clear();
     EPotBCFunc->m_valueFunc->m_timeFunctions.push_back(u);
     EPotBCFunc->m_valueFunc->m_timeFunctions.push_back(udot);
-
+    
     EPotBCFunc->setValueFunction(linearTimeLinearZ);
-
+    
     BCHolder EPotTimeVaryBC(EPotBCFunc);
     a_fact = RefCountedPtr<AMRLevelAdvectDiffuseFactory>(
-        new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
-                                         ADParseBC, EPotTimeVaryBC, PIParseBC, cfl, domainLength,
-                                         refineThresh, tagBufferSize,
-                                         initialCFL, useLimiting, nu));
+                                                         new AMRLevelAdvectDiffuseFactory(a_advPhys, a_gas,
+                                                                                          ADParseBC, EPotTimeVaryBC, PIParseBC, cfl, domainLength,
+                                                                                          refineThresh, tagBufferSize,
+                                                                                          initialCFL, useLimiting, nu));
   }
 }
 
@@ -993,7 +1006,7 @@ defineAMR(AMR&                                          a_amr,
     std::string prefix;
     pp.get("plot_prefix",prefix);
     a_amr.plotPrefix(prefix);
-//    pout() << procID() << " " << uniqueProc(SerialTask::compute) << endl;
+    //    pout() << procID() << " " << uniqueProc(SerialTask::compute) << endl;
     if (procID() == uniqueProc(SerialTask::compute)) {
       std::size_t found = prefix.find_last_of("/");
       if (found!=std::string::npos) {
@@ -1056,17 +1069,17 @@ setupAMRForAMRRun(AMR& a_amr)
 
 void averageCellToEdge (const DisjointBoxLayout a_grids, LevelData<FArrayBox>& a_U, LevelData<FluxBox>& a_UEdge) {
   for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++dit) {
-//    Box b = a_U[dit].box();
+    //    Box b = a_U[dit].box();
     Box b = a_grids[dit];
     FArrayBox& UFab = a_U[dit];
-
+    
     for (int dir = 0; dir < SpaceDim; ++dir) {
       const Box bCenter = b & grow(a_grids.physDomain(), -BASISV(dir));
       // const Box bCenter1 = b & a_grids.physDomain();
       const Box bLo     = b & adjCellLo(bCenter,dir);
       const Box bHi     = b & adjCellHi(bCenter,dir);
-//      const Box bLoGhost     = b & adjCellLo(a_grids.physDomain(),dir);
-//      const Box bHiGhost     = b & adjCellHi(a_grids.physDomain(),dir);
+      //      const Box bLoGhost     = b & adjCellLo(a_grids.physDomain(),dir);
+      //      const Box bHiGhost     = b & adjCellHi(a_grids.physDomain(),dir);
       const Box bLoGhost = adjCellBox(b, dir, Side::Lo, 1);
       const Box bHiGhost = adjCellBox(b, dir, Side::Hi, 1);
       // copy the boundary cells of the orignal box
@@ -1075,44 +1088,44 @@ void averageCellToEdge (const DisjointBoxLayout a_grids, LevelData<FArrayBox>& a
     }
   }
   
-
-//  printDiagnosticInfo (100, 1, a_grids,a_U, "advVelCC", "averageCellToEdge");
-//  printDiagnosticInfo (100, 1, a_grids,a_UEdge, "advVel", "averageCellToEdge");
+  
+  //  printDiagnosticInfo (100, 1, a_grids,a_U, "advVelCC", "averageCellToEdge");
+  //  printDiagnosticInfo (100, 1, a_grids,a_UEdge, "advVel", "averageCellToEdge");
   
   CellToEdge(a_U, a_UEdge);
   
-//  printDiagnosticInfo (100, 1, a_grids,a_UEdge, "advVel", "averageCellToEdge");
+  //  printDiagnosticInfo (100, 1, a_grids,a_UEdge, "advVel", "averageCellToEdge");
   
-//  double sum = 0;
-//  double FluxMin;
-//  double FluxMax;
-//  IntVect minLoc(-100, -100, -100), maxLoc(-100, -100, -100);
-//
-//  int comp = 0;
-//  for (int dir = 0; dir < SpaceDim; ++dir) {
-//    sum = 0;
-//    FluxMin = numeric_limits<double>::max();
-//    FluxMax = numeric_limits<double>::lowest();
-//    minLoc = IntVect(-100, -100, -100);
-//    maxLoc = IntVect(-100, -100, -100);
-//    for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++ dit) {
-//      const FArrayBox& fab = a_UEdge[dit()].getFlux(dir);
-////      const Box& b = a_grids[dit()].surroundingNodes(dir);
-//      const Box& b = fab.box(); //this includes ghost cells
-//      sum += fab.sum(b, comp);
-//      if(fab.min(b, comp) < FluxMin) {
-//        FluxMin = fab.min(b, comp);
-//        minLoc = fab.minIndex(b, comp);
-//      }
-//      if(fab.max(b, comp) > FluxMax) {
-//        FluxMax = fab.max(b, comp);
-//        maxLoc = fab.maxIndex(b, comp);
-//      }
-//    }
-//  }
-//
-//  if (FluxMax > 1e100)
-//    pout() << "Error!";
+  //  double sum = 0;
+  //  double FluxMin;
+  //  double FluxMax;
+  //  IntVect minLoc(-100, -100, -100), maxLoc(-100, -100, -100);
+  //
+  //  int comp = 0;
+  //  for (int dir = 0; dir < SpaceDim; ++dir) {
+  //    sum = 0;
+  //    FluxMin = numeric_limits<double>::max();
+  //    FluxMax = numeric_limits<double>::lowest();
+  //    minLoc = IntVect(-100, -100, -100);
+  //    maxLoc = IntVect(-100, -100, -100);
+  //    for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++ dit) {
+  //      const FArrayBox& fab = a_UEdge[dit()].getFlux(dir);
+  ////      const Box& b = a_grids[dit()].surroundingNodes(dir);
+  //      const Box& b = fab.box(); //this includes ghost cells
+  //      sum += fab.sum(b, comp);
+  //      if(fab.min(b, comp) < FluxMin) {
+  //        FluxMin = fab.min(b, comp);
+  //        minLoc = fab.minIndex(b, comp);
+  //      }
+  //      if(fab.max(b, comp) > FluxMax) {
+  //        FluxMax = fab.max(b, comp);
+  //        maxLoc = fab.maxIndex(b, comp);
+  //      }
+  //    }
+  //  }
+  //
+  //  if (FluxMax > 1e100)
+  //    pout() << "Error!";
   
 }
 
@@ -1140,7 +1153,7 @@ void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, c
     minLoc = IntVect(-100, -100, -100);
     maxLoc = IntVect(-100, -100, -100);
     for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++ dit) {
-//      const Box& b = a_grids[dit()];
+      //      const Box& b = a_grids[dit()];
       const Box& b = U[dit()].box();
       sum += U[dit()].sum(b, comp);
       if(U[dit()].min(b, comp) < UMin) {
@@ -1170,12 +1183,12 @@ void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, c
     smax.append(20-smax.length(), ' ');
     
     pout() << left << setw(10) << variableName << " com " << comp << " min " << "@" << left << smin << left << setw(16) << UMin << " max " << "@" << left << smax << left << setw(16) << UMax << "  sum " << left << setw(16) << sum << endl;
-    }
+  }
 }
 
 /*******/
 void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, const LevelData<FluxBox>& a_levelFlux, const std::string& variableName, const std::string& funcInfo) {
-
+  
   double sum = 0;
   double FluxMin;
   double FluxMax;
@@ -1193,9 +1206,9 @@ void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, c
     for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++ dit) {
       const FArrayBox& fab = a_levelFlux[dit()].getFlux(dir);
       Box b = a_grids[dit()].surroundingNodes(dir);
-//      const Box& b = fab.box(); //this includes ghost cells
-//      cout << b.type() << " " << b << endl;
-//      cout << fab.box().type() << " " << fab.box() << endl;
+      //      const Box& b = fab.box(); //this includes ghost cells
+      //      cout << b.type() << " " << b << endl;
+      //      cout << fab.box().type() << " " << fab.box() << endl;
       sum += fab.sum(b, comp);
       if(fab.min(b, comp) < FluxMin) {
         FluxMin = fab.min(b, comp);
@@ -1206,18 +1219,18 @@ void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, c
         maxLoc = fab.maxIndex(b, comp);
       }
       
-//      for (BoxIterator bit(b); bit.ok(); ++bit) {
-//        const IntVect& iv = bit();
-//        if(FluxMin > fab(iv, 0)) {
-//          FluxMin = fab(iv, 0);
-//          minLoc = bit();
-//        }
-//
-//        if(FluxMax < fab(iv, 0)) {
-//          FluxMax = fab(iv, 0);
-//          maxLoc = bit();
-//        }
-//      }
+      //      for (BoxIterator bit(b); bit.ok(); ++bit) {
+      //        const IntVect& iv = bit();
+      //        if(FluxMin > fab(iv, 0)) {
+      //          FluxMin = fab(iv, 0);
+      //          minLoc = bit();
+      //        }
+      //
+      //        if(FluxMax < fab(iv, 0)) {
+      //          FluxMax = fab(iv, 0);
+      //          maxLoc = bit();
+      //        }
+      //      }
     }
     
     // this is to get the total particles if U represents density

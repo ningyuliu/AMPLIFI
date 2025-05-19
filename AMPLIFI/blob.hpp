@@ -179,6 +179,7 @@ private:
     Vector<RefCountedPtr<Blob> > m_blobs;
 };
 
+extern void void generateRandomBlobs(MultiBlob& multiBlob);
 extern void parseBlobsFromParmParse(MultiBlob& multiBlob);
 extern int testBlob();
 

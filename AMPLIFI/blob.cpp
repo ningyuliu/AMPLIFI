@@ -12,8 +12,72 @@
 
 #include "NamespaceHeader.H"  // This is often required for Chombo code
 
-void parseBlobsFromParmParse(MultiBlob& multiBlob)
-{
+void generateRandomBlobs(MultiBlob& multiBlob) {
+  ParmParse pp("iniPlaCloud");
+  int blobNum;
+  pp.get("number", blobNum);
+  
+  Vector<Real> center(SpaceDim * blobNum, 0.0);
+  Vector<Real> mag(blobNum, 0.0);
+  Vector<Real> radius(blobNum, 0.0);
+  Vector<Real> axisLength(blobNum, 0.0);
+  Vector<Real> sharpness(blobNum, 0.0);
+  
+  Vector<Real> distCenter(SpaceDim, 0.0);
+  Vector<Real> distBoxLength(SpaceDim, 0.0);
+  pp.getarr("distCenter", distCenter, 0, SpaceDim);
+  pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
+  
+  // Generate random centers
+  for (int i = 0; i < blobNum; i++) {
+    for (int dir = 0; dir < SpaceDim; dir++) {
+      center[dir + i * SpaceDim] = ((1.0 * rand() / RAND_MAX) - 0.5) * distBoxLength[dir] + distCenter[dir];
+    }
+  }
+  // Randomize radius, axis length, sharpness, and magnitude
+  Vector<Real> radLim(2), axisLengthLim(2), sharpLim(2), magLim(2);
+  pp.getarr("radLim", radLim, 0, 2);
+  pp.getarr("axisLengthLim", axisLengthLim, 0, 2);
+  pp.getarr("sharpLim", sharpLim, 0, 2);
+  pp.getarr("magLim", magLim, 0, 2);
+  
+  for (int i = 0; i < blobNum; i++) {
+    radius[i] = (rand() / static_cast<double>(RAND_MAX)) * (radLim[1] - radLim[0]) + radLim[0];
+    axisLength[i] = (rand() / static_cast<double>(RAND_MAX)) * (axisLengthLim[1] - axisLengthLim[0]) + axisLengthLim[0];
+    sharpness[i] = (rand() / static_cast<double>(RAND_MAX)) * (sharpLim[1] - sharpLim[0]) + sharpLim[0];
+    mag[i] = (rand() / static_cast<double>(RAND_MAX)) * (magLim[1] - magLim[0]) + magLim[0];
+    
+    // Generate random axis direction
+    std::vector<double> axis(SpaceDim);
+    double norm = 0.0;
+    for (int d = 0; d < SpaceDim; d++) {
+      axis[d] = ((1.0 * rand() / RAND_MAX) - 0.5);
+      norm += axis[d] * axis[d];
+    }
+    
+    norm = std::sqrt(norm);
+    for (int d = 0; d < SpaceDim; d++) axis[d] /= norm;
+    
+    // Create the blob and add to multiBlob
+    std::vector<double> blobCenter(SpaceDim);
+    for (int d = 0; d < SpaceDim; ++d) {
+      blobCenter[d] = center[i * SpaceDim + d];
+    }
+    
+    
+    for (int d = 0; d < SpaceDim; d++) {
+        centers[d + i * SpaceDim] = centers[d + i * SpaceDim] / normalization::scalingFactor / normalization::lBar;
+    }
+    radius[i] = radius[i] / normalization::scalingFactor / normalization::lBar;
+    mags[i] = mags[i] * normalization::scalingFactor * normalization::scalingFactor / normalization::nBar;
+    axisLengths[i] = axisLengths[i] / normalization::scalingFactor / normalization::lBar;
+    
+    RefCountedPtr<Blob> blob(new SpheroidalBlob(blobCenter, axis, axisLength[i], radius[i], sharpness[i], mag[i]));
+    multiBlob.addBlob(blob);
+  }
+}
+
+void parseBlobsFromParmParse(MultiBlob& multiBlob) {
     ParmParse pp("iniPlaCloud");
     int blobNum;
     pp.get("number", blobNum);
