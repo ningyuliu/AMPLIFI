@@ -50,12 +50,15 @@ max_step = 4000
 fixed_dt   = -1.0
 
 # this is the length of the longest side
+domain_length = 1e-2
+n_cell = 32 32 64
+max_level = 0
 #domain_length = 4e-2
 #n_cell = 32 32 128
 #max_level = 0
-domain_length = 8e-2
-n_cell = 16 16 64
-max_level = 6
+#domain_length = 8e-2
+#n_cell = 16 16 64
+#max_level = 6
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
@@ -123,7 +126,7 @@ mobility.A            =   3.99e25
 iniPlaCloud.bgdDensity = 0.0
 
 ### randomly generated ###
-iniPlaCloud.randBlobNum   = 50
+iniPlaCloud.randBlobNum   = 0
 iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
 iniPlaCloud.distBoxLength = 2e-2 2e-2 6e-2
 iniPlaCloud.radLim        = 0.1e-3 0.2e-3
@@ -131,21 +134,30 @@ iniPlaCloud.axisLengthLim = 0.2e-3 0.4e-3
 iniPlaCloud.magLim        = 1.1e19 1e19
 iniPlaCloud.sharpLim      = 5  5
 
-### specified ###
-iniPlaCloud.number        =    2
-iniPlaCloud.type          =    spheroid cylinder
-iniPlaCloud.center        =    1e-2 1e-2 1.5e-2
-                               1e-2 1e-2 5e-2
-iniPlaCloud.radius        =    1e-3 1e-3 1e-3
-                               1e-3 1e-3 1e-3
+iniPlaCloud.number        =    1
+iniPlaCloud.type          =    spheroid
+iniPlaCloud.center        =    2.5e-3 2.5e-3 5.0e-3
+iniPlaCloud.radius        =    0.5e-3
 iniPlaCloud.axisLength    =    1.5e-3
-                               1.5e-3
 iniPlaCloud.mag           =    1e19
-                               1e19
 iniPlaCloud.sharpness     =    5
-                               5
-iniPlaCloud.axisDirection =    0.0 0.0 1.0
-                               1.0 0.0 0.0
+iniPlaCloud.axisDirection =    0.5774 0.0 1.0
+
+### specified ###
+#iniPlaCloud.number        =    2
+#iniPlaCloud.type          =    spheroid cylinder
+#iniPlaCloud.center        =    1e-2 1e-2 1.5e-2
+#                               1e-2 1e-2 5e-2
+#iniPlaCloud.radius        =    1e-3 1e-3 1e-3
+#                               1e-3 1e-3 1e-3
+#iniPlaCloud.axisLength    =    1.5e-3
+#                               1.5e-3
+#iniPlaCloud.mag           =    1e19
+#                               1e19
+#iniPlaCloud.sharpness     =    5
+#                               5
+#iniPlaCloud.axisDirection =    0.0 0.0 1.0
+#                               1.0 0.0 0.0
                                
 ###############################################################
 # diffusion solver inputs
@@ -193,9 +205,14 @@ PoissonSolver.verbosity   = 1
 #EPot.bc_hi      = 3       3       3
 
 EPot.bc_lo      = 3   3   0
-EPot.bc_loValue = 2.1e6  2.1e6  1.68e5
+EPot.bc_loValue = 2.1e6  2.1e6  2.1e4
 EPot.bc_hi      = 3   3   0
 EPot.bc_hiValue = 2.1e6  2.1e6  0.
+
+#EPot.bc_lo      = 3   3   0
+#EPot.bc_loValue = 2.1e6  2.1e6  1.68e5
+#EPot.bc_hi      = 3   3   0
+#EPot.bc_hiValue = 2.1e6  2.1e6  0.
 
 #EPot.bc_lo      = 1   1   0
 #EPot.bc_loValue = 0   0   0
