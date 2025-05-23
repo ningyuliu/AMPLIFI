@@ -32,9 +32,9 @@ value(x) = amplitude * 0.5 * {1 - tanh[sharpness/radius * (distance/radius - 1.0
 value(x) = amplitude * 0.5 * {1 - tanh[sharpnessNorm * (distance/radius - 1.0)]}, i.e., sharpnessNorm is
 the sharpness normalized to radius. sharpnessNorm is what should be given as an input. */
 
-class SpheroidalBlob : public Blob {
+class SpheroidBlob : public Blob {
 public:
-    SpheroidalBlob(
+    SpheroidBlob(
         const std::vector<double>& center,
         const std::vector<double>& axisDirection,
         double axisLength,

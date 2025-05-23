@@ -34,11 +34,9 @@ class AdvectTestIBC:public PhysIBC
 public:
 
   ///
-  AdvectTestIBC(const int                    a_number,
-                const MultiBlob&             a_blob,
+  AdvectTestIBC(const MultiBlob&             a_blob,
                 const piecewiseFunction&     a_bgdDensity)
   {
-    m_number = a_number;
     m_blob       = a_blob;
     m_bgdDensity = a_bgdDensity;
   }
@@ -79,7 +77,6 @@ public:
 
 protected:
 
-  int                 m_number;
   MultiBlob           m_blob;
   piecewiseFunction   m_bgdDensity;
 

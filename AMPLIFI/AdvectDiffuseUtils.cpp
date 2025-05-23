@@ -649,92 +649,24 @@ void
 getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
 {
   ParmParse pp("iniPlaCloud");
-  int blobNum;
-  pp.get("number", blobNum);
-  
-  //  Vector<Real> radius(SpaceDim*blobNum, 0.0);
-  //  pp.getarr("radius", radius, 0, SpaceDim);
-  //  for (int i = 1; i < blobNum; i++)
-  //    for (int dir = 0; dir < SpaceDim; dir++)
-  //      radius[dir+i*SpaceDim] = radius[dir];
-  //
-  //  Vector<Real> center(SpaceDim*blobNum, 0.0);
-  //  if (pp.contains("randCenter")) {
-  //    bool randVar;
-  //    pp.get("randCenter", randVar);
-  //    if (randVar) {
-  //      Vector<Real> distCenter(SpaceDim, 0.0);
-  //      Vector<Real> distBoxLength(SpaceDim, 0.0);
-  //
-  //      pp.getarr("distCenter", distCenter, 0, SpaceDim);
-  //      pp.getarr("distBoxLength", distBoxLength, 0, SpaceDim);
-  //
-  //      const std::string varName("iniPlaCloud.center");
-  //      std::string valStr;
-  //      // random generator is called on one processor only
-  //      if (procID() == uniqueProc(SerialTask::compute))
-  //        for (int i = 0; i < blobNum; i++)
-  //          for (int dir = 0; dir < SpaceDim; dir++) {
-  //            center[dir+i*SpaceDim] = ((1.0*rand()/RAND_MAX) - 0.5) * distBoxLength[dir] + distCenter[dir];
-  //            valStr += to_string(center[dir+i*SpaceDim]);
-  //            valStr += " ";
-  //          }
-  //
-  //      broadcast(valStr,uniqueProc(SerialTask::compute));
-  //      broadcast(center,uniqueProc(SerialTask::compute));
-  //      pp.setStr(varName, valStr);
-  //    } else
-  //      pp.getarr("center", center, 0, SpaceDim*blobNum);
-  //
-  //  } else
-  //    pp.getarr("center", center, 0, SpaceDim*blobNum);
-  //
-  //  Vector<Real> mag(blobNum, 0.0);
-  //  if (pp.contains("randMag")) {
-  //    bool randVar;
-  //    pp.get("randMag", randVar);
-  //    if (randVar) {
-  //      Vector<Real> magLimit;
-  //      pp.getarr("magLim", magLimit, 0, 2);
-  //
-  //      const std::string varName("iniPlaCloud.mag");
-  //      std::string valStr;
-  //      if (procID() == uniqueProc(SerialTask::compute))
-  //        for (int i = 0; i < blobNum; i++) {
-  //          mag[i] = (1.0*rand()/RAND_MAX) * (magLimit[1]-magLimit[0]) + magLimit[0];
-  //          valStr += to_string(mag[i]);
-  //          valStr += " ";
-  //        }
-  //      broadcast(valStr,uniqueProc(SerialTask::compute));
-  //      broadcast(mag,uniqueProc(SerialTask::compute));
-  //      pp.setStr(varName, valStr);
-  //    } else {
-  //      double mag0;
-  //      pp.get("mag", mag0);
-  //      for (int i = 0; i < blobNum; i++)
-  //        mag[i] = mag0;
-  //    }
-  //  } else
-  //    pp.getarr("mag", mag, 0, blobNum);
   
   MultiBlob blobs;
-  
-  
-  // Initialize random number generator
-  if (pp.contains("randBlobs")) {
-    bool randVar;
-    pp.get("randBlobs", randVar);
-    if (randVar) {
+
+  if (pp.contains("randBlobNum")) {
+    int blobNum;
+    pp.get("randBlobNum", blobNum);
+    if (blobNum > 0)
       generateRandomBlobs(blobs);
-      outputBlobs(blobs);
-    }
-    else
-      MayDay::Error("wrong value for randBlobs");
-  } else {
-    //  testBlob();
-    MultiBlob blobs;
-    parseBlobsFromParmParse(blobs);
   }
+  
+  if (pp.contains("number")) {
+    int blobNum;
+    pp.get("number", blobNum);
+    if (blobNum > 0)
+      parseBlobsFromParmParse(blobs);
+  }
+  
+  outputBlobs(blobs);
   
   pp = ParmParse("bgdPlasma");
   int numPiece;
@@ -780,7 +712,7 @@ getAdvectTestIBC(RefCountedPtr<AdvectTestIBC>& a_ibc)
   }
   
   piecewiseFunction bgdDensity = piecewiseFunction(numPiece, lb, fNames, paramVect);
-  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobNum, blobs, bgdDensity));
+  a_ibc = RefCountedPtr<AdvectTestIBC>(new AdvectTestIBC(blobs, bgdDensity));
 }
 
 void

@@ -23,7 +23,7 @@
 //   its define() must be called before it is used).
 PhysIBC* AdvectTestIBC::new_physIBC()
 {
-  AdvectTestIBC* retval = new AdvectTestIBC(m_number, m_blob, m_bgdDensity);
+  AdvectTestIBC* retval = new AdvectTestIBC(m_blob, m_bgdDensity);
   return static_cast<PhysIBC*>(retval);
 }
 

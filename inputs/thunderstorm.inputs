@@ -50,12 +50,12 @@ max_step = 4000
 fixed_dt   = -1.0
 
 # this is the length of the longest side
-domain_length = 4e-2
-n_cell = 32 32 128
-max_level = 0
-#domain_length = 8e-2
-#n_cell = 64 64 256
+#domain_length = 4e-2
+#n_cell = 32 32 128
 #max_level = 0
+domain_length = 8e-2
+n_cell = 16 16 64
+max_level = 6
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
@@ -122,49 +122,31 @@ mobility.A            =   3.99e25
 
 iniPlaCloud.bgdDensity = 0.0
 
-iniPlaCloud.number        =    2
-
 ### randomly generated ###
-iniPlaCloud.randBlobs     = true
+iniPlaCloud.randBlobNum   = 50
 iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
-iniPlaCloud.distBoxLength = 1e-2 1e-2 2e-2
-iniPlaCloud.radLim        = 1e-3 1.0e-3
-iniPlaCloud.axisLengthLim = 2e-3 2.01e-3
-iniPlaCloud.magLim        = 0.99e19 1e19
-iniPlaCloud.sharpLim      = 5e-3 5.01e-3
+iniPlaCloud.distBoxLength = 2e-2 2e-2 6e-2
+iniPlaCloud.radLim        = 0.1e-3 0.2e-3
+iniPlaCloud.axisLengthLim = 0.2e-3 0.4e-3
+iniPlaCloud.magLim        = 1.1e19 1e19
+iniPlaCloud.sharpLim      = 5  5
 
-### specified generated ###
-#iniPlaCloud.type          =    spheroid cylinder
-#iniPlaCloud.center        =    .5e-2 .5e-2 1e-2
-#                               .5e-2 .5e-2 3e-2
-#iniPlaCloud.radius        =    1e-3 1e-3 1e-3
-#                               1e-3 1e-3 1e-3
-#iniPlaCloud.axisLength    =    2e-3
-#                               1e-3
-#iniPlaCloud.mag           =    1e19
-#                               1e19
-#iniPlaCloud.sharpness     =    5
-#                               0.001
-#iniPlaCloud.axisDirection =    0.0 0.0 1.0
-#                               0.0 0.0 1.0
+### specified ###
+iniPlaCloud.number        =    2
+iniPlaCloud.type          =    spheroid cylinder
+iniPlaCloud.center        =    1e-2 1e-2 1.5e-2
+                               1e-2 1e-2 5e-2
+iniPlaCloud.radius        =    1e-3 1e-3 1e-3
+                               1e-3 1e-3 1e-3
+iniPlaCloud.axisLength    =    1.5e-3
+                               1.5e-3
+iniPlaCloud.mag           =    1e19
+                               1e19
+iniPlaCloud.sharpness     =    5
+                               5
+iniPlaCloud.axisDirection =    0.0 0.0 1.0
+                               1.0 0.0 0.0
                                
-#iniPlaCloud.number = 1
-#iniPlaCloud.type = cylinder
-#iniPlaCloud.center = .5e-2 .5e-2 2e-2
-#iniPlaCloud.radius = 2e-3 1e-3  // Radial and axial radii
-#iniPlaCloud.length = 5e-3  // Length for the cylinder
-#iniPlaCloud.mag = 1e19
-#iniPlaCloud.sharpness = 20
-#iniPlaCloud.axisDirection = 0.0 0.0 1.0  // Z-axis direction
-
-#iniPlaCloud.number        = 1
-#iniPlaCloud.radius        = 2e-3 2e-3 2e-3
-#iniPlaCloud.randCenter    = true
-#iniPlaCloud.distCenter    = 1e-2 1e-2 4e-2
-#iniPlaCloud.distBoxLength = 0.5e-2 0.5e-2 2e-2
-#iniPlaCloud.randMag       = true
-#iniPlaCloud.magLim        = 0.99e19 1e19
-
 ###############################################################
 # diffusion solver inputs
 
@@ -197,23 +179,23 @@ PoissonSolver.verbosity   = 1
 
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate,
 # 3 = dirichlet, with linearly varying potential with z;
-EPot.bc_timeVarying = true
 
-bc_timeVarying.numPieces    =   2
-bc_timeVarying.paramNums    =   2       1
-bc_timeVarying.xlb          =   0       0.5e-6
-bc_timeVarying.funcNames    =   linear  const
-bc_timeVarying.u            =  -.84e3  -1.68e11
-                               -.84e5
-bc_timeVarying.udot         =   2.1e4    4.2e12
-                                2.1e6
-EPot.bc_lo      = 3       3       3
-EPot.bc_hi      = 3       3       3
+#EPot.bc_timeVarying = true
+#bc_timeVarying.numPieces    =   2
+#bc_timeVarying.paramNums    =   2       1
+#bc_timeVarying.xlb          =   0       0.5e-6
+#bc_timeVarying.funcNames    =   linear  const
+#bc_timeVarying.u            =  -.84e3  -1.68e11
+#                               -.84e5
+#bc_timeVarying.udot         =   2.1e4    4.2e12
+#                                2.1e6
+#EPot.bc_lo      = 3       3       3
+#EPot.bc_hi      = 3       3       3
 
-#EPot.bc_lo      = 3       3       0
-#EPot.bc_loValue = 1.8e6   1.8e6   0
-#EPot.bc_hi      = 3       3       0
-#EPot.bc_hiValue = 1.8e6   1.8e6  -0.72e5
+EPot.bc_lo      = 3   3   0
+EPot.bc_loValue = 2.1e6  2.1e6  1.68e5
+EPot.bc_hi      = 3   3   0
+EPot.bc_hiValue = 2.1e6  2.1e6  0.
 
 #EPot.bc_lo      = 1   1   0
 #EPot.bc_loValue = 0   0   0
