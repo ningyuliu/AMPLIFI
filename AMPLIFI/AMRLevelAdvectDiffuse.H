@@ -388,7 +388,7 @@ protected:
   static Vector<RefCountedPtr<LevelData<FluxBox> > > s_bCoef;
   static Vector<RefCountedPtr<LevelData<FArrayBox> > > s_aCoefComp;
   static Vector<RefCountedPtr<LevelData<FluxBox> > > s_bCoefComp;
-
+  LevelData<FluxBox>   m_EEdgeOld, m_EEdgeCoarseOld;
   
   int m_advanceScheme, m_sourceNumericalScheme;
   
