@@ -865,7 +865,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     m_dU[dit()] *= -m_dt/m_dx;
     m_UNew[dit()] += m_dU[dit()];
     
-    const Real ne_floor = 1.0e-10;
+    const Real ne_floor = 1.0e-18;
     for (BoxIterator bit(curBox); bit.ok(); ++bit) {
       const IntVect& iv = bit();
       Real& val = m_UNew[dit()](iv, 0);
