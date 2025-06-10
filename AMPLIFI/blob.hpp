@@ -177,7 +177,10 @@ public:
 };
 
 extern void generateRandomBlobs(MultiBlob& multiBlob);
-extern void outputBlobs(const MultiBlob& multiBlob);
+extern void outputBlobs(const MultiBlob& multiBlob, int myProcID);
+inline void outputBlobs(const MultiBlob& multiBlob) {
+  outputBlobs(multiBlob, uniqueProc(SerialTask::compute));
+}
 extern void parseBlobsFromParmParse(MultiBlob& multiBlob);
 extern int testBlob();
 

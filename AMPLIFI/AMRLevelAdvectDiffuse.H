@@ -391,6 +391,7 @@ protected:
   LevelData<FluxBox>   m_EEdgeOld, m_EEdgeCoarseOld;
   
   int m_advanceScheme, m_sourceNumericalScheme;
+  bool m_densityFlooring;
   
   static bool s_testing;
   LevelData<FArrayBox> m_testOutput;

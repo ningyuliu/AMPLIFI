@@ -189,33 +189,35 @@ void parseBlobsFromParmParse(MultiBlob& multiBlob) {
   }
 }
 
-void outputBlobs(const MultiBlob& multiBlob) {
-  for (int i = 0; i < multiBlob.numBlobs(); ++i) {
-    const RefCountedPtr<Blob>& blobPtr = multiBlob.m_blobs[i];
-
-    if (const SpheroidBlob* sphBlob = dynamic_cast<const SpheroidBlob*>(blobPtr.operator->())) {
-      std::cout << "Blob " << i + 1 << ": Spheroid\n";
-      std::cout << "  Center: ";
-      for (double c : sphBlob->m_center) std::cout << c << " ";
-      std::cout << "\n  Axis: ";
-      for (double a : sphBlob->m_axis) std::cout << a << " ";
-      std::cout << "\n  Axis Length: " << sphBlob->m_axisLength
-                << "\n  Radius: " << sphBlob->m_radius
-                << "\n  Sharpness: " << sphBlob->m_sharpness
-                << "\n  Amplitude: " << sphBlob->m_amplitude << "\n";
-
-    } else if (const CylinderBlob* cylBlob = dynamic_cast<const CylinderBlob*>(blobPtr.operator->())) {
-      std::cout << "Blob " << i + 1 << ": Cylinder\n";
-      std::cout << "  Center: ";
-      for (double c : cylBlob->m_center) std::cout << c << " ";
-      std::cout << "\n  Axis: ";
-      for (double a : cylBlob->m_axis) std::cout << a << " ";
-      std::cout << "\n  Axis Length: " << cylBlob->m_axisLength
-                << "\n  Radius: " << cylBlob->m_radius
-                << "\n  Amplitude: " << cylBlob->m_amplitude << "\n";
-
-    } else {
-      std::cout << "Blob " << i + 1 << ": Unknown blob type\n";
+void outputBlobs(const MultiBlob& multiBlob, int myProcID) {
+  if(procID() == myProcID) {
+    for (int i = 0; i < multiBlob.numBlobs(); ++i) {
+      const RefCountedPtr<Blob>& blobPtr = multiBlob.m_blobs[i];
+      
+      if (const SpheroidBlob* sphBlob = dynamic_cast<const SpheroidBlob*>(blobPtr.operator->())) {
+        std::cout << "Blob " << i + 1 << ": Spheroid\n";
+        std::cout << "  Center: ";
+        for (double c : sphBlob->m_center) std::cout << c << " ";
+        std::cout << "\n  Axis: ";
+        for (double a : sphBlob->m_axis) std::cout << a << " ";
+        std::cout << "\n  Axis Length: " << sphBlob->m_axisLength
+        << "\n  Radius: " << sphBlob->m_radius
+        << "\n  Sharpness: " << sphBlob->m_sharpness
+        << "\n  Amplitude: " << sphBlob->m_amplitude << "\n";
+        
+      } else if (const CylinderBlob* cylBlob = dynamic_cast<const CylinderBlob*>(blobPtr.operator->())) {
+        std::cout << "Blob " << i + 1 << ": Cylinder\n";
+        std::cout << "  Center: ";
+        for (double c : cylBlob->m_center) std::cout << c << " ";
+        std::cout << "\n  Axis: ";
+        for (double a : cylBlob->m_axis) std::cout << a << " ";
+        std::cout << "\n  Axis Length: " << cylBlob->m_axisLength
+        << "\n  Radius: " << cylBlob->m_radius
+        << "\n  Amplitude: " << cylBlob->m_amplitude << "\n";
+        
+      } else {
+        std::cout << "Blob " << i + 1 << ": Unknown blob type\n";
+      }
     }
   }
 }

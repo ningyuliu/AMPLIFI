@@ -232,6 +232,7 @@ define(const AdvectPhysics&        a_gphys,
   pp.get("implicitReflux", imReflux);
   pp.get("advanceScheme", m_advanceScheme);
   pp.get("sourceNumericalScheme", m_sourceNumericalScheme);
+  pp.get("densityFlooring", m_densityFlooring);
   verbosity(a_verbosity);
   pp.get("testing", s_testing);
   
@@ -865,11 +866,13 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     m_dU[dit()] *= -m_dt/m_dx;
     m_UNew[dit()] += m_dU[dit()];
     
-    const Real ne_floor = 1.0e-18;
-    for (BoxIterator bit(curBox); bit.ok(); ++bit) {
-      const IntVect& iv = bit();
-      Real& val = m_UNew[dit()](iv, 0);
-      if (val < ne_floor) val = ne_floor;
+    if(m_densityFlooring) {
+      const Real ne_floor = 1.0e-18;
+      for (BoxIterator bit(curBox); bit.ok(); ++bit) {
+        const IntVect& iv = bit();
+        Real& val = m_UNew[dit()](iv, 0);
+        if (val < ne_floor) val = ne_floor;
+      }
     }
     
     // Do flux register updates
@@ -1265,6 +1268,18 @@ postTimeStep()
       }
     } // end if we're doing explicit refluxing
   } // end if there is a finer level
+  
+  if(m_densityFlooring) {
+    const Real ne_floor = 1.0e-18;
+    for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
+      Box curBox = m_grids.get(dit());
+      for (BoxIterator bit(curBox); bit.ok(); ++bit) {
+        const IntVect& iv = bit();
+        Real& val = m_UNew[dit()](iv, 0);
+        if (val < ne_floor) val = ne_floor;
+      }
+    }
+  }
   
   Real time_eps = 1.0e-10;
   if (m_level == 0 || (abs(m_coarser_level_ptr->time() - m_time) > time_eps)) {
@@ -3284,6 +3299,12 @@ writePlotHeader(HDF5Handle& a_handle) const
   sprintf(compStr,"component_%d",istart);
   header.m_string[compStr] = "phi";
   istart += m_phi.nComp();
+  
+  if (!m_gas.m_uniformity) {
+    sprintf(compStr,"component_%d",istart);
+    header.m_string[compStr] = "neut";
+    istart += m_neut.nComp();
+  }
 
   if (s_testing) {
 
@@ -3315,12 +3336,6 @@ writePlotHeader(HDF5Handle& a_handle) const
         header.m_string[compStr] = "bCoeffComp"+to_string(dir);
       }
       istart += (*s_bCoefComp[m_level]).nComp()*SpaceDim;
-    }
-    
-    if (!m_gas.m_uniformity) {
-      sprintf(compStr,"component_%d",istart);
-      header.m_string[compStr] = "neut";
-      istart += m_neut.nComp();
     }
     
     sprintf(compStr,"component_%d",istart);
@@ -3385,13 +3400,13 @@ writePlotLevel(HDF5Handle& a_handle) const
   int numPlotVar;
   
   numPlotVar = m_UNew.nComp() + m_ionNew.nComp() + m_field.m_Emag.nComp() + m_phi.nComp();
+  if (!m_gas.m_uniformity)
+    numPlotVar += m_neut.nComp();
   
   if (s_testing) {
     numPlotVar += m_phtzn.rate.nComp() + m_flux.nComp()*SpaceDim + m_J.m_E.nComp();
     if (m_doImplicitPoisson)
       numPlotVar += (*s_bCoef[m_level]).nComp()*SpaceDim + (*s_bCoefComp[m_level]).nComp()*SpaceDim;
-    if (!m_gas.m_uniformity)
-      numPlotVar += m_neut.nComp();
     numPlotVar += s_testing*m_testOutput.nComp();
   }
   LevelData<FArrayBox> plotData(m_UNew.disjointBoxLayout(), numPlotVar);
@@ -3421,6 +3436,14 @@ writePlotLevel(HDF5Handle& a_handle) const
   m_phi.copyTo(m_phi.interval(), plotData, interv);
   unnormalize(plotData, istart, nComp, normalization::phiBar);
   istart += nComp;
+  
+  if (!m_gas.m_uniformity) {
+    nComp = m_neut.nComp();
+    interv.define(istart, istart+nComp-1);
+    m_neut.copyTo(m_neut.interval(), plotData, interv);
+    unnormalize(plotData, istart, nComp, normalization::nBar);
+    istart += nComp;
+  }
   
   if (s_testing) {
 
@@ -3459,14 +3482,6 @@ writePlotLevel(HDF5Handle& a_handle) const
       tmp.copyTo(tmp.interval(), plotData, interv);
     //  unnormalize(plotData, istart, nComp, normalization::nBar*lBar/tBar);
       unnormalize(plotData, istart, nComp, 1.0);
-      istart += nComp;
-    }
-    
-    if (!m_gas.m_uniformity) {
-      nComp = m_neut.nComp();
-      interv.define(istart, istart+nComp-1);
-      m_neut.copyTo(m_neut.interval(), plotData, interv);
-      unnormalize(plotData, istart, nComp, normalization::nBar);
       istart += nComp;
     }
     
