@@ -1114,8 +1114,8 @@ void printDiagnosticInfo (int a_level, double a_dx, DisjointBoxLayout a_grids, c
     maxLoc = IntVect(-100, -100, -100);
     for (DataIterator dit = a_grids.dataIterator(); dit.ok(); ++ dit) {
       const FArrayBox& fab = a_levelFlux[dit()].getFlux(dir);
-      Box b = a_grids[dit()].surroundingNodes(dir);
-      //      const Box& b = fab.box(); //this includes ghost cells
+      //Box b = a_grids[dit()].surroundingNodes(dir);
+            const Box& b = fab.box(); //this includes ghost cells
       //      cout << b.type() << " " << b << endl;
       //      cout << fab.box().type() << " " << fab.box() << endl;
       sum += fab.sum(b, comp);

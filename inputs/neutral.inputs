@@ -18,7 +18,7 @@ implicitReflux = false
 use_limiting = true
 
 # testing, diagnostics, etc.
-verbosity = 2
+verbosity = 3
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -60,7 +60,7 @@ fixed_dt   = -1.0
 domain_length = 4e-2 #2.3e-2
 n_cell =  32 32 128
 #n_cell =  32 32 64
-max_level = 1
+max_level = 0
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2

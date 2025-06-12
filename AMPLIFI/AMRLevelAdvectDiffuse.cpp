@@ -738,11 +738,11 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
   srsTmp.define(m_UNew);
   
   // call poissonSolve in case that the source charge at the current level is modified after last Poisson solve
-  if (m_varyingField && m_doImplicitPoisson) {
-    poissonSolve();
-    fillMobility(false);
-    fillAdvectionVelocity(false);
-  }
+//  if (m_varyingField && m_doImplicitPoisson) {
+//    poissonSolve();
+//    fillMobility(false);
+//    fillAdvectionVelocity(false);
+//  }
   
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
@@ -823,7 +823,7 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
     if (m_varyingField)
       poissonSolveImplicit();
     for (DataIterator dit=m_grids.dataIterator(); dit.ok(); ++dit) {
-      Real eps = 1e-20;
+      Real eps = 1e-10;
       const Box& b = m_grids[dit()];
       FluxBox& curFlux = m_flux[dit()];
       FluxBox& advVel = m_advVel[dit()];
@@ -2147,6 +2147,7 @@ computeEField(bool timeInterpForGhost)
 
   // Set the ghost cells outside the physical boundary
   // Set by assuming the same potential difference as the neighbors
+  // TODO: rethink this implementation?
   for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
     const Box& b = m_grids[dit()];
     FArrayBox& phiFab = m_phi[dit()];
@@ -3529,6 +3530,13 @@ computeDt()
     
   if (s_verbosity >= 3)
     pout() << "AMRLevelAdvectDiffuse::computeDt " << m_level << " max speed " << m_levelGodunov.getMaxWaveSpeed(m_UNew, m_advVel) << " dtC " << newDtC*tBar << endl;
+  if (s_verbosity >= 3) {
+    printDiagnosticInfo (m_level, m_dx, m_grids, m_advVel, "advVel", "AMRLevelAdvectDiffuse::computeDt");
+    LevelData<FArrayBox> advVelCell;
+    advVelCell.define(m_grids, 3, m_numGhost*IntVect::Unit);
+    EdgeToCell(m_advVel, advVelCell);
+    printDiagnosticInfo (m_level, m_dx, m_grids, advVelCell, "advVelCell", "AMRLevelAdvectDiffuse::computeDt");
+  }
   
   Real newDT;
   newDT = min(newDtC, computeDtI());
@@ -3889,6 +3897,7 @@ fillMobility(bool timeInterpForGhost) {
     
   if (s_verbosity >= 3) {
     printDiagnosticInfo (m_level, m_dx, m_grids, m_mu, "mob", "AMRLevelAdvectDiffuse::fillMobility ");
+    printDiagnosticInfo (m_level, m_dx, m_grids, m_muEdge, "mobEdge", "AMRLevelAdvectDiffuse::fillMobility ");
   }
 }
 
@@ -3900,8 +3909,9 @@ fillAdvectionVelocity(bool timeInterpForGhost) {
     pout() << "AMRLevelAdvectDiffuse::fillAdvectionVelocity " << m_level << endl;
   
 //  initialization
-//  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
-//    m_advVel[dit()].setVal(0.0, m_advVel[dit()].box());
+  Real smallVel = 1e-10;
+  for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit)
+    m_advVel[dit()].setVal(smallVel, m_advVel[dit()].box());
   
   m_field.m_EEdge.copyTo(m_advVel);
   for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
