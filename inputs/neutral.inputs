@@ -60,17 +60,18 @@ fixed_dt   = -1.0
 domain_length = 4e-2 #2.3e-2
 n_cell =  32 32 128
 #n_cell =  32 32 64
-max_level = 0
+max_level = 1
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
 tag_buffer_size = 3
-refine_thresh = 0.001
+refine_gradMode = 1 # 0 - mag of undivided grad; 1 - mag of undivided grad of log(ne)
+refine_thresh = 0.75 # 0.001
 regrid_interval = 2 2 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4
 max_grid_size = 128
-fill_ratio = 0.75
+fill_ratio = 0.6
 
 
 ###############################################################

@@ -236,6 +236,10 @@ define(const AdvectPhysics&        a_gphys,
   verbosity(a_verbosity);
   pp.get("testing", s_testing);
   
+  m_refineThreshMode = 0;
+  if (pp.contains("refine_gradMode"))
+    pp.get("refine_gradMode", m_refineThreshMode);
+  
   m_isDefined = true;
   m_cfl = a_cfl;
   m_domainLength = a_domainLength;
@@ -2378,13 +2382,34 @@ tagCells(IntVectSet& a_tags)
   m_UNew.exchange(Interval(0,1-1));
   
   // Compute undivided gradient
+  const Real tagDensityFloor = 1.0e-6;
+  const Real clampLogMin = -20.0;
+  const Real clampLogMax = 40.0;
+
   DataIterator dit = levelDomain.dataIterator();
   for (dit.begin(); dit.ok(); ++dit)
   {
     const Box& b = levelDomain[dit()];
-    FArrayBox gradFab(b,SpaceDim);
     const FArrayBox& UFab = m_UNew[dit()];
-    
+    const FArrayBox* gradInput = &UFab;
+    FArrayBox logUFab;
+
+    if (m_refineThreshMode == 1) {
+      Box bLog = UFab.box();
+      logUFab.define(bLog, 1);
+      logUFab.copy(UFab);
+      BoxIterator bitLog(bLog);
+      for (bitLog.begin(); bitLog.ok(); ++bitLog) {
+        const IntVect& iv = bitLog();
+        Real val = std::max(logUFab(iv, 0), tagDensityFloor);
+        val = std::log(val);
+        val = std::min(std::max(val, clampLogMin), clampLogMax);
+        logUFab(iv, 0) = val;
+      }
+      gradInput = &logUFab;
+    }
+
+    FArrayBox gradFab(b,SpaceDim);
     for (int dir = 0; dir < SpaceDim; ++dir)
     {
       const Box bCenter = b & grow(m_problem_domain,-BASISV(dir));
@@ -2393,7 +2418,7 @@ tagCells(IntVectSet& a_tags)
       const Box bHi     = b & adjCellHi(bCenter,dir);
       const int hasHi = ! bHi.isEmpty();
       FORT_GETGRADF(CHF_FRA1(gradFab,dir),
-                    CHF_CONST_FRA1(UFab,0),
+                    CHF_CONST_FRA1((*gradInput), 0),
                     CHF_CONST_INT(dir),
                     CHF_BOX(bLo),
                     CHF_CONST_INT(hasLo),
@@ -2412,8 +2437,7 @@ tagCells(IntVectSet& a_tags)
     for (bit.begin(); bit.ok(); ++bit)
     {
       const IntVect& iv = bit();
-      
-      if (gradMagFab(iv) >= m_refineThresh)
+      if (UFab(iv, 0) > tagDensityFloor && gradMagFab(iv) >= m_refineThresh)
       {
         localTags |= iv;
       }

@@ -338,6 +338,7 @@ protected:
   Real                 m_cfl;
   Real                 m_domainLength;
   Real                 m_refineThresh;
+  int                  m_refineThreshMode;
   int                  m_tagBufferSize;
   Real                 m_initialDtMultiplier;
   bool                 m_useLimiting;
