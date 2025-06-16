@@ -65,8 +65,8 @@ max_level = 1
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
 tag_buffer_size = 3
-refine_gradMode = 1 # 0 - mag of undivided grad; 1 - mag of undivided grad of log(ne)
-refine_thresh = 0.75 # 0.001
+refine_gradMode = 1 # 0 - mag of undivided grad; 1 - mag of undivided grad of log(ne); 2 - combined, in this case, refine_thresh = [grad(ne), grad(log(ne))]
+refine_thresh = 0.6 #
 regrid_interval = 2 2 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4

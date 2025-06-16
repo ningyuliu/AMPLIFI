@@ -337,7 +337,7 @@ protected:
   bool m_isDefined;
   Real                 m_cfl;
   Real                 m_domainLength;
-  Real                 m_refineThresh;
+  Real                 m_refineThresh, m_refineThreshLog;
   int                  m_refineThreshMode;
   int                  m_tagBufferSize;
   Real                 m_initialDtMultiplier;

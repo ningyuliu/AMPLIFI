@@ -237,9 +237,14 @@ define(const AdvectPhysics&        a_gphys,
   pp.get("testing", s_testing);
   
   m_refineThreshMode = 0;
-  if (pp.contains("refine_gradMode"))
+  if (pp.contains("refine_gradMode")) {
     pp.get("refine_gradMode", m_refineThreshMode);
-  
+    if (m_refineThreshMode == 2) {
+      std::vector<Real> tmp;
+      pp.getarr("refine_thresh", tmp, 0, 2);
+      m_refineThreshLog  = tmp[1];
+    }
+  }
   m_isDefined = true;
   m_cfl = a_cfl;
   m_domainLength = a_domainLength;
@@ -1894,9 +1899,10 @@ poissonSolveImplicitComposite() {
   //      WriteAMRHierarchyHDF5(filename, grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
   //    }
     }
-    if (s_verbosity >= 3)
+    if (s_verbosity >= 3) {
+      pout() << "lbase = " << lbase << endl;
       pout() << "iter = " << iter << " " << "totVolCharge = " << totVolCharge << "  " << "totSurfCharge = " << totSurfCharge << endl;
-    
+    }
     // save the predictor solution
     for (int lev = m_level; lev <= finest_level; lev++)
       hierarchy[lev]->m_phi.copyTo(hierarchy[lev]->m_phiOld);
@@ -1907,6 +1913,22 @@ poissonSolveImplicitComposite() {
         setTimeHelper(hierarchy[lev]->m_EPotbcFunc, m_time+m_dt);
         // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
       }
+    
+    {
+      std::ostringstream oss_phi;
+      oss_phi << "results/phiSync_lstep" << AMR::s_step
+              << "_lbase" << lbase
+              << "_iter" << iter << ".h5";
+      WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
+
+      std::ostringstream oss_rhs;
+      oss_rhs << "results/rhs_lstep" << AMR::s_step
+              << "_lbase" << lbase
+              << "_iter" << iter << ".h5";
+      WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
+    }
+
+
     while ((totSurfCharge > surfChargeRelTol * (totVolCharge+chargeTol) || iter == 0) && iter <= maxNewtonIter && relChange > relChangeTol) {
       // note rhs contains additional terms that depend on the correction
       for (int lev = finest_level; lev>= m_level; lev--) {
@@ -1968,6 +1990,21 @@ poissonSolveImplicitComposite() {
       relChange = fabs((totSurfCharge-relChange)/relChange);
       
       iter++;
+      
+      {
+        std::ostringstream oss_phi;
+        oss_phi << "results/phiSync_lstep" << AMR::s_step
+                << "_lbase" << lbase
+                << "_iter" << iter << ".h5";
+        WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
+
+        std::ostringstream oss_rhs;
+        oss_rhs << "results/rhs_lstep" << AMR::s_step
+                << "_lbase" << lbase
+                << "_iter" << iter << ".h5";
+        WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
+      }
+
       
 //      if (m_level == 0 && s_verbosity >= 3) {
 //        string filename("PoiImSrs");
@@ -2348,14 +2385,14 @@ tagCells(IntVectSet& a_tags)
   {
     pout() << "AMRLevelAdvectDiffuse::tagCells " << m_level << endl;
   }
-  
+
   // Since tags are calculated using only current time step data, use
   // the same tagging function for initialization and for regridding.
   if (s_verbosity >= 3)
   {
     pout() << "AMRLevelAdvectDiffuse::tagCellsInit " << m_level << endl;
   }
-  
+
   // Create tags based on undivided gradient of density
   IntVectSet localTags;
   const DisjointBoxLayout& levelDomain = m_UNew.disjointBoxLayout();
@@ -2363,14 +2400,14 @@ tagCells(IntVectSet& a_tags)
   if (m_hasCoarser)
   {
     const AMRLevelAdvectDiffuse* amrGodCoarserPtr = getCoarserLevel();
-    
+
     PiecewiseLinearFillPatch pwl(levelDomain,
                                  amrGodCoarserPtr->m_UNew.disjointBoxLayout(),
                                  1,
                                  amrGodCoarserPtr->m_problem_domain,
                                  amrGodCoarserPtr->m_ref_ratio,
                                  1);
-    
+
     pwl.fillInterp(m_UNew,
                    amrGodCoarserPtr->m_UNew,
                    amrGodCoarserPtr->m_UNew,
@@ -2380,9 +2417,8 @@ tagCells(IntVectSet& a_tags)
                    1);
   }
   m_UNew.exchange(Interval(0,1-1));
-  
-  // Compute undivided gradient
-  const Real tagDensityFloor = 1.0e-6;
+
+  const Real tagDensityFloor = 1.0e-10;
   const Real clampLogMin = -20.0;
   const Real clampLogMax = 40.0;
 
@@ -2391,10 +2427,40 @@ tagCells(IntVectSet& a_tags)
   {
     const Box& b = levelDomain[dit()];
     const FArrayBox& UFab = m_UNew[dit()];
-    const FArrayBox* gradInput = &UFab;
-    FArrayBox logUFab;
 
-    if (m_refineThreshMode == 1) {
+    // Compute grad(ne)
+    FArrayBox gradNeFab(b, SpaceDim);
+    for (int dir = 0; dir < SpaceDim; ++dir)
+    {
+      const Box bCenter = b & grow(m_problem_domain, -BASISV(dir));
+      if (bCenter.isEmpty()) continue;
+
+      const Box bLo = b & adjCellLo(bCenter, dir);
+      const int hasLo = !bLo.isEmpty();
+      const Box bHi = b & adjCellHi(bCenter, dir);
+      const int hasHi = !bHi.isEmpty();
+
+      FORT_GETGRADF(CHF_FRA1(gradNeFab, dir),
+                    CHF_CONST_FRA1(UFab, 0),
+                    CHF_CONST_INT(dir),
+                    CHF_BOX(bLo),
+                    CHF_CONST_INT(hasLo),
+                    CHF_BOX(bHi),
+                    CHF_CONST_INT(hasHi),
+                    CHF_BOX(bCenter));
+    }
+
+    FArrayBox gradNeMagFab(b,1);
+    FORT_MAGNITUDEF(CHF_FRA1(gradNeMagFab,0),
+                    CHF_CONST_FRA(gradNeFab),
+                    CHF_BOX(b));
+
+    // Compute grad(log(ne)) if needed
+    FArrayBox gradLogFab(b, SpaceDim);
+    FArrayBox gradLogMagFab(b, 1);
+    FArrayBox logUFab;
+    if (m_refineThreshMode == 1 || m_refineThreshMode == 2)
+    {
       Box bLog = UFab.box();
       logUFab.define(bLog, 1);
       logUFab.copy(UFab);
@@ -2406,54 +2472,60 @@ tagCells(IntVectSet& a_tags)
         val = std::min(std::max(val, clampLogMin), clampLogMax);
         logUFab(iv, 0) = val;
       }
-      gradInput = &logUFab;
+
+      for (int dir = 0; dir < SpaceDim; ++dir)
+      {
+        const Box bCenter = b & grow(m_problem_domain, -BASISV(dir));
+        if (bCenter.isEmpty()) continue;
+
+        const Box bLo = b & adjCellLo(bCenter, dir);
+        const int hasLo = !bLo.isEmpty();
+        const Box bHi = b & adjCellHi(bCenter, dir);
+        const int hasHi = !bHi.isEmpty();
+
+        FORT_GETGRADF(CHF_FRA1(gradLogFab, dir),
+                      CHF_CONST_FRA1(logUFab, 0),
+                      CHF_CONST_INT(dir),
+                      CHF_BOX(bLo),
+                      CHF_CONST_INT(hasLo),
+                      CHF_BOX(bHi),
+                      CHF_CONST_INT(hasHi),
+                      CHF_BOX(bCenter));
+      }
+
+      FORT_MAGNITUDEF(CHF_FRA1(gradLogMagFab,0),
+                      CHF_CONST_FRA(gradLogFab),
+                      CHF_BOX(b));
     }
 
-    FArrayBox gradFab(b,SpaceDim);
-    for (int dir = 0; dir < SpaceDim; ++dir)
-    {
-      const Box bCenter = b & grow(m_problem_domain,-BASISV(dir));
-      const Box bLo     = b & adjCellLo(bCenter,dir);
-      const int hasLo = ! bLo.isEmpty();
-      const Box bHi     = b & adjCellHi(bCenter,dir);
-      const int hasHi = ! bHi.isEmpty();
-      FORT_GETGRADF(CHF_FRA1(gradFab,dir),
-                    CHF_CONST_FRA1((*gradInput), 0),
-                    CHF_CONST_INT(dir),
-                    CHF_BOX(bLo),
-                    CHF_CONST_INT(hasLo),
-                    CHF_BOX(bHi),
-                    CHF_CONST_INT(hasHi),
-                    CHF_BOX(bCenter));
-    }
-    
-    FArrayBox gradMagFab(b,1);
-    FORT_MAGNITUDEF(CHF_FRA1(gradMagFab,0),
-                    CHF_CONST_FRA(gradFab),
-                    CHF_BOX(b));
-    
     // Tag where gradient exceeds threshold
     BoxIterator bit(b);
     for (bit.begin(); bit.ok(); ++bit)
     {
       const IntVect& iv = bit();
-      if (UFab(iv, 0) > tagDensityFloor && gradMagFab(iv) >= m_refineThresh)
+      if (UFab(iv, 0) > tagDensityFloor)
       {
-        localTags |= iv;
+        if ((m_refineThreshMode == 1 && gradLogMagFab(iv) >= m_refineThresh) ||
+            (m_refineThreshMode == 0 && gradNeMagFab(iv) >= m_refineThresh) ||
+            (m_refineThreshMode == 2 &&
+             (gradNeMagFab(iv) >= m_refineThresh ||
+              gradLogMagFab(iv) >= m_refineThreshLog)))
+        {
+          localTags |= iv;
+        }
       }
     }
   }
-  
+
   localTags.grow(m_tagBufferSize);
-  
+
   // Need to do this in two steps unless a IntVectSet::operator &=
   // (ProblemDomain) operator is defined
   Box localTagsBox = localTags.minBox();
   localTagsBox &= m_problem_domain;
   localTags &= localTagsBox;
-  
+
   a_tags = localTags;
-  
 }
 
 /*******/
