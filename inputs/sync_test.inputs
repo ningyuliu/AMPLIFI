@@ -17,7 +17,7 @@ densityFlooring = true
 implicitReflux = false
 use_limiting = true
 
-verbosity = 4
+verbosity = 3
 checkpoint_interval = -1
 chk_prefix = chk
 testing = false
@@ -100,12 +100,17 @@ mobility.A            =   3.99e25
 ###############################################################
 # background plasma
 
+#bgdPlasma.numPieces   = 1
+#bgdPlasma.xlb         = 0
+#bgdPlasma.funcNames   = const
+#bgdPlasma.paramNums   = 1
+#bgdPlasma.A           = 1e5
+
 bgdPlasma.numPieces   = 1
 bgdPlasma.xlb         = 0
-bgdPlasma.funcNames   = const
-bgdPlasma.paramNums   = 1
-bgdPlasma.A           = 1e5
-
+bgdPlasma.funcNames   = tanhIP
+bgdPlasma.paramNums   = 3
+bgdPlasma.A           = 2e7 1800 100
 ###############################################################
 # initial plasma cloud(s)
 
@@ -118,7 +123,7 @@ iniPlaCloud.center        = 0.5e-2 0.5e-2 3.0e-2
 iniPlaCloud.radius        = 0.01e-2
 iniPlaCloud.axisLength    = 0.05e-2
 iniPlaCloud.mag           = 1e19
-iniPlaCloud.sharpness     = 1
+iniPlaCloud.sharpness     = 5
 iniPlaCloud.axisDirection = 0.0 0.0 1.0
 
 ###############################################################
@@ -145,7 +150,7 @@ PoissonSolver.num_mg      = 1
 PoissonSolver.norm_thresh = 1.0e-10
 PoissonSolver.hang_eps    = 1.0e-10
 PoissonSolver.max_iter    = 100
-PoissonSolver.verbosity   = 4
+PoissonSolver.verbosity   = 3
 
 EPot.bc_lo      = 1 1 1
 EPot.bc_loValue = 0 0 2.2e6

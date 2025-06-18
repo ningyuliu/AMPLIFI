@@ -753,6 +753,24 @@ diffusiveAdvance(LevelData<FArrayBox>& a_diffusiveSrc)
 //    fillAdvectionVelocity(false);
 //  }
   
+//  Vector<LevelData<FArrayBox>*> dataVec;
+//  Vector<DisjointBoxLayout> gridsVec;
+//  Vector<int> refRatioVec;
+//
+//  // Fill only one level (m_level)
+//  dataVec.push_back(&m_UNew);
+//  gridsVec.push_back(m_grids);
+//  refRatioVec.push_back(1);  // dummy value for base level
+//
+//  std::string filename = "results/UNew_level" + std::to_string(m_level) + ".h5";
+//
+//  WriteAMRHierarchyHDF5(filename,
+//                        gridsVec,
+//                        dataVec,
+//                        m_problem_domain.domainBox(),
+//                        refRatioVec,
+//                        /*numLevels=*/1);
+
   for (DataIterator dit=srs.dataIterator(); dit.ok(); ++dit) {
     FArrayBox rateI, rateA;
     rateI.define(srs[dit()].box(), srs[dit()].nComp());
@@ -1966,8 +1984,6 @@ poissonSolveImplicitComposite() {
             (*eec[lev])[dit()].negate();
           }
         }
-        
-        // need to find fields for m_level to finest_level, because they are required to calculate the photoionziation source
 
         // multigrid smoothes down first and then up; fine level solution is more accurate! This is really necessary; otherwise, there would be discontinuity at the coarse-fine interface!
         for (int lev = finest_level; lev >= m_level; lev--)
