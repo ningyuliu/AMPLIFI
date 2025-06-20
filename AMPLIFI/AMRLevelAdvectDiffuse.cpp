@@ -1716,6 +1716,14 @@ poissonSolveImplicit() {
 void
 AMRLevelAdvectDiffuse::
 setPoissonCoeffAB() {
+  // Operator for solving variable-coefficient
+  // (alpha * aCoef(x) * I - beta * Div(bCoef(x) . Grad)) phi = rho
+  // over an AMR hierarchy.
+  
+  // set the coeffs for div(grad phi + dt*flux) in (4.49). With flux = neMidStep*(-muEdge*(-grad phi));
+  // it is then div((1 + dt*neMidStep*muEdge) grad phi), i.e., bCoef = (1 + dt*neMidStep*muEdge)
+  
+  // note advVel = -muEdge*(grad phi) and beta in the operator is set to -1.0 previously
   LevelData<FluxBox>&  muEdge = m_muEdge;
   
   Real eps = 1e-20;
@@ -2105,7 +2113,7 @@ poissonSolveImplicitComposite() {
 void
 AMRLevelAdvectDiffuse::
 setPoissonCoeffABComposite(Real commonDt) {
-  
+  // on the edges contained in a c-f interface, dt of the coarser level should be used for calculating b coefficient
   (*s_aCoef[m_level]).copyTo(*s_aCoefComp[m_level]);
   (*s_bCoef[m_level]).copyTo(*s_bCoefComp[m_level]);
   
@@ -2117,7 +2125,8 @@ setPoissonCoeffABComposite(Real commonDt) {
       (*s_bCoefComp[m_level])[dit()] *= commonDt;
       (*s_bCoefComp[m_level])[dit()] += 1;
     }
-    
+  
+  // on each edge in a c-f interface, the bCoeff on the coarser level the average of the finer level
   if (m_hasFiner) {
     AMRLevelAdvectDiffuse* amrGodFinerPtr = getFinerLevel();
 //    (*s_bCoefComp[m_level+1]).exchange();

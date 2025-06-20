@@ -309,6 +309,8 @@ protected:
   // solve Poisson's equation with variable coefficients across all levels
   void poissonSolveImplicitComposite();
   void setPoissonCoeffABComposite(Real commonDt);
+  void poissonSolveImplicitComposite1();
+  void setPoissonCoeffABComposite1(Real coarserDt);
   // compute div(delta F) see Chombo Design document or Colella et al. 1999a,b
   void getDivDeltaFlux(LevelData<FArrayBox>& rhs, LevelData<FluxBox>* edgeField, LevelData<FluxBox>* edgeFieldFine, LevelData<FluxBox>* coeff, Real scale = 1.0);
   void computeEField(bool timeInterpForGhost);
