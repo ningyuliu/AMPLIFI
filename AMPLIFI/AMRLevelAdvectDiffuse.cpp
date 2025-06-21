@@ -1282,7 +1282,7 @@ postTimeStep()
     else {
       if (m_doImplicitPoisson) {
         if (m_varyingField)
-          poissonSolveImplicitComposite();
+          poissonSolveImplicitComposite1();
         else {
           Real scale = -1.0/m_dx;
           m_fluxRegister.reflux(m_UNew,scale);
@@ -1815,8 +1815,8 @@ poissonSolveImplicitComposite() {
         // revisit: For cases with >2 levels, is dt here the one for lev or lbase?
         // Define coe = dt*neMidStep*mu
         LevelData<FluxBox> coe;
-//        Real scale = m_dt/cl->m_dt;
-        Real scale = 1.0;
+        Real scale = m_dt/cl->m_dt;
+//        Real scale = 1.0;
         coe.define(*s_bCoef[lev]);
         (*s_bCoef[lev]).copyTo(coe);
         for (DataIterator dit=(*cl).m_grids.dataIterator(); dit.ok(); ++dit)

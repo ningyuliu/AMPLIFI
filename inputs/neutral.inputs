@@ -60,7 +60,7 @@ fixed_dt   = -1.0
 domain_length = 4e-2 #2.3e-2
 n_cell =  32 32 128
 #n_cell =  32 32 64
-max_level = 1
+max_level = 2
 
 periodic_bc = 0 0 0
 ref_ratio = 2 2 2 2 2 2 2 2
@@ -70,7 +70,7 @@ refine_thresh = 0.6 #
 regrid_interval = 2 2 2 2 2 2 2 2
 grid_buffer_size = 1
 block_factor =  4
-max_grid_size = 128
+max_grid_size = 64
 fill_ratio = 0.6
 
 
@@ -94,7 +94,7 @@ gas.elecDiffCoef      = 0.1995
 #gas.densityInputFile  = 77500m-500m-20m-5.txt #neutralDensityData.txt
 gas.numGridPoints     = 200 200 2000
 gas.spacing           = 5 5 5
-gas.basePoint         = -60 -60 -60
+gas.basePoint         = -60 -60 -500
 
 # input from a known function
 #gas.densityProfile          = exp
@@ -193,7 +193,7 @@ iniPlaCloud.type          =    spheroid
 iniPlaCloud.center        =    0.5e-2 0.5e-2 3.5e-2
 iniPlaCloud.radius        =    0.02e-2
 iniPlaCloud.axisLength    =    0.08e-2
-iniPlaCloud.mag           =    1e20
+iniPlaCloud.mag           =    1e21
 iniPlaCloud.sharpness     =    5
 iniPlaCloud.axisDirection =    0.0 0.0 1.0
                                
@@ -211,8 +211,8 @@ diffusionSolver.verbosity   = 1
 # 0 = dirichlet, 1 = neumann, 2 = extrapolate
 # zero values for all boundaries; nothing needs to be done for normalization
 # future work
-diffusion.bc_lo   = 1 1 1
-diffusion.bc_hi   = 1 1 1
+diffusion.bc_lo   = 2 2 1
+diffusion.bc_hi   = 2 2 2
 diffusion.bc_value = 0.
 
 

@@ -48,14 +48,9 @@
 void
 AMRLevelAdvectDiffuse::
 poissonSolveImplicitComposite1() {
-  // first find out what time coarser level is (if it exists)
-  Real time_eps = 1.0e-10;
-  // do multilevel operations if this is the coarsest level or if
-  // coarser level is not at same time as this level. otherwise,
-  // defer this until we get down to the coarsest level at this time.
-  if (m_level == 0 || (abs(m_coarser_level_ptr->time() - m_time) > time_eps)) {
+  if (m_hasFiner) {
     if (s_verbosity >= 3)
-      pout() << "AMRLevelAdvectDiffuse::poissonSolveImplicitComposite " << m_level << endl;
+      pout() << "AMRLevelAdvectDiffuse::poissonSolveImplicitComposite1 " << m_level << endl;
       
     Vector<AMRLevelAdvectDiffuse*>         hierarchy;
     Vector<int>                            refRat;
@@ -82,7 +77,7 @@ poissonSolveImplicitComposite1() {
     int startLev = Max(m_level-1, 0);
     
     for (int lev = finest_level; lev>= m_level; lev--)
-      hierarchy[lev]->setPoissonCoeffABComposite(m_dt);
+      hierarchy[lev]->setPoissonCoeffABComposite1(m_dt);
     
     for (int lev = finest_level; lev>= startLev; lev--) {
       // rhs has no ghost cells, phi does
@@ -101,7 +96,7 @@ poissonSolveImplicitComposite1() {
       }
     }
     
-    for (int lev = finest_level; lev>= m_level; lev--) {
+    for (int lev=m_level; lev>= m_level; lev--) {
       if (hierarchy[lev]->m_hasFiner && lev >= m_level) {
         AMRLevelAdvectDiffuse* cl = hierarchy[lev];
         AMRLevelAdvectDiffuse* fl = hierarchy[lev+1];
@@ -109,8 +104,8 @@ poissonSolveImplicitComposite1() {
         // revisit: For cases with >2 levels, is dt here the one for lev or lbase?
         // Define coe = dt*neMidStep*mu
         LevelData<FluxBox> coe;
-//        Real scale = m_dt/cl->m_dt;
-        Real scale = 1.0;
+        Real scale = m_dt/cl->m_dt;
+//        Real scale = 1.0;
         coe.define(*s_bCoef[lev]);
         (*s_bCoef[lev]).copyTo(coe);
         for (DataIterator dit=(*cl).m_grids.dataIterator(); dit.ok(); ++dit)
@@ -234,19 +229,19 @@ poissonSolveImplicitComposite1() {
         // pout() << "m_time+m_dt = " << m_time+m_dt << endl;
       }
     
-    {
-      std::ostringstream oss_phi;
-      oss_phi << "results/phiSync_lstep" << AMR::s_step
-              << "_lbase" << lbase
-              << "_iter" << iter << ".h5";
-      WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
-
-      std::ostringstream oss_rhs;
-      oss_rhs << "results/rhs_lstep" << AMR::s_step
-              << "_lbase" << lbase
-              << "_iter" << iter << ".h5";
-      WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
-    }
+//    {
+//      std::ostringstream oss_phi;
+//      oss_phi << "results/phiSync_lstep" << AMR::s_step
+//              << "_lbase" << lbase
+//              << "_iter" << iter << ".h5";
+//      WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
+//
+//      std::ostringstream oss_rhs;
+//      oss_rhs << "results/rhs_lstep" << AMR::s_step
+//              << "_lbase" << lbase
+//              << "_iter" << iter << ".h5";
+//      WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
+//    }
 
 
     while ((totSurfCharge > surfChargeRelTol * (totVolCharge+chargeTol) || iter == 0) && iter <= maxNewtonIter && relChange > relChangeTol) {
@@ -292,7 +287,15 @@ poissonSolveImplicitComposite1() {
           if (hierarchy[lev]->m_hasCoarser)
             hierarchy[lev]->m_coarseAverage.averageToCoarse(hierarchy[lev-1]->m_phi, hierarchy[lev]->m_phi);
         
-        computeEField(true);
+        Real time_eps = 1.0e-10;
+        if (m_coarser_level_ptr)
+          if (abs(m_coarser_level_ptr->time() - m_time) > time_eps)
+            computeEField(true);
+          else
+            computeEField(false);
+        else
+          computeEField(false);
+        
         for (int lev = m_level+1; lev <= finest_level; lev++)
           hierarchy[lev]->computeEField(false);
       }
@@ -309,19 +312,19 @@ poissonSolveImplicitComposite1() {
       
       iter++;
       
-      {
-        std::ostringstream oss_phi;
-        oss_phi << "results/phiSync_lstep" << AMR::s_step
-                << "_lbase" << lbase
-                << "_iter" << iter << ".h5";
-        WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
-
-        std::ostringstream oss_rhs;
-        oss_rhs << "results/rhs_lstep" << AMR::s_step
-                << "_lbase" << lbase
-                << "_iter" << iter << ".h5";
-        WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
-      }
+//      {
+//        std::ostringstream oss_phi;
+//        oss_phi << "results/phiSync_step" << AMR::s_step
+//                << "_lbase" << lbase
+//                << "_iter" << iter << ".h5";
+//        WriteAMRHierarchyHDF5(oss_phi.str(), grids, phi, lev0Domain.domainBox(), refRat, hierarchy.size());
+//
+//        std::ostringstream oss_rhs;
+//        oss_rhs << "results/rhs_step" << AMR::s_step
+//                << "_lbase" << lbase
+//                << "_iter" << iter << ".h5";
+//        WriteAMRHierarchyHDF5(oss_rhs.str(), grids, rhs, lev0Domain.domainBox(), refRat, hierarchy.size());
+//      }
 
       
 //      if (m_level == 0 && s_verbosity >= 3) {
@@ -407,22 +410,22 @@ poissonSolveImplicitComposite1() {
 
 void
 AMRLevelAdvectDiffuse::
-setPoissonCoeffABComposite1(Real coarserDt) {
-  // on the edges contained in the interface with the coarser level, dt of the coarser level should be used for calculating b coefficient; on the edge withe the finer level, dt of the current level should be used.
-  
+setPoissonCoeffABComposite1(Real commonDt) {
+  if (s_verbosity >= 3)
+    pout() << "AMRLevelAdvectDiffuse::setPoissonCoeffABComposite1 " << m_level << endl;
+  // on the edges contained in a c-f interface, dt of the coarser level should be used for calculating b coefficient
   (*s_aCoef[m_level]).copyTo(*s_aCoefComp[m_level]);
   (*s_bCoef[m_level]).copyTo(*s_bCoefComp[m_level]);
   
-  if (m_hasCoarser) {
-    Real eps = 1e-10;
-    if (abs(m_dt-coarserDt) > eps)
-      for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
-        (*s_bCoefComp[m_level])[dit()] -= 1.0;
-        (*s_bCoefComp[m_level])[dit()] *= 1/m_dt;
-        (*s_bCoefComp[m_level])[dit()] *= coarserDt;
-        (*s_bCoefComp[m_level])[dit()] += 1;
-      }
-  }
+  Real eps = 1e-10;
+  if (abs(m_dt-commonDt) > eps)
+    for (DataIterator dit = m_grids.dataIterator(); dit.ok(); ++dit) {
+      (*s_bCoefComp[m_level])[dit()] -= 1.0;
+      (*s_bCoefComp[m_level])[dit()] *= 1/m_dt;
+      (*s_bCoefComp[m_level])[dit()] *= commonDt;
+      (*s_bCoefComp[m_level])[dit()] += 1;
+    }
+  
   // on each edge in a c-f interface, the bCoeff on the coarser level the average of the finer level
   if (m_hasFiner) {
     AMRLevelAdvectDiffuse* amrGodFinerPtr = getFinerLevel();
@@ -432,6 +435,6 @@ setPoissonCoeffABComposite1(Real coarserDt) {
   }
   
   if (s_verbosity >= 3) {
-     printDiagnosticInfo (m_level, m_dx, m_grids, *s_bCoefComp[m_level], "bCoeffComp", "setPoissonCoeffABComp");
+     printDiagnosticInfo (m_level, m_dx, m_grids, *s_bCoefComp[m_level], "bCoeffComp", "setPoissonCoeffABComp1");
   }
 }
